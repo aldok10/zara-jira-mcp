@@ -27,10 +27,10 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 
 	modules := map[string][]regFunc{
 		"jira":          {registerJiraTools, registerIssueOpsTools, registerEpicSprintTools, registerBulkProjectTools, registerLinkWorklogTools, registerVersionTools, registerTraceTools},
-		"pm":            {registerPMTools, registerMemoryTools, registerPMIntelTools, registerAdvancedPMTools, registerDeepPMTools, registerFlowTools, registerForecastTools, registerRecipeTools, registerProcessTools, registerImprovementTools, registerOKRKPITools, registerInsightTools},
+		"pm":            {registerPMTools, registerMemoryTools, registerPMIntelTools, registerAdvancedPMTools, registerDeepPMTools, registerFlowTools, registerForecastTools, registerRecipeTools, registerProcessTools, registerImprovementTools, registerOKRKPITools, registerInsightTools, registerCoachingTools, registerStoryPointsTools},
 		"ai":            {registerAITools},
 		"notifications": {registerLarkTools, registerSlackTools, registerPlatformTools, registerRoutingTools},
-		"stakeholder":   {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools, registerCommunicationTools, registerCommsGapTools, registerSafetyTools},
+		"stakeholder":   {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools, registerCommunicationTools, registerCommsGapTools, registerSafetyTools, registerCareTools, registerOutcomeTools, registerTechSkillTools},
 		"portfolio":     {registerPortfolioTools},
 		"github":        {registerGitHubTools, registerGitHubFullTools, registerGitIntegrationTools},
 		"integrations":  {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools, registerLarkOKRTools},
