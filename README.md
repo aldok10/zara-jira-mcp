@@ -229,6 +229,17 @@ make install    # Install to ~/.local/bin/
 
 ---
 
+## Guides for PM/Scrum Masters
+
+| Guide | What You'll Learn |
+|-------|-------------------|
+| [Communication Frameworks](docs/communication-frameworks.md) | Pyramid Principle, SCARF, SBI, Radical Candor, DACI, async protocols |
+| [Reporting to Management](docs/reporting-guide.md) | Who needs what report, when, and which tool to use |
+| [Understanding Engineering](docs/engineering-literacy.md) | WIP, cycle time, tech debt, QA vocabulary, PR review |
+| [Performance Profiles](docs/profiles.md) | Keep your AI client fast — which profile to use |
+
+---
+
 ## Part of the Zara Ecosystem
 
 Built as part of [Zara Agent OPC](https://github.com/aldok10/zara-agent-opc) — an empathetic AI engineering partner with cognitive memory and multi-agent orchestration.
