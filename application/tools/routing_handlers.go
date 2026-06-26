@@ -144,11 +144,11 @@ func (h *Handlers) DailyDigest(ctx context.Context, req mcp.CallToolRequest) (*m
 
 	// Send to primary channel
 	if h.Slack != nil && h.Slack.Available() {
-		h.Slack.SendRichMessage(ctx, "", title, digest)
+		_ = h.Slack.SendRichMessage(ctx, "", title, digest)
 	} else if h.Lark != nil {
-		h.Lark.SendMarkdown(ctx, title, digest)
+		_ = h.Lark.SendMarkdown(ctx, title, digest)
 	} else if h.Teams != nil && h.Teams.Available() {
-		h.Teams.SendCard(ctx, title, digest)
+		_ = h.Teams.SendCard(ctx, title, digest)
 	}
 
 	return textResult(fmt.Sprintf("%s\n\n%s", title, digest)), nil
