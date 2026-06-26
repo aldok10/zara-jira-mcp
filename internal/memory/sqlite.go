@@ -421,9 +421,11 @@ func scanBlockers(rows *sql.Rows) ([]domain.Blocker, error) {
 	var out []domain.Blocker
 	for rows.Next() {
 		var b domain.Blocker
-		if err := rows.Scan(&b.ID, &b.IssueKey, &b.Description, &b.BlockedSince, &b.ResolvedAt, &b.Resolution, &b.Owner, &b.DaysBlocked); err != nil {
+		var resolution sql.NullString
+		if err := rows.Scan(&b.ID, &b.IssueKey, &b.Description, &b.BlockedSince, &b.ResolvedAt, &resolution, &b.Owner, &b.DaysBlocked); err != nil {
 			return nil, err
 		}
+		b.Resolution = resolution.String
 		out = append(out, b)
 	}
 	return out, rows.Err()

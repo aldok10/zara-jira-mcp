@@ -427,7 +427,7 @@ func (h *Handlers) UpdateIssue(ctx context.Context, req mcp.CallToolRequest) (*m
 
 // Health returns server version and status.
 func (h *Handlers) Health(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return textResult("zara-jira-mcp v0.2.0 | status: ok"), nil
+	return textResult("zara-jira-mcp v0.3.0 | status: ok | tools: 139"), nil
 }
 
 func textResult(text string) *mcp.CallToolResult {

@@ -417,7 +417,7 @@ func TestHealth(t *testing.T) {
 	}
 
 	text := resultText(result)
-	if !strings.Contains(text, "v0.2.0") {
+	if !strings.Contains(text, "v0.3.0") {
 		t.Errorf("expected version in output, got: %s", text)
 	}
 	if !strings.Contains(text, "ok") {
