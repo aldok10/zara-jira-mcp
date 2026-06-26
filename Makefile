@@ -1,10 +1,10 @@
-.PHONY: build install run test clean lint docker-build docker-run
+.PHONY: build install run test test-cover lint clean tidy docker-build docker-run
 
 BINARY := zara-jira-mcp
-VERSION := 0.1.0
+VERSION := 0.3.0
 
 build:
-	go build -ldflags="-s -w" -o bin/$(BINARY) ./cmd/server
+	go build -ldflags="-s -w -X main.version=$(VERSION)" -o bin/$(BINARY) ./cmd/server
 
 install: build
 	cp bin/$(BINARY) $(HOME)/.local/bin/$(BINARY)
@@ -13,7 +13,10 @@ run:
 	go run ./cmd/server
 
 test:
-	go test ./...
+	go test ./... -count=1
+
+test-cover:
+	go test ./application/tools/ -cover -count=1
 
 lint:
 	golangci-lint run ./...
