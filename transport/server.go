@@ -32,6 +32,8 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerLinkWorklogTools(s, handlers)
 	registerFlowTools(s, handlers)
 	registerForecastTools(s, handlers)
+	registerStakeholderTools(s, handlers)
+	registerRecipeTools(s, handlers)
 
 	return &MCPServer{s: s}
 }
@@ -697,5 +699,76 @@ func registerForecastTools(s *server.MCPServer, h *tools.Handlers) {
 			mcp.WithNumber("days", mcp.Description("Days without update to consider stale (default: 90)")),
 		),
 		h.BacklogGroom,
+	)
+}
+
+func registerRecipeTools(s *server.MCPServer, h *tools.Handlers) {
+	s.AddTool(mcp.NewTool("pm_recipe_start_work",
+		mcp.WithDescription("Start working on an issue: assigns to you, transitions to In Progress, suggests git branch name. One-click workflow."),
+		mcp.WithString("key", mcp.Required(), mcp.Description("Issue key")),
+		mcp.WithString("assignee_id", mcp.Description("Your account ID (use jira_find_user to look up)")),
+	), h.RecipeStartWork)
+
+	s.AddTool(mcp.NewTool("pm_recipe_done",
+		mcp.WithDescription("Mark issue as done: transitions to Done, optionally logs time and adds completion comment."),
+		mcp.WithString("key", mcp.Required(), mcp.Description("Issue key")),
+		mcp.WithString("time_spent", mcp.Description("Time to log (e.g. '2h', '30m')")),
+		mcp.WithString("comment", mcp.Description("Completion comment")),
+	), h.RecipeDone)
+
+	s.AddTool(mcp.NewTool("pm_recipe_block",
+		mcp.WithDescription("Flag an issue as blocked: records blocker in memory, adds comment to issue, creates impediment trail."),
+		mcp.WithString("key", mcp.Required(), mcp.Description("Issue key")),
+		mcp.WithString("reason", mcp.Required(), mcp.Description("Why is it blocked?")),
+		mcp.WithString("owner", mcp.Description("Who should resolve this?")),
+	), h.RecipeBlock)
+}
+
+func registerStakeholderTools(s *server.MCPServer, h *tools.Handlers) {
+	s.AddTool(
+		mcp.NewTool("pm_exec_report",
+			mcp.WithDescription("Generate executive stakeholder report. Business outcomes, risks, team health — no jargon, no story points. Written for a VP with 30 seconds."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+			mcp.WithBoolean("send_to_lark", mcp.Description("Send to Lark group")),
+		),
+		h.ExecutiveReport,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_scorecard",
+			mcp.WithDescription("Sprint scorecard: quantified 0-100 grade across completion, goal focus, predictability, quality, team balance."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.SprintScorecard,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_team_kb",
+			mcp.WithDescription("Team knowledge base: DoD, decisions, patterns, metrics, retro themes. Ask questions or browse. Great for onboarding."),
+			mcp.WithNumber("board_id", mcp.Description("Board ID for metrics context")),
+			mcp.WithString("question", mcp.Description("Ask a question about how the team works (AI-powered answer)")),
+		),
+		h.TeamKnowledgeBase,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_record_learning",
+			mcp.WithDescription("Record a team learning or tribal knowledge. Builds searchable institutional memory."),
+			mcp.WithString("title", mcp.Required(), mcp.Description("Learning title")),
+			mcp.WithString("learning", mcp.Required(), mcp.Description("What was learned")),
+			mcp.WithString("context", mcp.Description("What situation triggered this learning")),
+			mcp.WithString("tags", mcp.Description("Comma-separated tags")),
+			mcp.WithString("author", mcp.Description("Who learned this")),
+		),
+		h.RecordLearning,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_weekly_digest",
+			mcp.WithDescription("Generate weekly team digest: decisions, risks, blockers, wins, concerns. AI-summarized from all week's activity."),
+			mcp.WithNumber("board_id", mcp.Description("Board ID")),
+			mcp.WithBoolean("send_to_lark", mcp.Description("Send digest to Lark")),
+		),
+		h.WeeklyDigest,
 	)
 }
