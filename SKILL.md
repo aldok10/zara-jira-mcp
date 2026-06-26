@@ -215,25 +215,22 @@ Module names: `jira`, `pm`, `ai`, `notifications`, `stakeholder`, `portfolio`, `
 
 ---
 
-### Communication Intelligence (~17 tools)
+### Communication Intelligence (~14 tools)
 
 | Tool | Framework | Purpose |
-|------|-----------|---------|
+|------|-----------|---------
 | `pm_comms_health` | Signal-over-Noise | Communication health score 0-100 (decision velocity, blocker resolution, action follow-through, engagement) |
-| `pm_comms_anti_patterns` | Community Smells | Detect: re-deciding, dead actions, escalation hoarding, ghost stakeholders, blocker silence |
+| `pm_comms_anti_patterns` | Community Smells | Detect: re-deciding, escalation hoarding, ghost stakeholders, blocker silence |
 | `pm_silence_detector` | Ghost Stakeholders | Find stakeholders with no recent activity |
 | `pm_lencioni` | 5 Dysfunctions | Map team data to Lencioni pyramid levels with coaching per level |
 | `pm_trust_signals` | Trust Pyramid | Dashboard: forecast accuracy, escalation responsiveness, consistency, transparency |
 | `pm_hard_conversation` | Crucial Conversations | Prep difficult conversations: facts + stories + SCARF risks + opening lines |
-| `pm_nvc_reframe` | NVC (Rosenberg) | Rewrite blaming language → Observation/Feeling/Need/Request |
-| `pm_communicate` | Minto Pyramid | Generate audience-specific structured messages |
-| `pm_feedback_prep` | SBI Model | AI-generate structured feedback from team data |
-| `pm_escalation_draft` | Pyramid + TIRED | Draft escalation: ask + context + impact + next step + deadline |
+| `pm_nvc_reframe` | NVC (Rosenberg) | Rewrite blaming language into Observation/Feeling/Need/Request |
+| `pm_communicate` | Minto Pyramid | Generate or rewrite audience-specific messages (also absorbs pm_compose) |
+| `pm_feedback_prep` | SBI + data | AI-generate structured feedback from team metrics |
+| `pm_escalation_draft` | BLUF + TIRED | Draft escalation: ask + context + impact + next step + deadline |
 | `pm_decision_record` | ADR/MADR | Enhanced decision record with alternatives + consequences |
-| `pm_compose` | Minto + BLUF | Adapt content for target audience |
 | `pm_status_draft` | Pyramid + data | Auto-pull sprint data, format for audience |
-| `pm_feedback_coach` | SBI + Radical Candor | Help give feedback with exact words |
-| `pm_escalate_message` | SCQA | Situation-Complication-Question-Answer escalation |
 | `pm_announce_decision` | DACI | Communicate decisions with roles and rationale |
 | `pm_comms_plan` | RACI + Timing | Generate communication plan: who, what, when, channel |
 
