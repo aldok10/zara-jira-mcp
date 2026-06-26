@@ -26,11 +26,11 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	enabled := enabledModules()
 
 	modules := map[string][]regFunc{
-		"jira": {registerJiraTools, registerIssueOpsTools, registerEpicSprintTools, registerBulkProjectTools, registerLinkWorklogTools, registerVersionTools, registerTraceTools},
+		"jira":          {registerJiraTools, registerIssueOpsTools, registerEpicSprintTools, registerBulkProjectTools, registerLinkWorklogTools, registerVersionTools, registerTraceTools},
 		"pm": {registerPMTools, registerMemoryTools, registerPMIntelTools, registerAdvancedPMTools, registerDeepPMTools, registerFlowTools, registerForecastTools, registerProcessTools, registerRecipeTools, registerCareTools, registerCoachingTools, registerOutcomeTools, registerTechSkillTools},
 		"ai": {registerAITools},
 		"notifications": {registerLarkTools, registerSlackTools, registerPlatformTools, registerRoutingTools},
-		"stakeholder": {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools},
+		"stakeholder": {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools},
 		"portfolio": {registerPortfolioTools},
 		"github": {registerGitHubTools, registerGitHubFullTools, registerGitIntegrationTools},
 		"integrations": {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools},
@@ -53,11 +53,14 @@ func enabledModules() map[string]bool {
 	profile := os.Getenv("PM_PROFILE")
 	switch profile {
 	case "unified":
-		// 1 tool only: mega-router. For ChatGPT Desktop, slow clients.
+		// 1 tool only: mega-router. For ChatGPT Desktop, ultra-slow clients.
 		return map[string]bool{"unified": true}
+	case "chatgpt":
+		// ~8 tools: shortcuts only. Best for ChatGPT Desktop, mobile, constrained clients.
+		return map[string]bool{"shortcuts": true}
 	case "lite":
-		// ~30 tools: essentials only, fast on any client
-		return map[string]bool{"jira": true, "pm": true, "shortcuts": true}
+		// ~30 tools: shortcuts + AI. Good for Copilot, lightweight use.
+		return map[string]bool{"shortcuts": true, "ai": true, "pm": true}
 	case "standard":
 		// ~80 tools: daily PM work + notifications
 		return map[string]bool{"jira": true, "pm": true, "ai": true, "notifications": true, "shortcuts": true}

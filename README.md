@@ -75,6 +75,34 @@ Works with **any** MCP-compatible client. Stdio transport, zero external depende
 
 Pre-built config files included for all platforms. See [docs/agents/](docs/agents/) for copy-paste setup per client.
 
+## Performance Profiles (Keep Your AI Fast)
+
+224 tools can make ChatGPT Desktop or Claude Desktop slow. Use a profile to load only what you need:
+
+| Profile | Tools | Best For |
+|---------|-------|----------|
+| `lite` | ~30 | ChatGPT Desktop on slower machines |
+| `pm` | ~60 | **Recommended for PM/SM** — all PM tools, no dev clutter |
+| `standard` | ~100 | PM + all notification channels |
+| `full` | ~150 | PM + GitHub/developer visibility |
+| (none) | ~224 | Developers who want everything |
+
+Set via environment variable in your config:
+```json
+{
+  "mcpServers": {
+    "jira-pm": {
+      "command": "zara-jira-mcp",
+      "env": {
+        "PM_PROFILE": "pm"
+      }
+    }
+  }
+}
+```
+
+> Full details: [docs/profiles.md](docs/profiles.md)
+
 ## Quick Start
 
 ```bash
