@@ -19,7 +19,7 @@ func (h *Handlers) RecipeStartWork(ctx context.Context, req mcp.CallToolRequest)
 
 	issue, err := h.Jira.GetIssue(ctx, key)
 	if err != nil {
-		return errorResult("Failed to get issue: " + err.Error()), nil
+		return sanitizedError("Failed to get issue", err), nil
 	}
 
 	transitions, _ := h.Jira.GetTransitions(ctx, key)

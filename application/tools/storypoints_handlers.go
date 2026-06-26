@@ -33,7 +33,7 @@ func (h *Handlers) StoryPointsSummary(ctx context.Context, req mcp.CallToolReque
 
 	result, err := h.Jira.SearchIssues(ctx, jql, 100, 0)
 	if err != nil {
-		return errorResult("Search failed: " + err.Error()), nil
+		return sanitizedError("Search failed", err), nil
 	}
 
 	// Calculate totals
@@ -125,7 +125,7 @@ func (h *Handlers) SprintPointsBurndown(ctx context.Context, req mcp.CallToolReq
 	sprint := sprints[0]
 	issues, err := h.Jira.GetSprintIssues(ctx, sprint.ID)
 	if err != nil {
-		return errorResult("Failed to get issues: " + err.Error()), nil
+		return sanitizedError("Failed to get issues", err), nil
 	}
 
 	var totalPts, donePts, inProgressPts, todoPts, blockedPts float64

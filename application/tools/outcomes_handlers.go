@@ -168,7 +168,7 @@ func (h *Handlers) PMStakeholderPulse(ctx context.Context, req mcp.CallToolReque
 	_, execErr := db.Exec("INSERT INTO stakeholder_pulse (stakeholder, score, sprint_name, feedback) VALUES (?, ?, ?, ?)",
 		stakeholder, score, sprintName, feedback)
 	if execErr != nil {
-		return errorResult("Failed to save: " + execErr.Error()), nil
+		return sanitizedError("failed to save stakeholder pulse", execErr), nil
 	}
 
 	return textResult(fmt.Sprintf("Recorded: %s satisfaction %d/5 for %s.", stakeholder, score, sprintName)), nil
@@ -351,7 +351,7 @@ Be concise. No fluff. Data-driven verdict.`
 
 	result, aiErr := h.aiComplete(ctx, systemPrompt, contextData.String())
 	if aiErr != nil {
-		return errorResult("AI analysis failed: " + aiErr.Error()), nil
+		return sanitizedError("failed ai analysis for team autonomy", aiErr), nil
 	}
 
 	return textResult(result), nil
@@ -382,7 +382,7 @@ func (h *Handlers) PMOutcomeMap(ctx context.Context, req mcp.CallToolRequest) (*
 	_, execErr := db.Exec("INSERT INTO outcome_map (sprint_name, objective, key_results, board_id) VALUES (?, ?, ?, ?)",
 		sprintName, objective, keyResults, boardID)
 	if execErr != nil {
-		return errorResult("Failed to save: " + execErr.Error()), nil
+		return sanitizedError("failed to save outcome map", execErr), nil
 	}
 
 	msg := fmt.Sprintf("Mapped: Sprint '%s' serves objective '%s'.", sprintName, objective)

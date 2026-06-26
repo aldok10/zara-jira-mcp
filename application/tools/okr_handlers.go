@@ -86,7 +86,7 @@ func (h *Handlers) PMOKRDefine(ctx context.Context, req mcp.CallToolRequest) (*m
 	result, execErr := db.Exec("INSERT INTO okr (level, title, description, owner, cycle) VALUES (?, ?, ?, ?, ?)",
 		level, title, description, owner, cycle)
 	if execErr != nil {
-		return errorResult("Failed: " + execErr.Error()), nil
+		return sanitizedError("failed to define OKR", execErr), nil
 	}
 
 	type lastIDer interface{ LastInsertId() (int64, error) }
@@ -392,7 +392,7 @@ func (h *Handlers) PMKPIDefine(ctx context.Context, req mcp.CallToolRequest) (*m
 	_, execErr := db.Exec(`INSERT INTO kpi_definition (name, description, formula, unit, target_value, warning_threshold, danger_threshold)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`, name, description, formula, unit, targetValue, warningThreshold, dangerThreshold)
 	if execErr != nil {
-		return errorResult("Failed: " + execErr.Error()), nil
+		return sanitizedError("failed to define KPI", execErr), nil
 	}
 
 	msg := fmt.Sprintf("KPI defined: '%s'", name)
@@ -427,7 +427,7 @@ func (h *Handlers) PMKPISnapshot(ctx context.Context, req mcp.CallToolRequest) (
 	_, execErr := db.Exec("INSERT INTO kpi_snapshot (kpi_id, value, sprint_name, notes) VALUES (?, ?, ?, ?)",
 		kpiID, value, sprintName, notes)
 	if execErr != nil {
-		return errorResult("Failed: " + execErr.Error()), nil
+		return sanitizedError("failed to record KPI snapshot", execErr), nil
 	}
 
 	// Get name + thresholds for status

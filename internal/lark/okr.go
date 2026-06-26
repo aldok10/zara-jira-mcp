@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -75,7 +76,8 @@ func (c *OKRClient) ListPeriods(ctx context.Context) ([]Period, error) {
 
 // ListUserOKRs returns OKRs for a user in a period.
 func (c *OKRClient) ListUserOKRs(ctx context.Context, userID, periodID string) ([]Objective, error) {
-	url := fmt.Sprintf("https://open.larksuite.com/open-apis/okr/v1/users/%s/okrs?period_id=%s&user_id_type=open_id", userID, periodID)
+	url := fmt.Sprintf("https://open.larksuite.com/open-apis/okr/v1/users/%s/okrs?period_id=%s&user_id_type=open_id",
+		url.PathEscape(userID), url.QueryEscape(periodID))
 	body, err := c.get(ctx, url)
 	if err != nil {
 		return nil, err

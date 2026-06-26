@@ -54,6 +54,9 @@ func (h *Handlers) LarkOKRPull(ctx context.Context, req mcp.CallToolRequest) (*m
 	if err != nil {
 		return errorResult("user_id required (Lark open_id)"), nil
 	}
+	if strings.ContainsAny(userID, "/:\\?#") {
+		return errorResult("invalid user_id format"), nil
+	}
 	periodID, err := req.RequireString("period_id")
 	if err != nil {
 		return errorResult("period_id required (use lark_okr_periods to find)"), nil

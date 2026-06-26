@@ -303,7 +303,7 @@ End with a one-sentence overall verdict.
 Use the team signals below as evidence. Be honest but constructive. Under 300 words.`,
 		strings.Join(signals, "\n"))
 	if err != nil {
-		return errorResult("AI failed: "+err.Error()), nil
+		return sanitizedError("AI failed", err), nil
 	}
 	return textResult("Project Aristotle Assessment\n\n" + result), nil
 }
