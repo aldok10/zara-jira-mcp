@@ -386,7 +386,7 @@ Be concise and data-driven. Reference specific ticket keys when relevant.`
 	userPrompt := fmt.Sprintf("PM's question: %s\n\nJira tickets (%d total, showing %d):\n%s",
 		query, result.Total, len(result.Issues), issueContext.String())
 
-	analysis, err := h.AI.Complete(ctx, systemPrompt, userPrompt)
+	analysis, err := h.aiComplete(ctx, systemPrompt, userPrompt)
 	if err != nil {
 		return errorResult("AI analysis failed: " + err.Error()), nil
 	}
@@ -448,7 +448,7 @@ Format in markdown. Keep it under 500 words.`
 	userPrompt := fmt.Sprintf("Sprint: %s\nGoal: %s\nTotal issues: %d\n\n%s",
 		sprint.Name, sprint.Goal, len(issues), issueContext.String())
 
-	report, err := h.AI.Complete(ctx, systemPrompt, userPrompt)
+	report, err := h.aiComplete(ctx, systemPrompt, userPrompt)
 	if err != nil {
 		return errorResult("AI report generation failed: " + err.Error()), nil
 	}

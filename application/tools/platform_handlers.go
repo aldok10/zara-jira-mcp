@@ -12,6 +12,9 @@ import (
 // Discord handlers
 
 func (h *Handlers) DiscordSend(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	if !h.CheckNotificationBudget() {
+		return errorResult("Daily notification budget exceeded (5/day)."), nil
+	}
 	if h.Discord == nil || !h.Discord.Available() {
 		return errorResult("Discord not configured. Set DISCORD_BOT_TOKEN."), nil
 	}
@@ -37,6 +40,9 @@ func (h *Handlers) DiscordSend(ctx context.Context, req mcp.CallToolRequest) (*m
 // Telegram handlers
 
 func (h *Handlers) TelegramSend(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	if !h.CheckNotificationBudget() {
+		return errorResult("Daily notification budget exceeded (5/day)."), nil
+	}
 	if h.Telegram == nil || !h.Telegram.Available() {
 		return errorResult("Telegram not configured. Set TELEGRAM_BOT_TOKEN."), nil
 	}
@@ -53,6 +59,7 @@ func (h *Handlers) TelegramSend(ctx context.Context, req mcp.CallToolRequest) (*
 	if err := h.Telegram.SendMessage(ctx, chatID, text); err != nil {
 		return errorResult("Telegram send failed: " + err.Error()), nil
 	}
+	h.LogNotification("telegram", "medium", text[:min(len(text), 100)])
 	return textResult("Message sent to Telegram."), nil
 }
 

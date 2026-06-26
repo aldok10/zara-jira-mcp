@@ -122,7 +122,7 @@ Be practical — a story doesn't need perfection, just enough clarity to start w
 	issueData := fmt.Sprintf("Issue: %s\nSummary: %s\nType: %s\nDescription: %s\nLabels: %s\nPriority: %s\n\n%s",
 		issue.Key, issue.Summary, issue.Type, issue.Description, strings.Join(issue.Labels, ","), issue.Priority, dorContext)
 
-	analysis, err := h.AI.Complete(ctx, systemPrompt, issueData)
+	analysis, err := h.aiComplete(ctx, systemPrompt, issueData)
 	if err != nil {
 		return errorResult("AI failed: " + err.Error()), nil
 	}

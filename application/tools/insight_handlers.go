@@ -36,7 +36,7 @@ func (h *Handlers) initInsightTables() {
 
 // TrackToolUsage records a tool call.
 func (h *Handlers) TrackToolUsage(toolName string) {
-	if h.Memory == nil {
+	if h.Memory == nil || h.Memory.DB() == nil {
 		return
 	}
 	h.initInsightTables()
@@ -192,7 +192,7 @@ func (h *Handlers) PMNotificationBudgetCheck(ctx context.Context, req mcp.CallTo
 
 // CheckNotificationBudget returns true if within daily budget.
 func (h *Handlers) CheckNotificationBudget() bool {
-	if h.Memory == nil {
+	if h.Memory == nil || h.Memory.DB() == nil {
 		return true
 	}
 	h.initInsightTables()
@@ -204,7 +204,7 @@ func (h *Handlers) CheckNotificationBudget() bool {
 
 // LogNotification records a sent notification.
 func (h *Handlers) LogNotification(channel, severity, title string) {
-	if h.Memory == nil {
+	if h.Memory == nil || h.Memory.DB() == nil {
 		return
 	}
 	h.initInsightTables()

@@ -105,4 +105,20 @@ func registerCommsGapTools(s *server.MCPServer, h *tools.Handlers) {
 		mcp.WithDescription("Recall context notes about a subject."),
 		mcp.WithString("subject", mcp.Description("Filter by subject")),
 	), h.PMContextRecall)
+
+	// Proactive intelligence
+	s.AddTool(mcp.NewTool("pm_burnout_risk",
+		mcp.WithDescription("Per-person burnout risk score from WIP, assignment load, carryover, blockers."),
+		mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+	), h.PMBurnoutRisk)
+
+	s.AddTool(mcp.NewTool("pm_reality_check",
+		mcp.WithDescription("Velocity vs actual delivery. Detects 'productivity theater'."),
+		mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+	), h.PMRealityCheck)
+
+	s.AddTool(mcp.NewTool("pm_safety_signals",
+		mcp.WithDescription("Psychological safety from observable behaviors (retros, bugs, blockers, decisions)."),
+		mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+	), h.PMSafetySignals)
 }

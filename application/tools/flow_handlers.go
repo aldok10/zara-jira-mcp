@@ -260,7 +260,7 @@ Keep it engaging for stakeholders, not just devs. Under 150 words.`,
 		userPrompt = "No specific context available. Generate generic but useful facilitation prompts."
 	}
 
-	result, err := h.AI.Complete(ctx, systemPrompt, userPrompt)
+	result, err := h.aiComplete(ctx, systemPrompt, userPrompt)
 	if err != nil {
 		return errorResult("AI failed: " + err.Error()), nil
 	}
@@ -348,7 +348,7 @@ Based on the sprint data and goal definition, assess:
 3. What needs to happen to achieve the goal
 Keep it to 3-4 bullet points. Be honest.`
 
-	analysis, err := h.AI.Complete(ctx, systemPrompt, sb.String())
+	analysis, err := h.aiComplete(ctx, systemPrompt, sb.String())
 	if err != nil {
 		return textResult(sb.String()), nil // fallback to raw data
 	}

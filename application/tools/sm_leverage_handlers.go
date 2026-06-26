@@ -460,7 +460,7 @@ Rules:
 - Business language only
 - Format: 3-4 short sentences max`
 
-	report, err := h.AI.Complete(ctx, systemPrompt, contextData.String())
+	report, err := h.aiComplete(ctx, systemPrompt, contextData.String())
 	if err != nil {
 		return textResult("Stakeholder Update:\n\n" + contextData.String()), nil
 	}

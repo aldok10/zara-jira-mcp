@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	jira "github.com/felixgeelhaar/jirasdk"
@@ -19,6 +20,31 @@ import (
 	domain "github.com/aldok10/zara-jira-mcp/domain/jira"
 )
 
+type rateLimiter struct {
+	mu     sync.Mutex
+	tokens int
+	max    int
+	last   time.Time
+}
+
+func (r *rateLimiter) wait() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	refill := int(time.Since(r.last).Seconds() / 60.0 * float64(r.max))
+	if refill > 0 {
+		r.tokens += refill
+		if r.tokens > r.max {
+			r.tokens = r.max
+		}
+		r.last = time.Now()
+	}
+	if r.tokens <= 0 {
+		time.Sleep(time.Second)
+		r.tokens = 1
+	}
+	r.tokens--
+}
+
 // RestClient wraps jirasdk.Client and implements domain.Client.
 type RestClient struct {
 	sdk     *jira.Client
@@ -26,6 +52,7 @@ type RestClient struct {
 	email   string
 	token   string
 	http    *http.Client
+	limiter *rateLimiter
 }
 
 func NewRestClient(cfg *config.Config) (*RestClient, error) {
@@ -43,6 +70,7 @@ func NewRestClient(cfg *config.Config) (*RestClient, error) {
 		email:   cfg.Jira.Email,
 		token:   cfg.Jira.Token,
 		http:    &http.Client{Timeout: 30 * time.Second},
+		limiter: &rateLimiter{max: 60, tokens: 60, last: time.Now()},
 	}, nil
 }
 
@@ -898,6 +926,7 @@ func (c *RestClient) GetProject(ctx context.Context, key string) (*domain.Projec
 }
 
 func (c *RestClient) RawRequest(ctx context.Context, method, path string, body []byte) ([]byte, int, error) {
+	c.limiter.wait()
 	fullURL := c.baseURL + path
 	var bodyReader io.Reader
 	if len(body) > 0 {
@@ -917,7 +946,7 @@ func (c *RestClient) RawRequest(ctx context.Context, method, path string, body [
 		return nil, 0, err
 	}
 	defer resp.Body.Close()
-	respBody, _ := io.ReadAll(resp.Body)
+	respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	return respBody, resp.StatusCode, nil
 }
 

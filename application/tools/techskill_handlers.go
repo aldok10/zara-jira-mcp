@@ -54,7 +54,7 @@ func (h *Handlers) TechGlossary(ctx context.Context, req mcp.CallToolRequest) (*
 		}
 		// AI explain
 		systemPrompt := "Explain this technical concept to a non-technical PM/Scrum Master in 2-3 sentences. Include: what it is, why it matters for the PM, and what question the PM should ask developers about it."
-		result, err := h.AI.Complete(ctx, systemPrompt, "Explain: "+term)
+		result, err := h.aiComplete(ctx, systemPrompt, "Explain: "+term)
 		if err != nil {
 			return textResult(fmt.Sprintf("Term '%s' not in glossary. Ask your developers to explain it — showing curiosity builds trust.", term)), nil
 		}

@@ -39,7 +39,7 @@ Keep it under 150 words. Professional but human.`
 	data := fmt.Sprintf("Decision: %s\nContext: %s\nDriver: %s\nApprover: %s\nContributors: %s\nInformed: %s",
 		decision, contextStr, driver, approver, contributors, informed)
 
-	result, err := h.AI.Complete(ctx, systemPrompt, data)
+	result, err := h.aiComplete(ctx, systemPrompt, data)
 	if err != nil {
 		return textResult("DECISION: " + decision + "\nDriver: " + driver + "\nApprover: " + approver), nil
 	}
@@ -103,7 +103,7 @@ func (h *Handlers) AdaptMessage(ctx context.Context, req mcp.CallToolRequest) (*
 		return errorResult("audience must be one of: executive, po, team, engineering, stakeholder"), nil
 	}
 
-	result, err := h.AI.Complete(ctx, prompt, message)
+	result, err := h.aiComplete(ctx, prompt, message)
 	if err != nil {
 		return textResult(message), nil
 	}
@@ -138,7 +138,7 @@ Rules:
 
 	data := fmt.Sprintf("Situation: %s\nBehavior: %s\nImpact: %s", situation, behavior, impact)
 
-	result, err := h.AI.Complete(ctx, systemPrompt, data)
+	result, err := h.aiComplete(ctx, systemPrompt, data)
 	if err != nil {
 		return textResult(fmt.Sprintf("FEEDBACK (SBI)\n\nSituation: %s\nBehavior: %s\nImpact: %s", situation, behavior, impact)), nil
 	}
@@ -206,7 +206,7 @@ func (h *Handlers) WriteUpdate(ctx context.Context, req mcp.CallToolRequest) (*m
 		prompt = prompts["team"]
 	}
 
-	result, err := h.AI.Complete(ctx, prompt, data.String())
+	result, err := h.aiComplete(ctx, prompt, data.String())
 	if err != nil {
 		return textResult(data.String()), nil
 	}
@@ -243,7 +243,7 @@ Keep practical. Under 200 words.`
 
 	inputData := fmt.Sprintf("Topic: %s\nStakeholders: %s\nUrgency: %s", topic, stakeholders, urgency)
 
-	result, err := h.AI.Complete(ctx, systemPrompt, inputData)
+	result, err := h.aiComplete(ctx, systemPrompt, inputData)
 	if err != nil {
 		return errorResult("AI failed: " + err.Error()), nil
 	}

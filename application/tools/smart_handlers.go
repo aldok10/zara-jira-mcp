@@ -30,7 +30,7 @@ func (h *Handlers) PMSmart(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 	case containsAny(lower, "help"): return h.PMHelp(ctx, req)
 	default:
 		if h.AI != nil {
-			r, e := h.AI.Complete(ctx, "Concise PM assistant. 2-3 sentences.", ask)
+			r, e := h.aiComplete(ctx, "Concise PM assistant. 2-3 sentences.", ask)
 			if e == nil { return mcp.NewToolResultText(r), nil }
 		}
 		return h.PMHelp(ctx, req)

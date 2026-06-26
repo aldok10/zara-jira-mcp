@@ -11,6 +11,9 @@ import (
 
 // NotifyRouted sends a notification to the optimal channel based on severity, audience, and time.
 func (h *Handlers) NotifyRouted(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	if !h.CheckNotificationBudget() {
+		return errorResult("Daily notification budget exceeded (5/day). Use pm_notification_budget to check."), nil
+	}
 	content, err := req.RequireString("content")
 	if err != nil {
 		return errorResult("content parameter required"), nil
@@ -74,6 +77,7 @@ func (h *Handlers) NotifyRouted(ctx context.Context, req mcp.CallToolRequest) (*
 	if len(results) == 0 {
 		return textResult("No channels configured for this route. Configure at least one notification platform."), nil
 	}
+	h.LogNotification("routed", severity, title)
 	return textResult(fmt.Sprintf("Routed [%s/%s]:\n%s", severity, audience, strings.Join(results, "\n"))), nil
 }
 

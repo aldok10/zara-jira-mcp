@@ -102,7 +102,7 @@ Write a concise report (under 250 words) with these sections:
 
 Tone: confident, concise, no jargon. Write for a VP who has 30 seconds.`
 
-	report, err := h.AI.Complete(ctx, systemPrompt, contextData.String())
+	report, err := h.aiComplete(ctx, systemPrompt, contextData.String())
 	if err != nil {
 		return errorResult("AI failed: " + err.Error()), nil
 	}
@@ -318,7 +318,7 @@ Answer based ONLY on the provided data. If you don't have data to answer, say so
 Be concise and helpful. Format as bullet points.`
 
 		userPrompt := fmt.Sprintf("Question: %s\n\nTeam Knowledge Base:\n%s", question, kb.String())
-		answer, err := h.AI.Complete(ctx, systemPrompt, userPrompt)
+		answer, err := h.aiComplete(ctx, systemPrompt, userPrompt)
 		if err != nil {
 			return textResult(kb.String()), nil
 		}
@@ -440,7 +440,7 @@ Format:
 
 Keep under 150 words. Be specific, reference the data.`
 
-	digest, err := h.AI.Complete(ctx, systemPrompt, contextData.String())
+	digest, err := h.aiComplete(ctx, systemPrompt, contextData.String())
 	if err != nil {
 		return textResult(contextData.String()), nil
 	}

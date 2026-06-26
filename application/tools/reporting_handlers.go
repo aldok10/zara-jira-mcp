@@ -79,7 +79,7 @@ func (h *Handlers) ReportToPO(ctx context.Context, req mcp.CallToolRequest) (*mc
 4. Any scope changes recommended
 Keep it under 200 words. Use clear, non-technical language.`
 
-	report, err := h.AI.Complete(ctx, systemPrompt, data.String())
+	report, err := h.aiComplete(ctx, systemPrompt, data.String())
 	if err != nil {
 		return textResult("PO Briefing:\n\n" + data.String()), nil
 	}
@@ -139,7 +139,7 @@ func (h *Handlers) EscalationBrief(ctx context.Context, req mcp.CallToolRequest)
 
 Keep professional, concise, action-oriented. No jargon.`
 
-	report, err := h.AI.Complete(ctx, systemPrompt, data.String())
+	report, err := h.aiComplete(ctx, systemPrompt, data.String())
 	if err != nil {
 		return textResult(data.String()), nil
 	}

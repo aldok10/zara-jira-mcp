@@ -287,7 +287,7 @@ Format:
 
 Keep it under 200 words. Be direct.`, topic)
 
-	result, err := h.AI.Complete(ctx, systemPrompt, contextData.String())
+	result, err := h.aiComplete(ctx, systemPrompt, contextData.String())
 	if err != nil {
 		return errorResult("AI failed: " + err.Error()), nil
 	}
@@ -390,7 +390,7 @@ Examples:
 - "my open bugs" -> assignee = currentUser() AND issuetype = Bug AND resolution = Unresolved
 - "high priority tasks in current sprint" -> priority in (High, Highest) AND sprint in openSprints() AND resolution = Unresolved`
 
-	result, err := h.AI.Complete(ctx, systemPrompt, query)
+	result, err := h.aiComplete(ctx, systemPrompt, query)
 	if err != nil {
 		return errorResult("AI conversion failed: " + err.Error()), nil
 	}

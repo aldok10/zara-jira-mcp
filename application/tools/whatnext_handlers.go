@@ -168,7 +168,7 @@ func (h *Handlers) OneOnOnePrep(ctx context.Context, req mcp.CallToolRequest) (*
 Focus on: growth opportunities, blockers to discuss, workload concerns, recognition.
 Be specific and actionable. No generic questions.`
 
-	suggestions, err := h.AI.Complete(ctx, systemPrompt, data.String())
+	suggestions, err := h.aiComplete(ctx, systemPrompt, data.String())
 	if err != nil {
 		data.WriteString("Suggested topics: workload balance, blockers, career growth, feedback\n")
 		return textResult(data.String()), nil
@@ -252,7 +252,7 @@ Structure:
 Tone: confident, transparent, stakeholder-friendly. Under 150 words.
 Do NOT list ticket IDs. Describe outcomes in business language.`
 
-	narrative, err := h.AI.Complete(ctx, systemPrompt, data.String())
+	narrative, err := h.aiComplete(ctx, systemPrompt, data.String())
 	if err != nil {
 		return textResult("Sprint Narrative:\n\n" + data.String()), nil
 	}

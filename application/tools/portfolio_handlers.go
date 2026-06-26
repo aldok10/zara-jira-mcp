@@ -148,7 +148,7 @@ func (h *Handlers) PortfolioSummary(ctx context.Context, req mcp.CallToolRequest
 Include: overall health assessment, top risks, blockers needing escalation, key numbers.
 Format: short paragraph + bullet points for action items.`
 
-	summary, err := h.AI.Complete(ctx, systemPrompt, ctxData.String())
+	summary, err := h.aiComplete(ctx, systemPrompt, ctxData.String())
 	if err != nil {
 		return textResult("Portfolio data:\n" + ctxData.String()), nil
 	}

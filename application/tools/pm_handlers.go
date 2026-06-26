@@ -97,7 +97,7 @@ Rules:
 	userPrompt := fmt.Sprintf("Focus: %s\n\nHistorical PM Data:\n%s\nGive me your top recommendations.",
 		focus, memoryContext.String())
 
-	analysis, err := h.AI.Complete(ctx, systemPrompt, userPrompt)
+	analysis, err := h.aiComplete(ctx, systemPrompt, userPrompt)
 	if err != nil {
 		return errorResult("AI analysis failed: " + err.Error()), nil
 	}
@@ -236,7 +236,7 @@ Generate a brief standup prep note for the PM/Scrum Master with:
 
 Keep it concise - this is a quick prep, not a report. Bullet points. Under 200 words.`
 
-	analysis, err := h.AI.Complete(ctx, systemPrompt, briefContext.String())
+	analysis, err := h.aiComplete(ctx, systemPrompt, briefContext.String())
 	if err != nil {
 		// Fallback: return raw context if AI fails
 		return textResult("Standup Prep (raw):\n\n" + briefContext.String()), nil
@@ -305,7 +305,7 @@ Based on historical sprint data, identify:
 Be data-driven. Reference specific sprints and metrics. No generic advice.
 If previous retro action items keep appearing without resolution, call it out.`
 
-	analysis, err := h.AI.Complete(ctx, systemPrompt, analysisContext.String())
+	analysis, err := h.aiComplete(ctx, systemPrompt, analysisContext.String())
 	if err != nil {
 		return errorResult("AI analysis failed: " + err.Error()), nil
 	}

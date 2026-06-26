@@ -4,9 +4,11 @@ Instructions for AI agents working with this project.
 
 ## What This Is
 
-`zara-jira-mcp` is a 124-tool MCP server that acts as an AI-powered Scrum Master with persistent memory. It connects to Jira Cloud, runs Monte Carlo forecasts, detects anti-patterns, manages risks/blockers/decisions, and sends notifications across Lark/Slack/Discord/Telegram/Teams/Email.
+`zara-jira-mcp` is a ~270-tool MCP server that acts as an AI-powered Scrum Master with persistent memory, empathy, and learning capability. It connects to Jira Cloud, runs Monte Carlo forecasts, detects anti-patterns, reads team sentiment, manages feedback lifecycles, and sends notifications across Lark/Slack/Discord/Telegram/Teams/Email.
 
-Built with Go 1.26. SQLite for persistent memory (14 tables). OpenAI-compatible API for AI intelligence.
+Built with Go 1.26. SQLite for persistent memory (16+ tables). OpenAI-compatible API for AI intelligence. Lark OKR bi-directional sync.
+
+**Design principle:** Tool-surface compression (BCG 2026, Microsoft Research). Use profiles to control tool count. For most use cases, start with `pm_smart`.
 
 ## First Things First
 
@@ -18,19 +20,33 @@ jira_boards -> returns board IDs
 
 Store the board_id. Almost every PM tool needs it.
 
+## Profiles (Tool-Surface Compression)
+
+Choose based on your context (BCG research: productivity peaks at 3 tools, degrades at 4+):
+
+| Profile | Tools | Best For |
+|---------|-------|----------|
+| `chatgpt` | ~14 | ChatGPT Desktop (token-limited) |
+| `lite` | ~100 | Solo PM, daily workflow |
+| `standard` | ~180 | Full PM team + Jira |
+| `full` | ~220 | Power user + GitHub + portfolio |
+| `all` | ~270 | Developer/debugging (all modules) |
+
+Set via `PM_PROFILE=chatgpt` or `PM_ENABLED_MODULES=jira,pm,ai`.
+
 ## Tool Categories
 
-| Category | Count | Use When |
-|----------|-------|----------|
-| Jira Operations | 45 | CRUD on issues, sprints, epics, bulk ops |
-| PM Memory | 20 | Recording decisions, risks, blockers, retros, team metrics |
-| AI Intelligence | 15 | Forecasting, coaching, anti-patterns, recommendations |
-| Process & Health | 18 | Sprint health, velocity, capacity, DoD/DoR, goals |
-| Escalation & Reporting | 8 | Executive reports, release notes, weekly digests |
-| Workflow Recipes | 3 | One-click start/done/block workflows |
-| Notifications | 9 | Multi-channel messaging |
-| Portfolio | 5 | Cross-project overview |
-| Calendar | 4 | Lark calendar events and meetings |
+| Category | Key Tools | Use When |
+|----------|-----------|----------|
+| Smart Router | `pm_smart`, `pm_do`, `pm_report`, `pm_team`, `pm_plan` | Don't know which tool — just ask |
+| Jira Operations | `jira_search`, `jira_get_issue`, `jira_create_issue` | CRUD on issues, sprints, epics |
+| PM Memory | `pm_record_decision`, `pm_record_risk`, `pm_record_blocker` | Record events immediately |
+| Intelligence | `pm_sentiment`, `pm_coaching`, `pm_anti_patterns` | Understand team state |
+| Communication | `pm_comms_nudge`, `pm_conversation_prep`, `pm_feedback_log` | Human-centered PM work |
+| OKR/KPI | `pm_okr_health`, `pm_okr_suggest`, `pm_kpi_trend` | Goal alignment |
+| Reporting | `pm_exec_report`, `pm_daily_digest`, `pm_forecast` | Stakeholder updates |
+| Notifications | `notify_routed`, `lark_send`, `slack_send` | Multi-channel messaging |
+| Lark OKR | `lark_okr_pull`, `lark_okr_sync` | Bi-directional OKR sync |
 
 ## Critical Rules
 
@@ -39,6 +55,8 @@ Store the board_id. Almost every PM tool needs it.
 3. **Record immediately.** After any decision, risk, or blocker: record it. Don't wait.
 4. **Never use `pm_dashboard` for executives.** Use `pm_exec_report` instead (no jargon, business outcomes only).
 5. **Run `pm_auto_detect_risks` weekly.** Proactive scanning catches problems early.
+6. **Use `pm_context_note` for human stories.** Record WHY someone is stuck, not just THAT they're stuck.
+7. **Close the feedback loop.** `pm_feedback_log` -> `pm_feedback_due` -> `pm_feedback_close`.
 
 ## Common Workflows
 
@@ -86,7 +104,7 @@ pm_stakeholder_pulse(stakeholder, score:1-5, feedback) -> track satisfaction
 
 ### Cross-Team Dependencies
 ```
-pm_dependencies -> who blocks whom, across teams
+pm_dependency_report -> who blocks whom, across teams
 portfolio_blockers -> all blockers across all projects
 portfolio_summary -> AI exec summary for steering committee
 ```
@@ -99,8 +117,46 @@ pm_maturity_assessment(board_id) -> team stage with evidence
 
 ### Team Seems Off
 ```
+pm_sentiment(board_id) -> read team mood from data signals + AI coaching
 pm_anti_patterns(board_id) -> zombie sprints, hero culture, scope creep
+pm_lencioni(board_id) -> 5 Dysfunctions diagnosis with coaching
 pm_coaching(topic:"team_dynamics", situation:"...")
+```
+
+### Report to PO / Product Owner
+```
+pm_goal_check(board_id) -> is sprint goal on track?
+pm_scope_creep(board_id) -> what changed mid-sprint without approval?
+pm_forecast(board_id, remaining_items:N) -> realistic delivery date
+```
+
+### Escalation to Management
+```
+pm_impediment_aging -> all blockers with age, chronic flags
+pm_escalate(board_id) -> auto-alert if risk/blocker > 3 days or health < 50
+pm_stakeholder_pulse(stakeholder, score:1-5, feedback) -> track satisfaction
+```
+
+### Difficult Conversation
+```
+pm_conversation_prep(type:"performance", context:"...", person:"...") -> framework-based prep
+pm_hard_conversation(situation:"...", person:"...") -> STATE + SBI + SCARF
+pm_nvc_reframe(message:"...") -> rewrite using Nonviolent Communication
+```
+
+### OKR Alignment
+```
+pm_okr_suggest(board_id) -> AI: which sprint items serve which OKRs?
+pm_okr_health -> progress vs time elapsed, flags at-risk objectives
+pm_kpi_trend(name:"cycle_time") -> single KPI trend over time
+pm_kpi_to_okr -> AI: suggest Key Results from current metrics
+```
+
+### Feedback Loop
+```
+pm_feedback_log(person, topic, type) -> record feedback given
+pm_feedback_due -> show overdue follow-ups
+pm_feedback_close(id, outcome) -> close the loop
 ```
 
 ## Reporting Guide
