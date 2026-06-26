@@ -22,6 +22,7 @@ import (
 	inotion "github.com/aldok10/zara-jira-mcp/internal/notion"
 	"github.com/aldok10/zara-jira-mcp/internal/pagerduty"
 	"github.com/aldok10/zara-jira-mcp/internal/sheets"
+	"github.com/aldok10/zara-jira-mcp/internal/database"
 	islack "github.com/aldok10/zara-jira-mcp/internal/slack"
 	iteams "github.com/aldok10/zara-jira-mcp/internal/teams"
 	itelegram "github.com/aldok10/zara-jira-mcp/internal/telegram"
@@ -49,6 +50,7 @@ type Handlers struct {
 	PagerDuty  *pagerduty.Client
 	Clockify   *clockify.Client
 	Sheets     *sheets.Client
+	Database   *database.Client
 }
 
 // SearchIssues searches Jira using JQL.

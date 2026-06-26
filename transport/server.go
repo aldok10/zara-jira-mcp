@@ -33,7 +33,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 		"stakeholder": {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools},
 		"portfolio": {registerPortfolioTools},
 		"github": {registerGitHubTools, registerGitHubFullTools, registerGitIntegrationTools},
-		"integrations": {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools, registerDatabaseTools},
+		"integrations": {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools},
 		"shortcuts": {registerPMShortcuts, registerHelpTools},
 	}
 
@@ -52,12 +52,15 @@ func enabledModules() map[string]bool {
 	// Profile presets for different PM needs
 	profile := os.Getenv("PM_PROFILE")
 	switch profile {
-	case "chatgpt":
-		// ~8 tools: shortcuts only. Best for ChatGPT Desktop, mobile, constrained clients.
-		return map[string]bool{"shortcuts": true}
+	case "unified":
+		// 1 tool only: mega-router. For ChatGPT Desktop, slow clients.
+		return map[string]bool{"unified": true}
+	case "smart":
+		// 7 tools: natural language interface, covers everything.
+		return map[string]bool{"smart": true}
 	case "lite":
-		// ~30 tools: shortcuts + AI. Good for Copilot, lightweight use.
-		return map[string]bool{"shortcuts": true, "ai": true, "pm": true}
+		// ~30 tools: essentials only, fast on any client
+		return map[string]bool{"jira": true, "pm": true, "shortcuts": true}
 	case "standard":
 		// ~80 tools: daily PM work + notifications
 		return map[string]bool{"jira": true, "pm": true, "ai": true, "notifications": true, "shortcuts": true}
