@@ -211,7 +211,7 @@ func (h *Handlers) GetDependencies(ctx context.Context, req mcp.CallToolRequest)
 		deps, err = h.Memory.GetOpenDependencies(ctx)
 	}
 	if err != nil {
-		return errorResult("Failed to get dependencies: " + err.Error()), nil
+		return sanitizedError("Failed to get dependencies", err), nil
 	}
 
 	if len(deps) == 0 {
@@ -254,7 +254,7 @@ func (h *Handlers) RecordMeeting(ctx context.Context, req mcp.CallToolRequest) (
 	}
 
 	if err := h.Memory.SaveMeetingNote(ctx, m); err != nil {
-		return errorResult("Failed to save meeting: " + err.Error()), nil
+		return sanitizedError("Failed to save meeting", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Meeting recorded: %s (%s)\nDecisions: %s\nActions: %s",
@@ -268,7 +268,7 @@ func (h *Handlers) GetMeetings(ctx context.Context, req mcp.CallToolRequest) (*m
 
 	notes, err := h.Memory.GetMeetingNotes(ctx, meetingType, limit)
 	if err != nil {
-		return errorResult("Failed to get meetings: " + err.Error()), nil
+		return sanitizedError("Failed to get meetings", err), nil
 	}
 
 	if len(notes) == 0 {
@@ -486,7 +486,7 @@ func (h *Handlers) HealthHistory(ctx context.Context, req mcp.CallToolRequest) (
 
 	scores, err := h.Memory.GetHealthScores(ctx, boardID, 10)
 	if err != nil {
-		return errorResult("Failed to get health scores: " + err.Error()), nil
+		return sanitizedError("Failed to get health scores", err), nil
 	}
 
 	if len(scores) == 0 {
