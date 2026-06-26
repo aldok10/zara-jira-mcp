@@ -93,9 +93,6 @@ func (h *Handlers) PMSMImpact(ctx context.Context, req mcp.CallToolRequest) (*mc
 		if b.ResolvedAt == nil {
 			continue
 		}
-		if sprintName != "" && b.IssueKey == "" {
-			// Can't filter by sprint without better data, include all
-		}
 		blockersResolved++
 		totalResDays += int(b.ResolvedAt.Sub(b.BlockedSince).Hours() / 24)
 	}
