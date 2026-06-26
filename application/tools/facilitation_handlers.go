@@ -109,7 +109,7 @@ For each:
 Under 200 words. Be specific, not generic.`,
 		strings.Join(signals, "\n"))
 	if err != nil {
-		return errorResult("AI failed: "+err.Error()), nil
+		return sanitizedError("AI failed", err), nil
 	}
 	return textResult("Retro Format Recommendation\n\n" + result), nil
 }

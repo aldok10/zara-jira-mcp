@@ -245,7 +245,7 @@ Keep practical. Under 200 words.`
 
 	result, err := h.aiComplete(ctx, systemPrompt, inputData)
 	if err != nil {
-		return errorResult("AI failed: " + err.Error()), nil
+		return sanitizedError("AI failed", err), nil
 	}
 	return textResult(result), nil
 }

@@ -17,7 +17,7 @@ func (h *Handlers) DatabaseQuery(ctx context.Context, req mcp.CallToolRequest) (
 	query, _ := req.RequireString("query")
 	results, err := h.Database.QuerySQL(ctx, req.GetString("type", ""), query, req.GetInt("limit", 50))
 	if err != nil {
-		return errorResult("Query failed: " + err.Error()), nil
+		return sanitizedError("Query failed", err), nil
 	}
 	return textResult(fmt.Sprintf("Results (%d rows):\n\n%s", len(results), database.FormatResults(results))), nil
 }
@@ -34,7 +34,7 @@ func (h *Handlers) DatabaseListTables(ctx context.Context, req mcp.CallToolReque
 	}
 	tables, err := h.Database.ListTables(ctx, dbType)
 	if err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("Failed", err), nil
 	}
 	var sb strings.Builder
 	for _, t := range tables {
@@ -55,7 +55,7 @@ func (h *Handlers) MongoQuery(ctx context.Context, req mcp.CallToolRequest) (*mc
 	}
 	results, err := h.Database.QueryMongo(ctx, collection, filter, req.GetInt("limit", 20))
 	if err != nil {
-		return errorResult("MongoDB query failed: " + err.Error()), nil
+		return sanitizedError("MongoDB query failed", err), nil
 	}
 	return textResult(fmt.Sprintf("Results (%d docs):\n\n%s", len(results), database.FormatResults(results))), nil
 }
@@ -66,7 +66,7 @@ func (h *Handlers) MongoListCollections(ctx context.Context, req mcp.CallToolReq
 	}
 	collections, err := h.Database.ListCollections(ctx)
 	if err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("Failed", err), nil
 	}
 	var sb strings.Builder
 	for _, c := range collections {

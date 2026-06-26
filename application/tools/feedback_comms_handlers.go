@@ -167,7 +167,7 @@ func (h *Handlers) ConversationPrep(ctx context.Context, req mcp.CallToolRequest
 		fmt.Sprintf("Prepare talking points for a %s conversation. Framework: %s. Be direct, under 100 words.", convType, framework),
 		fmt.Sprintf("Situation: %s\nPerson: %s", contextStr, person))
 	if aiErr != nil {
-		return errorResult("AI failed: " + aiErr.Error()), nil
+		return sanitizedError("AI failed", aiErr), nil
 	}
 	return textResult(fmt.Sprintf("[%s prep]\n\n%s", convType, result)), nil
 }
