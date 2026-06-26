@@ -134,91 +134,215 @@ type AIConfig struct {
 	Model   string // JIRA_AI_MODEL (default: gpt-4o-mini)
 }
 
+// FileConfig represents the subset of Config that can be persisted to disk.
+// Server and Memory settings remain env-only.
+type FileConfig struct {
+	Jira           *JiraConfig           `json:"jira,omitempty"`
+	AI             *AIConfig             `json:"ai,omitempty"`
+	Lark           *LarkConfig           `json:"lark,omitempty"`
+	Slack          *SlackConfig          `json:"slack,omitempty"`
+	Discord        *DiscordConfig        `json:"discord,omitempty"`
+	Telegram       *TelegramConfig       `json:"telegram,omitempty"`
+	Teams          *TeamsConfig          `json:"teams,omitempty"`
+	Email          *EmailConfig          `json:"email,omitempty"`
+	Confluence     *ConfluenceConfig     `json:"confluence,omitempty"`
+	GoogleCalendar *GoogleCalendarConfig `json:"google_calendar,omitempty"`
+	GitHub         *GitHubConfig         `json:"github,omitempty"`
+	GitLab         *GitLabConfig         `json:"gitlab,omitempty"`
+	Notion         *NotionConfig         `json:"notion,omitempty"`
+	Clockify       *ClockifyConfig       `json:"clockify,omitempty"`
+	Linear         *LinearConfig         `json:"linear,omitempty"`
+	PagerDuty      *PagerDutyConfig      `json:"pagerduty,omitempty"`
+	GoogleSheets   *GoogleSheetsConfig   `json:"google_sheets,omitempty"`
+}
+
+// ConfigFilePath returns the path to the config JSON file.
+func ConfigFilePath() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".zara-jira-mcp", "config.json")
+}
+
+func loadFileConfig() *FileConfig {
+	data, err := os.ReadFile(ConfigFilePath())
+	if err != nil {
+		return nil
+	}
+	var fc FileConfig
+	if json.Unmarshal(data, &fc) != nil {
+		return nil
+	}
+	return &fc
+}
+
+// envOrFile returns env if non-empty, else file value.
+func envOrFile(envVal, fileVal string) string {
+	if envVal != "" {
+		return envVal
+	}
+	return fileVal
+}
+
 func Load() (*Config, error) {
+	fc := loadFileConfig()
+	if fc == nil {
+		fc = &FileConfig{}
+	}
+	// Helper to get file value or empty
+	fJira := fc.Jira
+	if fJira == nil {
+		fJira = &JiraConfig{}
+	}
+	fAI := fc.AI
+	if fAI == nil {
+		fAI = &AIConfig{}
+	}
+	fLark := fc.Lark
+	if fLark == nil {
+		fLark = &LarkConfig{}
+	}
+	fSlack := fc.Slack
+	if fSlack == nil {
+		fSlack = &SlackConfig{}
+	}
+	fDiscord := fc.Discord
+	if fDiscord == nil {
+		fDiscord = &DiscordConfig{}
+	}
+	fTelegram := fc.Telegram
+	if fTelegram == nil {
+		fTelegram = &TelegramConfig{}
+	}
+	fTeams := fc.Teams
+	if fTeams == nil {
+		fTeams = &TeamsConfig{}
+	}
+	fEmail := fc.Email
+	if fEmail == nil {
+		fEmail = &EmailConfig{}
+	}
+	fConfluence := fc.Confluence
+	if fConfluence == nil {
+		fConfluence = &ConfluenceConfig{}
+	}
+	fCal := fc.GoogleCalendar
+	if fCal == nil {
+		fCal = &GoogleCalendarConfig{}
+	}
+	fGH := fc.GitHub
+	if fGH == nil {
+		fGH = &GitHubConfig{}
+	}
+	fGL := fc.GitLab
+	if fGL == nil {
+		fGL = &GitLabConfig{}
+	}
+	fNotion := fc.Notion
+	if fNotion == nil {
+		fNotion = &NotionConfig{}
+	}
+	fClockify := fc.Clockify
+	if fClockify == nil {
+		fClockify = &ClockifyConfig{}
+	}
+	fLinear := fc.Linear
+	if fLinear == nil {
+		fLinear = &LinearConfig{}
+	}
+	fPD := fc.PagerDuty
+	if fPD == nil {
+		fPD = &PagerDutyConfig{}
+	}
+	fSheets := fc.GoogleSheets
+	if fSheets == nil {
+		fSheets = &GoogleSheetsConfig{}
+	}
+
 	cfg := &Config{
 		Server: ServerConfig{
-			Transport: os.Getenv("MCP_TRANSPORT"),
-			Port:      os.Getenv("MCP_PORT"),
+			Transport:        os.Getenv("MCP_TRANSPORT"),
+			Port:             os.Getenv("MCP_PORT"),
+			DashboardEnabled: os.Getenv("MCP_DASHBOARD") == "true",
+			DashboardPort:    os.Getenv("MCP_DASHBOARD_PORT"),
 		},
 		Jira: JiraConfig{
-			BaseURL: strings.TrimRight(os.Getenv("JIRA_BASE_URL"), "/"),
-			Email:   os.Getenv("JIRA_EMAIL"),
-			Token:   os.Getenv("JIRA_API_TOKEN"),
+			BaseURL: strings.TrimRight(envOrFile(os.Getenv("JIRA_BASE_URL"), fJira.BaseURL), "/"),
+			Email:   envOrFile(os.Getenv("JIRA_EMAIL"), fJira.Email),
+			Token:   envOrFile(os.Getenv("JIRA_API_TOKEN"), fJira.Token),
 		},
 		AI: AIConfig{
-			BaseURL: os.Getenv("JIRA_AI_BASE_URL"),
-			APIKey:  os.Getenv("JIRA_AI_API_KEY"),
-			Model:   os.Getenv("JIRA_AI_MODEL"),
+			BaseURL: envOrFile(os.Getenv("JIRA_AI_BASE_URL"), fAI.BaseURL),
+			APIKey:  envOrFile(os.Getenv("JIRA_AI_API_KEY"), fAI.APIKey),
+			Model:   envOrFile(os.Getenv("JIRA_AI_MODEL"), fAI.Model),
 		},
 		Lark: LarkConfig{
-			WebhookURL: os.Getenv("JIRA_LARK_WEBHOOK_URL"),
-			AppID:      os.Getenv("LARK_APP_ID"),
-			AppSecret:  os.Getenv("LARK_APP_SECRET"),
-			ChatID:     os.Getenv("LARK_CHAT_ID"),
+			WebhookURL: envOrFile(os.Getenv("JIRA_LARK_WEBHOOK_URL"), fLark.WebhookURL),
+			AppID:      envOrFile(os.Getenv("LARK_APP_ID"), fLark.AppID),
+			AppSecret:  envOrFile(os.Getenv("LARK_APP_SECRET"), fLark.AppSecret),
+			ChatID:     envOrFile(os.Getenv("LARK_CHAT_ID"), fLark.ChatID),
 		},
 		Slack: SlackConfig{
-			BotToken:       os.Getenv("SLACK_BOT_TOKEN"),
-			DefaultChannel: os.Getenv("SLACK_DEFAULT_CHANNEL"),
-			WebhookURL:     os.Getenv("SLACK_WEBHOOK_URL"),
+			BotToken:       envOrFile(os.Getenv("SLACK_BOT_TOKEN"), fSlack.BotToken),
+			DefaultChannel: envOrFile(os.Getenv("SLACK_DEFAULT_CHANNEL"), fSlack.DefaultChannel),
+			WebhookURL:     envOrFile(os.Getenv("SLACK_WEBHOOK_URL"), fSlack.WebhookURL),
 		},
 		Discord: DiscordConfig{
-			BotToken:   os.Getenv("DISCORD_BOT_TOKEN"),
-			ChannelID:  os.Getenv("DISCORD_CHANNEL_ID"),
-			WebhookURL: os.Getenv("DISCORD_WEBHOOK_URL"),
+			BotToken:   envOrFile(os.Getenv("DISCORD_BOT_TOKEN"), fDiscord.BotToken),
+			ChannelID:  envOrFile(os.Getenv("DISCORD_CHANNEL_ID"), fDiscord.ChannelID),
+			WebhookURL: envOrFile(os.Getenv("DISCORD_WEBHOOK_URL"), fDiscord.WebhookURL),
 		},
 		Telegram: TelegramConfig{
-			BotToken: os.Getenv("TELEGRAM_BOT_TOKEN"),
-			ChatID:   os.Getenv("TELEGRAM_CHAT_ID"),
+			BotToken: envOrFile(os.Getenv("TELEGRAM_BOT_TOKEN"), fTelegram.BotToken),
+			ChatID:   envOrFile(os.Getenv("TELEGRAM_CHAT_ID"), fTelegram.ChatID),
 		},
 		Teams: TeamsConfig{
-			WebhookURL: os.Getenv("TEAMS_WEBHOOK_URL"),
+			WebhookURL: envOrFile(os.Getenv("TEAMS_WEBHOOK_URL"), fTeams.WebhookURL),
 		},
 		Email: EmailConfig{
-			SMTPHost: os.Getenv("EMAIL_SMTP_HOST"),
-			SMTPPort: os.Getenv("EMAIL_SMTP_PORT"),
-			Username: os.Getenv("EMAIL_USERNAME"),
-			Password: os.Getenv("EMAIL_PASSWORD"),
-			From:     os.Getenv("EMAIL_FROM"),
+			SMTPHost: envOrFile(os.Getenv("EMAIL_SMTP_HOST"), fEmail.SMTPHost),
+			SMTPPort: envOrFile(os.Getenv("EMAIL_SMTP_PORT"), fEmail.SMTPPort),
+			Username: envOrFile(os.Getenv("EMAIL_USERNAME"), fEmail.Username),
+			Password: envOrFile(os.Getenv("EMAIL_PASSWORD"), fEmail.Password),
+			From:     envOrFile(os.Getenv("EMAIL_FROM"), fEmail.From),
 		},
 		Confluence: ConfluenceConfig{
-			BaseURL: strings.TrimRight(os.Getenv("CONFLUENCE_BASE_URL"), "/"),
-			Email:   os.Getenv("CONFLUENCE_EMAIL"),
-			Token:   os.Getenv("CONFLUENCE_API_TOKEN"),
+			BaseURL: strings.TrimRight(envOrFile(os.Getenv("CONFLUENCE_BASE_URL"), fConfluence.BaseURL), "/"),
+			Email:   envOrFile(os.Getenv("CONFLUENCE_EMAIL"), fConfluence.Email),
+			Token:   envOrFile(os.Getenv("CONFLUENCE_API_TOKEN"), fConfluence.Token),
 		},
 		Memory: MemoryConfig{
 			DBPath: os.Getenv("PM_MEMORY_DB_PATH"),
 		},
 		GoogleCalendar: GoogleCalendarConfig{
-			APIKey:     os.Getenv("GOOGLE_CALENDAR_API_KEY"),
-			CalendarID: os.Getenv("GOOGLE_CALENDAR_ID"),
+			APIKey:     envOrFile(os.Getenv("GOOGLE_CALENDAR_API_KEY"), fCal.APIKey),
+			CalendarID: envOrFile(os.Getenv("GOOGLE_CALENDAR_ID"), fCal.CalendarID),
 		},
 		GitHub: GitHubConfig{
-			Token: os.Getenv("GITHUB_TOKEN"),
-			Owner: os.Getenv("GITHUB_OWNER"),
-			Repo:  os.Getenv("GITHUB_REPO"),
+			Token: envOrFile(os.Getenv("GITHUB_TOKEN"), fGH.Token),
+			Owner: envOrFile(os.Getenv("GITHUB_OWNER"), fGH.Owner),
+			Repo:  envOrFile(os.Getenv("GITHUB_REPO"), fGH.Repo),
 		},
 		GitLab: GitLabConfig{
-			Token:     os.Getenv("GITLAB_TOKEN"),
-			BaseURL:   os.Getenv("GITLAB_BASE_URL"),
-			ProjectID: os.Getenv("GITLAB_PROJECT_ID"),
+			Token:     envOrFile(os.Getenv("GITLAB_TOKEN"), fGL.Token),
+			BaseURL:   envOrFile(os.Getenv("GITLAB_BASE_URL"), fGL.BaseURL),
+			ProjectID: envOrFile(os.Getenv("GITLAB_PROJECT_ID"), fGL.ProjectID),
 		},
 		Notion: NotionConfig{
-			APIKey:     os.Getenv("NOTION_API_KEY"),
-			DatabaseID: os.Getenv("NOTION_DATABASE_ID"),
+			APIKey:     envOrFile(os.Getenv("NOTION_API_KEY"), fNotion.APIKey),
+			DatabaseID: envOrFile(os.Getenv("NOTION_DATABASE_ID"), fNotion.DatabaseID),
 		},
 		Clockify: ClockifyConfig{
-			APIKey:      os.Getenv("CLOCKIFY_API_KEY"),
-			WorkspaceID: os.Getenv("CLOCKIFY_WORKSPACE_ID"),
+			APIKey:      envOrFile(os.Getenv("CLOCKIFY_API_KEY"), fClockify.APIKey),
+			WorkspaceID: envOrFile(os.Getenv("CLOCKIFY_WORKSPACE_ID"), fClockify.WorkspaceID),
 		},
 		Linear: LinearConfig{
-			APIKey: os.Getenv("LINEAR_API_KEY"),
+			APIKey: envOrFile(os.Getenv("LINEAR_API_KEY"), fLinear.APIKey),
 		},
 		PagerDuty: PagerDutyConfig{
-			APIKey: os.Getenv("PAGERDUTY_API_KEY"),
+			APIKey: envOrFile(os.Getenv("PAGERDUTY_API_KEY"), fPD.APIKey),
 		},
 		GoogleSheets: GoogleSheetsConfig{
-			APIKey:        os.Getenv("GOOGLE_SHEETS_API_KEY"),
-			SpreadsheetID: os.Getenv("GOOGLE_SHEETS_SPREADSHEET_ID"),
+			APIKey:        envOrFile(os.Getenv("GOOGLE_SHEETS_API_KEY"), fSheets.APIKey),
+			SpreadsheetID: envOrFile(os.Getenv("GOOGLE_SHEETS_SPREADSHEET_ID"), fSheets.SpreadsheetID),
 		},
 	}
 
@@ -241,6 +365,9 @@ func Load() (*Config, error) {
 	}
 	if cfg.Server.Port == "" {
 		cfg.Server.Port = "8080"
+	}
+	if cfg.Server.DashboardPort == "" {
+		cfg.Server.DashboardPort = "9090"
 	}
 
 	return cfg, nil
