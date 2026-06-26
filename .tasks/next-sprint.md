@@ -86,3 +86,50 @@ Based on `research/jira-okr-bridge.md`.
 - [x] `pm_kpi_define` — Define KPI with thresholds
 - [x] `pm_kpi_snapshot` — Record measurement
 - [x] `pm_kpi_dashboard` — All KPIs with trends
+
+---
+
+## Next: v0.6.0 Backlog
+
+Priority order. Files disappeared mid-session (disk sync issue) — recreate from scratch.
+
+### P2: Hypothesis-Driven Development (HIGH — validates team improvement)
+- [ ] `pm_hypothesis` — Record belief + expected outcome + measure
+- [ ] `pm_hypothesis_review` — Show all, filter by status
+- [ ] `pm_hypothesis_close` — Validate/invalidate with actual outcome
+- [ ] `pm_estimation_accuracy` — committed vs delivered pattern detection
+
+Research basis: Teams that validate hypotheses improve 2x faster (Spotify model). Sprint experiments without measurement = theater.
+
+### P3: SPACE Metrics (HIGH — replaces velocity as health signal)
+- [ ] `pm_space` — Satisfaction/Performance/Activity/Communication/Efficiency from existing data
+- [ ] Map: S=pulse, P=goal hit rate, A=throughput, C=decisions recorded, E=blocker resolution
+
+Research basis: SPACE (Forsgren et al. 2021) replaces velocity as single metric. "Developer productivity cannot be reduced to a single dimension." GitHub, Google, Microsoft all adopted internally.
+
+### P7: Evidence-Based Management (MEDIUM — Scrum.org standard)
+- [ ] `pm_ebm` — 4 Key Value Areas dashboard
+- [ ] Current Value = satisfaction + goal achievement
+- [ ] Unrealized Value = scope growth (demand > capacity signal)
+- [ ] Ability to Innovate = tech debt count + feature/bug ratio
+- [ ] Time to Market = velocity + impediment resolution speed
+
+Research basis: EBM (Scrum.org, 2020) — "measure value, not output." Only framework that connects sprint metrics to business outcomes.
+
+### Security Hardening (MEDIUM — production readiness)
+- [ ] Rate limiting Jira API (60 req/min token bucket)
+- [ ] `io.LimitReader(10MB)` on all HTTP response reads
+- [ ] Sanitize error messages (generic to client, full to log)
+- [ ] Gemini API key from URL to header
+
+Research basis: OWASP API Security Top 10 (2023) — #4 Unrestricted Resource Consumption, #8 Security Misconfiguration.
+
+### Docker & Deployment (LOW — adoption enabler)
+- [ ] Verify Dockerfile works with `docker build`
+- [ ] docker-compose.yml with volume mount (done, needs test)
+- [ ] Document one-command deploy in README
+
+### Stretch: KPI Trend + OKR AI Suggest
+- [ ] `pm_kpi_trend` — Single KPI over time with direction
+- [ ] `pm_okr_suggest` — AI maps sprint work to OKRs
+- [ ] `pm_kpi_to_okr` — Suggest Key Results from underperforming KPIs
