@@ -53,6 +53,39 @@ func (m *mockJira) TransitionIssue(_ context.Context, _, _ string) error {
 func (m *mockJira) GetTransitions(_ context.Context, _ string) ([]jiradom.Transition, error) {
 	return m.transitions, m.err
 }
+func (m *mockJira) AssignIssue(_ context.Context, _, _ string) error  { return m.err }
+func (m *mockJira) DeleteIssue(_ context.Context, _ string) error     { return m.err }
+func (m *mockJira) CreateSubtask(_ context.Context, _ string, _ *jiradom.CreateIssueInput) (*jiradom.Issue, error) {
+	return &jiradom.Issue{Key: "SUB-1"}, m.err
+}
+func (m *mockJira) FindUser(_ context.Context, _ string) ([]jiradom.User, error) {
+	return nil, m.err
+}
+func (m *mockJira) SetEpicLink(_ context.Context, _, _ string) error    { return m.err }
+func (m *mockJira) RemoveEpicLink(_ context.Context, _ string) error    { return m.err }
+func (m *mockJira) GetSprints(_ context.Context, _ int, _ string) ([]jiradom.Sprint, error) {
+	return m.sprints, m.err
+}
+func (m *mockJira) CreateSprint(_ context.Context, _ int, name, _ string) (*jiradom.Sprint, error) {
+	return &jiradom.Sprint{ID: 1, Name: name, State: "future"}, m.err
+}
+func (m *mockJira) StartSprint(_ context.Context, _ int, _, _ string) error { return m.err }
+func (m *mockJira) CloseSprint(_ context.Context, _ int) error              { return m.err }
+func (m *mockJira) MoveIssuesToSprint(_ context.Context, _ int, _ []string) error {
+	return m.err
+}
+func (m *mockJira) LinkIssues(_ context.Context, _, _, _ string) error { return m.err }
+func (m *mockJira) GetLinkTypes(_ context.Context) ([]jiradom.LinkType, error) {
+	return nil, m.err
+}
+func (m *mockJira) AddWorklog(_ context.Context, _, _, _ string) error { return m.err }
+func (m *mockJira) GetWorklogs(_ context.Context, _ string) ([]jiradom.Worklog, error) {
+	return nil, m.err
+}
+func (m *mockJira) AddWatcher(_ context.Context, _, _ string) error { return m.err }
+func (m *mockJira) GetWatchers(_ context.Context, _ string) ([]jiradom.User, error) {
+	return nil, m.err
+}
 
 type mockAI struct {
 	response string

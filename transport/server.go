@@ -19,6 +19,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	)
 
 	registerJiraTools(s, handlers)
+	registerIssueOpsTools(s, handlers)
 	registerPMTools(s, handlers)
 	registerAITools(s, handlers)
 	registerLarkTools(s, handlers)
@@ -26,6 +27,8 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerPMIntelTools(s, handlers)
 	registerAdvancedPMTools(s, handlers)
 	registerDeepPMTools(s, handlers)
+	registerEpicSprintTools(s, handlers)
+	registerLinkWorklogTools(s, handlers)
 
 	return &MCPServer{s: s}
 }
@@ -126,6 +129,53 @@ func registerJiraTools(s *server.MCPServer, h *tools.Handlers) {
 			mcp.WithDescription("Health check and version info for zara-jira-mcp server."),
 		),
 		h.Health,
+	)
+}
+
+func registerIssueOpsTools(s *server.MCPServer, h *tools.Handlers) {
+	s.AddTool(
+		mcp.NewTool("jira_assign",
+			mcp.WithDescription("Assign a Jira issue to a user by account ID."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key (e.g. PROJ-123)")),
+			mcp.WithString("assignee_id", mcp.Required(), mcp.Description("Assignee account ID (use jira_find_user to look up)")),
+		),
+		h.AssignIssue,
+	)
+
+	s.AddTool(
+		mcp.NewTool("jira_unassign",
+			mcp.WithDescription("Remove the assignee from a Jira issue."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key (e.g. PROJ-123)")),
+		),
+		h.UnassignIssue,
+	)
+
+	s.AddTool(
+		mcp.NewTool("jira_delete_issue",
+			mcp.WithDescription("Delete a Jira issue permanently."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key (e.g. PROJ-123)")),
+		),
+		h.DeleteIssue,
+	)
+
+	s.AddTool(
+		mcp.NewTool("jira_create_subtask",
+			mcp.WithDescription("Create a subtask under a parent issue."),
+			mcp.WithString("parent_key", mcp.Required(), mcp.Description("Parent issue key (e.g. PROJ-123)")),
+			mcp.WithString("summary", mcp.Required(), mcp.Description("Subtask summary")),
+			mcp.WithString("description", mcp.Description("Subtask description")),
+			mcp.WithString("assignee_id", mcp.Description("Assignee account ID")),
+			mcp.WithString("priority", mcp.Description("Priority: Highest, High, Medium, Low, Lowest")),
+		),
+		h.CreateSubtask,
+	)
+
+	s.AddTool(
+		mcp.NewTool("jira_find_user",
+			mcp.WithDescription("Search for Jira users by name or email. Use to find account IDs for assignment."),
+			mcp.WithString("query", mcp.Required(), mcp.Description("Search by name or email")),
+		),
+		h.FindUser,
 	)
 }
 
@@ -450,7 +500,7 @@ func registerDeepPMTools(s *server.MCPServer, h *tools.Handlers) {
 			mcp.WithDescription("Track today's sprint progress (burndown data point). Call daily for burndown chart data."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
-		h.RecordDailyProgress,
+		h.TrackDailyProgress,
 	)
 
 	s.AddTool(
@@ -489,33 +539,19 @@ func registerDeepPMTools(s *server.MCPServer, h *tools.Handlers) {
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 			mcp.WithBoolean("show_history", mcp.Description("Show past goals with outcomes (default: false)")),
 		),
-		h.GetGoals,
+		h.GetSprintGoals,
 	)
 
 	s.AddTool(
 		mcp.NewTool("pm_dod",
-			mcp.WithDescription("Show Definition of Done checklist for a project."),
+			mcp.WithDescription("Manage Definition of Done checklist. Actions: list (default), add, remove."),
+			mcp.WithString("action", mcp.Description("list, add, remove (default: list)")),
 			mcp.WithString("project", mcp.Description("Project key (default: * for global)")),
-		),
-		h.GetDoD,
-	)
-
-	s.AddTool(
-		mcp.NewTool("pm_dod_add",
-			mcp.WithDescription("Add an item to the Definition of Done checklist."),
-			mcp.WithString("item", mcp.Required(), mcp.Description("DoD checklist item")),
-			mcp.WithString("project", mcp.Description("Project key (default: * for global)")),
+			mcp.WithString("item", mcp.Description("DoD item text (required for action=add)")),
 			mcp.WithString("category", mcp.Description("code, testing, docs, review, deploy (default: general)")),
+			mcp.WithNumber("item_id", mcp.Description("Item ID (required for action=remove)")),
 		),
-		h.AddDoDItem,
-	)
-
-	s.AddTool(
-		mcp.NewTool("pm_dod_remove",
-			mcp.WithDescription("Remove a Definition of Done item."),
-			mcp.WithNumber("item_id", mcp.Required(), mcp.Description("Item ID")),
-		),
-		h.RemoveDoDItem,
+		h.ManageDoD,
 	)
 
 	s.AddTool(

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	jira "github.com/felixgeelhaar/jirasdk"
@@ -274,6 +275,644 @@ func (c *RestClient) GetTransitions(ctx context.Context, issueKey string) ([]dom
 		out[i] = domain.Transition{ID: t.ID, Name: t.Name}
 	}
 	return out, nil
+}
+
+func (c *RestClient) AssignIssue(ctx context.Context, issueKey, accountID string) error {
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s/assignee", c.baseURL, issueKey)
+	var body []byte
+	if accountID == "" {
+		body = []byte(`{"accountId":null}`)
+	} else {
+		payload := map[string]string{"accountId": accountID}
+		body, _ = json.Marshal(payload)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, path, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("assign failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) DeleteIssue(ctx context.Context, issueKey string) error {
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s", c.baseURL, issueKey)
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, path, nil)
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("delete failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) CreateSubtask(ctx context.Context, parentKey string, input *domain.CreateIssueInput) (*domain.Issue, error) {
+	fields := map[string]any{
+		"project":   map[string]string{"key": input.Project},
+		"summary":   input.Summary,
+		"issuetype": map[string]string{"name": "Sub-task"},
+		"parent":    map[string]string{"key": parentKey},
+	}
+	if input.Description != "" {
+		fields["description"] = map[string]any{
+			"type": "doc", "version": 1,
+			"content": []map[string]any{
+				{"type": "paragraph", "content": []map[string]any{
+					{"type": "text", "text": input.Description},
+				}},
+			},
+		}
+	}
+	if input.Priority != "" {
+		fields["priority"] = map[string]string{"name": input.Priority}
+	}
+	if input.Assignee != "" {
+		fields["assignee"] = map[string]string{"accountId": input.Assignee}
+	}
+
+	payload := map[string]any{"fields": fields}
+	data, _ := json.Marshal(payload)
+
+	path := fmt.Sprintf("%s/rest/api/3/issue", c.baseURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, path, bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("create subtask failed %d: %s", resp.StatusCode, string(b))
+	}
+
+	var result struct {
+		Key string `json:"key"`
+	}
+	json.NewDecoder(resp.Body).Decode(&result)
+	return &domain.Issue{Key: result.Key, Summary: input.Summary}, nil
+}
+
+func (c *RestClient) FindUser(ctx context.Context, query string) ([]domain.User, error) {
+	path := fmt.Sprintf("%s/rest/api/3/user/search?query=%s", c.baseURL, url.QueryEscape(query))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("user search failed %d: %s", resp.StatusCode, string(b))
+	}
+
+	var users []struct {
+		AccountID   string `json:"accountId"`
+		DisplayName string `json:"displayName"`
+		Email       string `json:"emailAddress"`
+	}
+	json.NewDecoder(resp.Body).Decode(&users)
+
+	out := make([]domain.User, len(users))
+	for i, u := range users {
+		out[i] = domain.User{AccountID: u.AccountID, DisplayName: u.DisplayName, Email: u.Email}
+	}
+	return out, nil
+}
+
+func (c *RestClient) SetEpicLink(ctx context.Context, issueKey, epicKey string) error {
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s", c.baseURL, issueKey)
+	payload := map[string]any{"fields": map[string]any{"parent": map[string]string{"key": epicKey}}}
+	data, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("set epic link failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) RemoveEpicLink(ctx context.Context, issueKey string) error {
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s", c.baseURL, issueKey)
+	payload := map[string]any{"fields": map[string]any{"parent": nil}}
+	data, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("remove epic link failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) GetSprints(ctx context.Context, boardID int, state string) ([]domain.Sprint, error) {
+	path := fmt.Sprintf("%s/rest/agile/1.0/board/%d/sprint", c.baseURL, boardID)
+	if state != "" {
+		path += "?state=" + state
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Accept", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("get sprints failed %d: %s", resp.StatusCode, string(b))
+	}
+	var result struct {
+		Values []struct {
+			ID        int    `json:"id"`
+			Name      string `json:"name"`
+			State     string `json:"state"`
+			Goal      string `json:"goal"`
+			StartDate string `json:"startDate"`
+			EndDate   string `json:"endDate"`
+		} `json:"values"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	out := make([]domain.Sprint, len(result.Values))
+	for i, s := range result.Values {
+		out[i] = domain.Sprint{ID: s.ID, Name: s.Name, State: s.State, Goal: s.Goal, StartDate: s.StartDate, EndDate: s.EndDate}
+	}
+	return out, nil
+}
+
+func (c *RestClient) CreateSprint(ctx context.Context, boardID int, name, goal string) (*domain.Sprint, error) {
+	path := fmt.Sprintf("%s/rest/agile/1.0/sprint", c.baseURL)
+	payload := map[string]any{"name": name, "originBoardId": boardID}
+	if goal != "" {
+		payload["goal"] = goal
+	}
+	data, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, path, bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("create sprint failed %d: %s", resp.StatusCode, string(b))
+	}
+	var result struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	}
+	json.NewDecoder(resp.Body).Decode(&result)
+	return &domain.Sprint{ID: result.ID, Name: result.Name, State: "future"}, nil
+}
+
+func (c *RestClient) StartSprint(ctx context.Context, sprintID int, startDate, endDate string) error {
+	path := fmt.Sprintf("%s/rest/agile/1.0/sprint/%d", c.baseURL, sprintID)
+	payload := map[string]any{"state": "active", "startDate": startDate, "endDate": endDate}
+	data, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("start sprint failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) CloseSprint(ctx context.Context, sprintID int) error {
+	path := fmt.Sprintf("%s/rest/agile/1.0/sprint/%d", c.baseURL, sprintID)
+	payload := map[string]any{"state": "closed"}
+	data, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("close sprint failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) MoveIssuesToSprint(ctx context.Context, sprintID int, issueKeys []string) error {
+	path := fmt.Sprintf("%s/rest/agile/1.0/sprint/%d/issue", c.baseURL, sprintID)
+	payload := map[string]any{"issues": issueKeys}
+	data, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("move issues to sprint failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) LinkIssues(ctx context.Context, inwardKey, outwardKey, linkType string) error {
+	path := fmt.Sprintf("%s/rest/api/3/issueLink", c.baseURL)
+	payload := map[string]any{
+		"type":         map[string]string{"name": linkType},
+		"inwardIssue":  map[string]string{"key": inwardKey},
+		"outwardIssue": map[string]string{"key": outwardKey},
+	}
+	data, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("link issues failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) GetLinkTypes(ctx context.Context) ([]domain.LinkType, error) {
+	path := fmt.Sprintf("%s/rest/api/3/issueLinkType", c.baseURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Accept", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("get link types failed %d: %s", resp.StatusCode, string(b))
+	}
+	var result struct {
+		IssueLinkTypes []struct {
+			Name    string `json:"name"`
+			Inward  string `json:"inward"`
+			Outward string `json:"outward"`
+		} `json:"issueLinkTypes"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	out := make([]domain.LinkType, len(result.IssueLinkTypes))
+	for i, lt := range result.IssueLinkTypes {
+		out[i] = domain.LinkType{Name: lt.Name, Inward: lt.Inward, Outward: lt.Outward}
+	}
+	return out, nil
+}
+
+func (c *RestClient) AddWorklog(ctx context.Context, issueKey, timeSpent, comment string) error {
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s/worklog", c.baseURL, issueKey)
+	payload := map[string]any{"timeSpent": timeSpent}
+	if comment != "" {
+		payload["comment"] = map[string]any{
+			"type": "doc", "version": 1,
+			"content": []map[string]any{
+				{"type": "paragraph", "content": []map[string]any{
+					{"type": "text", "text": comment},
+				}},
+			},
+		}
+	}
+	data, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("add worklog failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) GetWorklogs(ctx context.Context, issueKey string) ([]domain.Worklog, error) {
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s/worklog", c.baseURL, issueKey)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Accept", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("get worklogs failed %d: %s", resp.StatusCode, string(b))
+	}
+	var result struct {
+		Worklogs []struct {
+			Author    struct{ DisplayName string } `json:"author"`
+			TimeSpent string                       `json:"timeSpent"`
+			Started   string                       `json:"started"`
+			Comment   *struct {
+				Content []struct {
+					Content []struct {
+						Text string `json:"text"`
+					} `json:"content"`
+				} `json:"content"`
+			} `json:"comment"`
+		} `json:"worklogs"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	out := make([]domain.Worklog, len(result.Worklogs))
+	for i, w := range result.Worklogs {
+		var comment string
+		if w.Comment != nil && len(w.Comment.Content) > 0 && len(w.Comment.Content[0].Content) > 0 {
+			comment = w.Comment.Content[0].Content[0].Text
+		}
+		out[i] = domain.Worklog{Author: w.Author.DisplayName, TimeSpent: w.TimeSpent, Started: w.Started, Comment: comment}
+	}
+	return out, nil
+}
+
+func (c *RestClient) AddWatcher(ctx context.Context, issueKey, accountID string) error {
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s/watchers", c.baseURL, issueKey)
+	data, _ := json.Marshal(accountID)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("add watcher failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) GetWatchers(ctx context.Context, issueKey string) ([]domain.User, error) {
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s/watchers", c.baseURL, issueKey)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Accept", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("get watchers failed %d: %s", resp.StatusCode, string(b))
+	}
+	var result struct {
+		Watchers []struct {
+			AccountID   string `json:"accountId"`
+			DisplayName string `json:"displayName"`
+		} `json:"watchers"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	out := make([]domain.User, len(result.Watchers))
+	for i, w := range result.Watchers {
+		out[i] = domain.User{AccountID: w.AccountID, DisplayName: w.DisplayName}
+	}
+	return out, nil
+}
+
+func (c *RestClient) AddLabel(ctx context.Context, issueKey, label string) error {
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s", c.baseURL, issueKey)
+	payload := map[string]any{"update": map[string]any{"labels": []map[string]string{{"add": label}}}}
+	data, _ := json.Marshal(payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("add label failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) GetProjects(ctx context.Context) ([]domain.Project, error) {
+	path := fmt.Sprintf("%s/rest/api/3/project/search?maxResults=50", c.baseURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Accept", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("get projects failed %d: %s", resp.StatusCode, string(b))
+	}
+	var result struct {
+		Values []struct {
+			Key  string `json:"key"`
+			Name string `json:"name"`
+			Lead struct {
+				DisplayName string `json:"displayName"`
+			} `json:"lead"`
+			ProjectTypeKey string `json:"projectTypeKey"`
+		} `json:"values"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	out := make([]domain.Project, len(result.Values))
+	for i, p := range result.Values {
+		out[i] = domain.Project{Key: p.Key, Name: p.Name, Lead: p.Lead.DisplayName, Type: p.ProjectTypeKey}
+	}
+	return out, nil
+}
+
+func (c *RestClient) GetProject(ctx context.Context, key string) (*domain.ProjectDetail, error) {
+	path := fmt.Sprintf("%s/rest/api/3/project/%s", c.baseURL, key)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Accept", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("get project failed %d: %s", resp.StatusCode, string(b))
+	}
+	var raw struct {
+		Key  string `json:"key"`
+		Name string `json:"name"`
+		Lead struct {
+			DisplayName string `json:"displayName"`
+		} `json:"lead"`
+		ProjectTypeKey string `json:"projectTypeKey"`
+		Description    string `json:"description"`
+		Components     []struct {
+			Name string `json:"name"`
+		} `json:"components"`
+		Versions []struct {
+			Name string `json:"name"`
+		} `json:"versions"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
+		return nil, err
+	}
+	pd := &domain.ProjectDetail{
+		Key:  raw.Key,
+		Name: raw.Name,
+		Lead: raw.Lead.DisplayName,
+		Type: raw.ProjectTypeKey,
+		Description: raw.Description,
+	}
+	for _, c := range raw.Components {
+		pd.Components = append(pd.Components, c.Name)
+	}
+	for _, v := range raw.Versions {
+		pd.Versions = append(pd.Versions, v.Name)
+	}
+	return pd, nil
+}
+
+func (c *RestClient) RawRequest(ctx context.Context, method, path string, body []byte) ([]byte, int, error) {
+	fullURL := c.baseURL + path
+	var bodyReader io.Reader
+	if len(body) > 0 {
+		bodyReader = bytes.NewReader(body)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, fullURL, bodyReader)
+	if err != nil {
+		return nil, 0, err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Accept", "application/json")
+	if len(body) > 0 {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	return respBody, resp.StatusCode, nil
 }
 
 func mapIssue(raw *issue.Issue) domain.Issue {

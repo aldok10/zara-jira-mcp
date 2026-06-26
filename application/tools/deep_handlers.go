@@ -251,6 +251,156 @@ func (h *Handlers) ManageDoD(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	}
 }
 
+// PMDashboard shows everything in one view.
+func (h *Handlers) PMDashboard(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	boardID := req.GetInt("board_id", 0)
+
+	var sb strings.Builder
+	sb.WriteString("=== PM DASHBOARD ===\n\n")
+
+	if boardID > 0 {
+		sprints, _ := h.Jira.GetActiveSprints(ctx, boardID)
+		if len(sprints) > 0 {
+			sprint := sprints[0]
+			issues, _ := h.Jira.GetSprintIssues(ctx, sprint.ID)
+			var done, inProg, blocked int
+			for _, issue := range issues {
+				lower := strings.ToLower(issue.Status)
+				switch {
+				case strings.Contains(lower, "done") || strings.Contains(lower, "closed"):
+					done++
+				case strings.Contains(lower, "progress") || strings.Contains(lower, "review"):
+					inProg++
+				case strings.Contains(lower, "block"):
+					blocked++
+				}
+			}
+			completion := 0.0
+			if len(issues) > 0 {
+				completion = float64(done) / float64(len(issues)) * 100
+			}
+			sb.WriteString(fmt.Sprintf("SPRINT: %s (Goal: %s)\n", sprint.Name, sprint.Goal))
+			sb.WriteString(fmt.Sprintf("  Progress: %d/%d (%.0f%%) | InProgress: %d | Blocked: %d\n\n", done, len(issues), completion, inProg, blocked))
+		}
+
+		scores, _ := h.Memory.GetHealthScores(ctx, boardID, 1)
+		if len(scores) > 0 {
+			s := scores[0]
+			status := "HEALTHY"
+			if s.OverallScore < 50 {
+				status = "AT RISK"
+			} else if s.OverallScore < 70 {
+				status = "WATCH"
+			}
+			sb.WriteString(fmt.Sprintf("HEALTH: %d/100 (%s)\n\n", s.OverallScore, status))
+		}
+	}
+
+	risks, _ := h.Memory.GetOpenRisks(ctx)
+	if len(risks) > 0 {
+		sb.WriteString(fmt.Sprintf("RISKS: %d open\n", len(risks)))
+		for _, r := range risks {
+			if r.Severity == "critical" || r.Severity == "high" {
+				sb.WriteString(fmt.Sprintf("  [%s] %s\n", strings.ToUpper(r.Severity), r.Title))
+			}
+		}
+		sb.WriteString("\n")
+	}
+
+	blockers, _ := h.Memory.GetActiveBlockers(ctx)
+	if len(blockers) > 0 {
+		sb.WriteString(fmt.Sprintf("BLOCKERS: %d active\n", len(blockers)))
+		for _, b := range blockers {
+			days := int(time.Since(b.BlockedSince).Hours() / 24)
+			sb.WriteString(fmt.Sprintf("  [%d days] %s\n", days, b.Description))
+		}
+		sb.WriteString("\n")
+	}
+
+	deps, _ := h.Memory.GetOpenDependencies(ctx)
+	if len(deps) > 0 {
+		sb.WriteString(fmt.Sprintf("DEPENDENCIES: %d open\n", len(deps)))
+		for _, d := range deps {
+			sb.WriteString(fmt.Sprintf("  %s -> %s\n", d.FromIssueKey, d.ToIssueKey))
+		}
+		sb.WriteString("\n")
+	}
+
+	actions, _ := h.Memory.GetPendingActionItems(ctx)
+	if len(actions) > 0 {
+		sb.WriteString(fmt.Sprintf("PENDING ACTIONS: %d\n", len(actions)))
+		for _, a := range actions {
+			sb.WriteString(fmt.Sprintf("  - %s (%s)\n", a.Description, a.Owner))
+		}
+		sb.WriteString("\n")
+	}
+
+	return textResult(sb.String()), nil
+}
+
+// GenerateReleaseNotes creates release notes from completed sprint issues.
+func (h *Handlers) GenerateReleaseNotes(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	boardID, err := req.RequireInt("board_id")
+	if err != nil {
+		return errorResult("board_id required"), nil
+	}
+
+	sprints, err := h.Jira.GetActiveSprints(ctx, boardID)
+	if err != nil || len(sprints) == 0 {
+		return textResult("No active sprint found."), nil
+	}
+
+	sprint := sprints[0]
+	issues, err := h.Jira.GetSprintIssues(ctx, sprint.ID)
+	if err != nil {
+		return errorResult("Failed to get issues: " + err.Error()), nil
+	}
+
+	var features, bugs, tasks []string
+	for _, issue := range issues {
+		lower := strings.ToLower(issue.Status)
+		if !strings.Contains(lower, "done") && !strings.Contains(lower, "closed") && !strings.Contains(lower, "resolved") {
+			continue
+		}
+		entry := fmt.Sprintf("- **%s** %s", issue.Key, issue.Summary)
+		switch strings.ToLower(issue.Type) {
+		case "bug":
+			bugs = append(bugs, entry)
+		case "story", "feature":
+			features = append(features, entry)
+		default:
+			tasks = append(tasks, entry)
+		}
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("# Release Notes: %s\n\n", sprint.Name))
+	if sprint.Goal != "" {
+		sb.WriteString(fmt.Sprintf("**Goal:** %s\n\n", sprint.Goal))
+	}
+	if len(features) > 0 {
+		sb.WriteString("## Features\n" + strings.Join(features, "\n") + "\n\n")
+	}
+	if len(bugs) > 0 {
+		sb.WriteString("## Bug Fixes\n" + strings.Join(bugs, "\n") + "\n\n")
+	}
+	if len(tasks) > 0 {
+		sb.WriteString("## Tasks\n" + strings.Join(tasks, "\n") + "\n\n")
+	}
+
+	total := len(features) + len(bugs) + len(tasks)
+	sb.WriteString(fmt.Sprintf("---\n*%d items delivered*\n", total))
+
+	if req.GetBool("send_to_lark", false) {
+		if err := h.Lark.SendMarkdown(ctx, "Release: "+sprint.Name, sb.String()); err != nil {
+			return textResult(sb.String() + "\n(Lark send failed: " + err.Error() + ")"), nil
+		}
+		return textResult(sb.String() + "\n(Sent to Lark)"), nil
+	}
+
+	return textResult(sb.String()), nil
+}
+
 // Escalate checks for critical conditions and sends alerts to Lark.
 func (h *Handlers) Escalate(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	boardID, err := req.RequireInt("board_id")
