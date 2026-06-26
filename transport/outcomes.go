@@ -38,13 +38,13 @@ func registerOutcomeTools(s *server.MCPServer, h *tools.Handlers) {
 	), h.PMTeamAutonomy)
 
 	s.AddTool(mcp.NewTool("pm_outcome_map",
-		mcp.WithDescription("Connect sprint work to business outcomes. Map which OKR/objective this sprint serves."),
+		mcp.WithDescription("[LEGACY: prefer pm_okr_define with level=sprint] Connect sprint work to business outcomes. Map which OKR/objective this sprint serves."),
 		mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		mcp.WithString("objective", mcp.Required(), mcp.Description("Business objective this sprint serves")),
 		mcp.WithString("key_results", mcp.Description("Measurable key results (newline-separated)")),
 	), h.PMOutcomeMap)
 
 	s.AddTool(mcp.NewTool("pm_outcome_history",
-		mcp.WithDescription("Show OKR/objective alignment history. Which sprints served which business outcomes."),
+		mcp.WithDescription("[LEGACY: prefer pm_okr_list with status=active] Show OKR/objective alignment history. Which sprints served which business outcomes."),
 	), h.PMOutcomeHistory)
 }

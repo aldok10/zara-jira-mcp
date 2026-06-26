@@ -202,13 +202,7 @@ func (h *Handlers) CommsAntiPatterns(ctx context.Context, req mcp.CallToolReques
 		}
 	}
 
-	// 2. Dead actions: too many pending items
-	pending, _ := h.Memory.GetPendingActionItems(ctx)
-	if len(pending) > 5 {
-		patterns = append(patterns, fmt.Sprintf("[MEDIUM] Dead Actions: %d pending action items. Meetings produce commitments nobody follows through on. Fix: review actions at start of next ceremony, reduce to max 3 per retro.", len(pending)))
-	}
-
-	// 3. Escalation hoarding: blockers but no escalations
+	// 2. Escalation hoarding: blockers but no escalations
 	blockers, _ := h.Memory.GetActiveBlockers(ctx)
 	escalations, _ := h.Memory.GetRecentEscalations(ctx, 10)
 	agingBlockers := 0

@@ -56,22 +56,4 @@ func registerVersionTools(s *server.MCPServer, h *tools.Handlers) {
 		),
 		h.GetFields,
 	)
-
-	s.AddTool(
-		mcp.NewTool("pm_tech_debt_ratio",
-			mcp.WithDescription("Calculate tech debt ratio: bugs/debt items vs feature items. Flags health status and recommends action when >20%."),
-			mcp.WithString("project", mcp.Description("Project key (all projects if empty)")),
-			mcp.WithNumber("sprints", mcp.Description("Number of sprints for trend (default: 3)")),
-		),
-		h.TechDebtRatio,
-	)
-
-	s.AddTool(
-		mcp.NewTool("pm_priority_churn",
-			mcp.WithDescription("Detect priority instability — issues with priority changes in last N days. High churn = team burnout risk (DORA 2024)."),
-			mcp.WithString("project", mcp.Description("Project key (all projects if empty)")),
-			mcp.WithNumber("days", mcp.Description("Lookback window in days (default: 14)")),
-		),
-		h.PriorityChurn,
-	)
 }

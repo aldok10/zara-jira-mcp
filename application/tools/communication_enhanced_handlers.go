@@ -11,6 +11,7 @@ import (
 )
 
 // PMCommunicate generates Minto Pyramid-structured messages for different audiences.
+// If a 'message' param is provided, it rewrites it for the audience. Otherwise generates from topic + data.
 func (h *Handlers) PMCommunicate(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	topic, err := req.RequireString("topic")
 	if err != nil {
@@ -21,6 +22,7 @@ func (h *Handlers) PMCommunicate(ctx context.Context, req mcp.CallToolRequest) (
 		return errorResult("audience required (exec/team/po/stakeholder)"), nil
 	}
 	boardID := req.GetInt("board_id", 0)
+	existingMessage := req.GetString("message", "")
 
 	systemPrompt := `You write structured PM updates using the Minto Pyramid Principle.
 Rules:
@@ -35,6 +37,9 @@ Rules:
 
 	var userData strings.Builder
 	userData.WriteString(fmt.Sprintf("Topic: %s\nAudience: %s\n", topic, audience))
+	if existingMessage != "" {
+		userData.WriteString(fmt.Sprintf("\nExisting message to rewrite:\n%s\n", existingMessage))
+	}
 
 	if boardID > 0 && h.Memory != nil {
 		snaps, _ := h.Memory.GetSprintSnapshots(ctx, boardID, 1)

@@ -19,15 +19,6 @@ func registerLeverageTools(s *server.MCPServer, h *tools.Handlers) {
 		mcp.WithNumber("days", mcp.Description("Lookback window in days (default: 14)")),
 	), h.PriorityChurn)
 
-	s.AddTool(mcp.NewTool("jira_trace_branch",
-		mcp.WithDescription("Trace a Jira ticket to its branch in GitHub/GitLab. Shows if branch exists, PRs/MRs status, and whether it's been merged to target branch. Use to verify ticket implementation status."),
-		mcp.WithString("key", mcp.Required(), mcp.Description("Jira issue key (e.g. SIT-3658)")),
-	), h.JiraTraceBranch)
-
-	s.AddTool(mcp.NewTool("pm_incident_summary",
-		mcp.WithDescription("Summarize incident impact: counts by status/urgency, average resolution time."),
-	), h.IncidentImpact)
-
 	s.AddTool(mcp.NewTool("pm_sprint_forecast_simple",
 		mcp.WithDescription("Simple sprint forecast: will we finish? Based on current burn rate and remaining items."),
 		mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),

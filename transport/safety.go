@@ -9,9 +9,10 @@ import (
 func registerSafetyTools(s *server.MCPServer, h *tools.Handlers) {
 	// Communication Templates (P1)
 	s.AddTool(mcp.NewTool("pm_communicate",
-		mcp.WithDescription("Generate Minto Pyramid-structured message for any audience. Conclusion first, then arguments, then data. Adapts tone per audience."),
+		mcp.WithDescription("Generate or rewrite Minto Pyramid-structured message for any audience. If 'message' provided, rewrites it. If only 'topic', generates from scratch with sprint data."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("What to communicate")),
 		mcp.WithString("audience", mcp.Required(), mcp.Description("exec, team, po, stakeholder")),
+		mcp.WithString("message", mcp.Description("Optional: existing message to rewrite for audience")),
 		mcp.WithNumber("board_id", mcp.Description("Board ID for sprint context")),
 	), h.PMCommunicate)
 
