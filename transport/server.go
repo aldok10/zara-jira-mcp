@@ -664,4 +664,38 @@ func registerForecastTools(s *server.MCPServer, h *tools.Handlers) {
 		),
 		h.CoachingAdvice,
 	)
+
+	s.AddTool(
+		mcp.NewTool("pm_forecast_sprint",
+			mcp.WithDescription("Monte Carlo sprint forecast. Predicts completion probability based on historical throughput. Shows 50%/85% confidence intervals."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+			mcp.WithNumber("items_remaining", mcp.Description("Items left to do (auto-detected from sprint if empty)")),
+		),
+		h.ForecastSprint,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_nl_to_jql",
+			mcp.WithDescription("Convert natural language to JQL. Ask in plain English, get JQL query back."),
+			mcp.WithString("query", mcp.Required(), mcp.Description("Natural language query (e.g. 'my open bugs with high priority')")),
+		),
+		h.NLToJQL,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_scope_creep",
+			mcp.WithDescription("Detect mid-sprint scope changes. Compares current items vs baseline snapshot."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.ScopeCreep,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_backlog_groom",
+			mcp.WithDescription("Find stale backlog items that need grooming or archiving. Items untouched for N days outside active sprints."),
+			mcp.WithString("project", mcp.Description("Project key filter")),
+			mcp.WithNumber("days", mcp.Description("Days without update to consider stale (default: 90)")),
+		),
+		h.BacklogGroom,
+	)
 }
