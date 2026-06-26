@@ -33,7 +33,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 		"stakeholder": {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools},
 		"portfolio": {registerPortfolioTools},
 		"github": {registerGitHubTools, registerGitHubFullTools, registerGitIntegrationTools},
-		"integrations": {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools},
+		"integrations": {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools, registerDatabaseTools},
 		"shortcuts": {registerPMShortcuts, registerHelpTools},
 	}
 
