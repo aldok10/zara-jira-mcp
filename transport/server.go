@@ -40,6 +40,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerRecipeTools(s, handlers)
 	registerPortfolioTools(s, handlers)
 	registerGitHubTools(s, handlers)
+	registerTechDebtTools(s, handlers)
 
 	return &MCPServer{s: s}
 }
@@ -836,5 +837,51 @@ func registerProcessTools(s *server.MCPServer, h *tools.Handlers) {
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.SprintPlanningSummary,
+	)
+}
+
+func registerTechDebtTools(s *server.MCPServer, h *tools.Handlers) {
+	s.AddTool(
+		mcp.NewTool("pm_tech_debt_add",
+			mcp.WithDescription("Record a tech debt item. Track code shortcuts, architectural issues, testing gaps."),
+			mcp.WithString("title", mcp.Required(), mcp.Description("Tech debt title")),
+			mcp.WithString("description", mcp.Description("Detailed description")),
+			mcp.WithString("impact", mcp.Description("high (blocks velocity), medium (slows), low (cosmetic). Default: medium")),
+			mcp.WithString("category", mcp.Description("code, architecture, testing, infra, docs. Default: code")),
+			mcp.WithString("owner", mcp.Description("Who should fix this")),
+			mcp.WithString("fix_approach", mcp.Description("How to fix it")),
+		),
+		h.RecordTechDebt,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_tech_debt",
+			mcp.WithDescription("Tech debt dashboard: all items by impact, resolution velocity, status."),
+		),
+		h.TechDebtDashboard,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_tech_debt_budget",
+			mcp.WithDescription("Recommend sprint capacity allocation for tech debt based on debt load and velocity."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.TechDebtBudget,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_review_prep",
+			mcp.WithDescription("Sprint review preparation: demo order, talking points, what shipped vs didn't, stakeholder questions."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.SprintReviewPrep,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_mcp_stats",
+			mcp.WithDescription("MCP server self-monitoring: memory contents, data freshness, storage stats."),
+			mcp.WithNumber("board_id", mcp.Description("Board ID for sprint-specific stats")),
+		),
+		h.MCPStats,
 	)
 }
