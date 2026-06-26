@@ -14,10 +14,10 @@ Priority order. Each item independently shippable.
 - [x] `pm_escalation_draft` — Pyramid-structured escalation
 - [x] `pm_decision_record` — ADR format (context/options/consequences)
 
-## P2: Psychological Safety (Partial)
-- [ ] `pm_safety_survey` — 7-question survey (1-5 scale per member)
-- [ ] `pm_safety_trend` — Safety score over time
-- [ ] `pm_team_aristotle` — Full 5-pillar assessment
+## P2: Psychological Safety (DONE)
+- [x] `pm_safety_survey` — 7-question Edmondson scale (q1-q7, 1-5 Likert, auto reverse-score)
+- [x] `pm_safety_trend` — Safety score over time with direction indicators
+- [x] `pm_team_aristotle` — AI-driven Google Project Aristotle 5-pillar assessment
 
 ## P3: SPACE Metrics + DevEx
 - [ ] `pm_space_metrics` — Aggregate S/P/A/C/E from Jira+GitHub
@@ -51,7 +51,7 @@ Priority order. Each item independently shippable.
 
 ---
 
-## Completed This Session (v0.5.5)
+## Completed This Session (v0.6.0)
 
 1. Tool descriptions shortened to <80 chars (all 262 tools)
 2. Tool usage tracking (`pm_tool_usage`)
@@ -65,12 +65,11 @@ Priority order. Each item independently shippable.
 10. Fixed duplicate tool registration (`registerCommunicationTools`)
 11. Updated README, AGENTS.md, version to v0.5.0
 12. **v0.5.5**: Hypothesis tools (`pm_hypothesis`, `pm_hypothesis_review`, `pm_hypothesis_close`)
-13. Estimation accuracy (`pm_estimation_accuracy`)
-14. SPACE metrics (`pm_space`)
-15. EBM dashboard (`pm_ebm`)
-16. Rate limiter (60 req/min) + io.LimitReader(10MB)
-17. Notification budget enforcement in `NotifyRouted`
-18. Proactive handlers + empathy tools + research blueprint
+13. Estimation accuracy (`pm_estimation_accuracy`), SPACE (`pm_space`), EBM (`pm_ebm`)
+14. Rate limiter (60 req/min) + io.LimitReader(10MB)
+15. Notification budget enforcement in `NotifyRouted`
+16. **v0.6.0**: Psychological Safety (`pm_safety_survey`, `pm_safety_trend`, `pm_team_aristotle`)
+17. Research gap analysis, slack integration updates, proactive handlers
 
 ---
 
