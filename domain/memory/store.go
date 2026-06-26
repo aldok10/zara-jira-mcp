@@ -51,4 +51,24 @@ type Store interface {
 	// Health scores
 	SaveHealthScore(ctx context.Context, h *HealthScore) error
 	GetHealthScores(ctx context.Context, boardID int, limit int) ([]HealthScore, error)
+
+	// Daily progress (burndown)
+	SaveDailyProgress(ctx context.Context, p *DailyProgress) error
+	GetDailyProgress(ctx context.Context, boardID int, sprintName string) ([]DailyProgress, error)
+
+	// Sprint goals
+	SaveSprintGoal(ctx context.Context, g *SprintGoal) error
+	UpdateSprintGoal(ctx context.Context, g *SprintGoal) error
+	GetActiveGoals(ctx context.Context, boardID int) ([]SprintGoal, error)
+	GetGoalHistory(ctx context.Context, boardID int, limit int) ([]SprintGoal, error)
+
+	// Definition of Done
+	SaveDoDItem(ctx context.Context, item *DoDItem) error
+	GetDoD(ctx context.Context, project string) ([]DoDItem, error)
+	DeleteDoDItem(ctx context.Context, id int64) error
+
+	// Escalations
+	SaveEscalation(ctx context.Context, e *Escalation) error
+	GetRecentEscalations(ctx context.Context, limit int) ([]Escalation, error)
+	AcknowledgeEscalation(ctx context.Context, id int64) error
 }

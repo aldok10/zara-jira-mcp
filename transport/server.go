@@ -25,6 +25,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerMemoryTools(s, handlers)
 	registerPMIntelTools(s, handlers)
 	registerAdvancedPMTools(s, handlers)
+	registerDeepPMTools(s, handlers)
 
 	return &MCPServer{s: s}
 }
@@ -440,5 +441,112 @@ func registerAdvancedPMTools(s *server.MCPServer, h *tools.Handlers) {
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.AutoDetectRisks,
+	)
+}
+
+func registerDeepPMTools(s *server.MCPServer, h *tools.Handlers) {
+	s.AddTool(
+		mcp.NewTool("pm_track_daily",
+			mcp.WithDescription("Track today's sprint progress (burndown data point). Call daily for burndown chart data."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.RecordDailyProgress,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_burndown",
+			mcp.WithDescription("Show sprint burndown data with daily progress tracking."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+			mcp.WithString("sprint_name", mcp.Description("Sprint name (default: active sprint)")),
+		),
+		h.GetBurndown,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_set_sprint_goal",
+			mcp.WithDescription("Define sprint goal with measurable key results. Track if the team achieves what matters."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+			mcp.WithString("goal", mcp.Required(), mcp.Description("Sprint goal statement")),
+			mcp.WithString("key_results", mcp.Description("Measurable key results (newline-separated)")),
+			mcp.WithString("sprint_name", mcp.Description("Sprint name (default: active sprint)")),
+		),
+		h.SetSprintGoal,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_close_sprint_goal",
+			mcp.WithDescription("Close a sprint goal with outcome assessment."),
+			mcp.WithNumber("goal_id", mcp.Required(), mcp.Description("Goal ID")),
+			mcp.WithString("status", mcp.Required(), mcp.Description("achieved, partially_achieved, missed")),
+			mcp.WithString("outcome", mcp.Description("What actually happened")),
+		),
+		h.CloseSprintGoal,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_sprint_goals",
+			mcp.WithDescription("Show active sprint goals or goal achievement history."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+			mcp.WithBoolean("show_history", mcp.Description("Show past goals with outcomes (default: false)")),
+		),
+		h.GetGoals,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_dod",
+			mcp.WithDescription("Show Definition of Done checklist for a project."),
+			mcp.WithString("project", mcp.Description("Project key (default: * for global)")),
+		),
+		h.GetDoD,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_dod_add",
+			mcp.WithDescription("Add an item to the Definition of Done checklist."),
+			mcp.WithString("item", mcp.Required(), mcp.Description("DoD checklist item")),
+			mcp.WithString("project", mcp.Description("Project key (default: * for global)")),
+			mcp.WithString("category", mcp.Description("code, testing, docs, review, deploy (default: general)")),
+		),
+		h.AddDoDItem,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_dod_remove",
+			mcp.WithDescription("Remove a Definition of Done item."),
+			mcp.WithNumber("item_id", mcp.Required(), mcp.Description("Item ID")),
+		),
+		h.RemoveDoDItem,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_escalate",
+			mcp.WithDescription("Auto-escalate to Lark: critical risks >3 days, blockers >3 days, sprint health <50. Sends alert to configured Lark group."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.Escalate,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_escalations",
+			mcp.WithDescription("Show escalation history — what was escalated, when, acknowledged status."),
+		),
+		h.GetEscalations,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_dashboard",
+			mcp.WithDescription("One-shot PM dashboard: sprint progress, health score, risks, blockers, dependencies, goals, actions, escalations. Everything in one view."),
+			mcp.WithNumber("board_id", mcp.Description("Board ID for sprint-specific data")),
+		),
+		h.PMDashboard,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_release_notes",
+			mcp.WithDescription("Generate categorized release notes from completed sprint issues (features, bugs, tasks). Optionally sends to Lark."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+			mcp.WithBoolean("send_to_lark", mcp.Description("Send release notes to Lark group")),
+		),
+		h.GenerateReleaseNotes,
 	)
 }

@@ -6,19 +6,18 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aldok10/zara-jira-mcp/domain/memory"
-	"github.com/aldok10/zara-jira-mcp/internal/ai"
-	"github.com/aldok10/zara-jira-mcp/internal/jira"
-	"github.com/aldok10/zara-jira-mcp/internal/lark"
+	aiprovider "github.com/aldok10/zara-jira-mcp/domain/ai"
 	domain "github.com/aldok10/zara-jira-mcp/domain/jira"
+	larkdom "github.com/aldok10/zara-jira-mcp/domain/lark"
+	"github.com/aldok10/zara-jira-mcp/domain/memory"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // Handlers holds all MCP tool handler methods.
 type Handlers struct {
-	Jira   *jira.RestClient
-	AI     *ai.OpenAIClient
-	Lark   *lark.WebhookClient
+	Jira   domain.Client
+	AI     aiprovider.Provider
+	Lark   larkdom.Notifier
 	Memory memory.Store
 }
 

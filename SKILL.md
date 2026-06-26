@@ -4,7 +4,7 @@ Use when managing IT projects, running sprints, tracking risks, making decisions
 
 ## What This MCP Does
 
-`zara-jira-mcp` is an AI-powered PM/Scrum Master brain with persistent memory. It connects to Jira for live data, maintains historical context in SQLite, and uses AI to provide proactive recommendations. 40 tools total.
+`zara-jira-mcp` is an AI-powered PM/Scrum Master brain with persistent memory. It connects to Jira for live data, maintains historical context in SQLite, and uses AI to provide proactive recommendations. **52 tools** across 13 categories.
 
 ## Tool Categories
 
@@ -103,9 +103,42 @@ Use when managing IT projects, running sprints, tracking risks, making decisions
 |------|---------|
 | `jira_notify_lark` | Send markdown to Lark group |
 
-## PM Workflow Patterns
+### 12. Burndown & Daily Tracking (2 tools)
 
-### Daily Standup Prep
+| Tool | When to Use |
+|------|-------------|
+| `pm_track_daily` | Daily — capture today's sprint progress for burndown |
+| `pm_burndown` | View burndown with burn rate + days-to-complete estimate |
+
+### 13. Sprint Goals (3 tools)
+
+| Tool | When to Use |
+|------|-------------|
+| `pm_set_sprint_goal` | Sprint planning — define goal + key results |
+| `pm_close_sprint_goal` | End of sprint — record achieved/missed + outcome |
+| `pm_sprint_goals` | View active goals or achievement history |
+
+### 14. Definition of Done (1 tool)
+
+| Tool | When to Use |
+|------|-------------|
+| `pm_dod` | Manage DoD checklist (add/remove/list per project) |
+
+### 15. Escalation System (3 tools)
+
+| Tool | When to Use |
+|------|-------------|
+| `pm_escalate` | Auto-escalate critical risks/blockers to Lark |
+| `pm_escalations` | View escalation history |
+| `pm_dashboard` | One-shot full PM view (everything in one call) |
+
+### 16. Release (1 tool)
+
+| Tool | When to Use |
+|------|-------------|
+| `pm_release_notes` | Generate categorized release notes from done issues |
+
+## PM Workflow Patterns
 ```
 1. pm_standup_prep(board_id)           -> AI-generated talking points
 2. pm_blockers()                       -> what's stuck
@@ -166,6 +199,44 @@ Use when managing IT projects, running sprints, tracking risks, making decisions
 1. pm_record_meeting(type, notes, decisions, action_items, attendees)
 ```
 
+### Daily Burndown
+```
+1. pm_track_daily(board_id)            -> capture today's data point
+2. pm_burndown(board_id)              -> view chart + burn rate
+```
+
+### Sprint Goal Lifecycle
+```
+1. pm_set_sprint_goal(board_id, goal, key_results)      -> at planning
+2. pm_sprint_goals(board_id)                            -> check during sprint
+3. pm_close_sprint_goal(goal_id, status, outcome)       -> at sprint end
+4. pm_sprint_goals(board_id, show_history:true)         -> track over time
+```
+
+### Definition of Done Setup
+```
+1. pm_dod(action:"add", item:"Unit tests pass", category:"testing")
+2. pm_dod(action:"add", item:"Code reviewed", category:"review")
+3. pm_dod(action:"add", item:"No critical bugs", category:"testing")
+4. pm_dod(project:"MYPROJ")           -> view project-specific DoD
+```
+
+### Escalation & Alerting
+```
+1. pm_escalate(board_id)              -> auto-check thresholds, send to Lark
+2. pm_escalations()                   -> review what was escalated
+```
+
+### Release Day
+```
+1. pm_release_notes(board_id, send_to_lark:true) -> generate + share
+```
+
+### Full Status Check (One Command)
+```
+1. pm_dashboard(board_id)             -> everything in one view
+```
+
 ## Health Score Breakdown (pm_sprint_health)
 
 | Component | Max | Measures |
@@ -188,6 +259,15 @@ Automatically scans for:
 
 All findings auto-recorded to risk register.
 
+## Auto Escalation (pm_escalate)
+
+Thresholds that trigger Lark alerts:
+1. Critical/High risks open >3 days without resolution
+2. Blockers unresolved >3 days
+3. Sprint health score below 50
+
+Escalation history tracked — prevents duplicate alerts.
+
 ## Principles
 
 1. **Record everything that matters** — Decisions, risks, blockers. Future you will thank present you.
@@ -206,4 +286,4 @@ All findings auto-recorded to risk register.
 SQLite at `~/.zara-jira-mcp/pm_memory.db` (configurable via `PM_MEMORY_DB_PATH`).
 Back up this file to preserve all PM memory across machines.
 
-Tables: `sprint_snapshots`, `risks`, `decisions`, `blockers`, `team_metrics`, `retrospectives`, `action_items`, `dependencies`, `meeting_notes`, `health_scores`
+Tables: `sprint_snapshots`, `risks`, `decisions`, `blockers`, `team_metrics`, `retrospectives`, `action_items`, `dependencies`, `meeting_notes`, `health_scores`, `daily_progress`, `sprint_goals`, `dod_items`, `escalations`

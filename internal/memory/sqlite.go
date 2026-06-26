@@ -29,6 +29,9 @@ func NewSQLiteStore(dbPath string) (*SQLiteStore, error) {
 	if err := s.migrateAdvanced(); err != nil {
 		return nil, fmt.Errorf("migrate advanced: %w", err)
 	}
+	if err := s.migrateDeep(); err != nil {
+		return nil, fmt.Errorf("migrate deep: %w", err)
+	}
 	return s, nil
 }
 

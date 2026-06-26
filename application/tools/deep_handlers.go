@@ -1,0 +1,349 @@
+package tools
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	memdom "github.com/aldok10/zara-jira-mcp/domain/memory"
+	"github.com/mark3labs/mcp-go/mcp"
+)
+
+// TrackDailyProgress captures daily sprint state for burndown tracking.
+func (h *Handlers) TrackDailyProgress(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	boardID, err := req.RequireInt("board_id")
+	if err != nil {
+		return errorResult("board_id required"), nil
+	}
+
+	sprints, err := h.Jira.GetActiveSprints(ctx, boardID)
+	if err != nil {
+		return errorResult("Failed to get sprints: " + err.Error()), nil
+	}
+	if len(sprints) == 0 {
+		return textResult("No active sprint found."), nil
+	}
+
+	sprint := sprints[0]
+	issues, err := h.Jira.GetSprintIssues(ctx, sprint.ID)
+	if err != nil {
+		return errorResult("Failed to get sprint issues: " + err.Error()), nil
+	}
+
+	var done, inProgress, todo, blocked int
+	for _, issue := range issues {
+		lower := strings.ToLower(issue.Status)
+		switch {
+		case strings.Contains(lower, "done") || strings.Contains(lower, "closed") || strings.Contains(lower, "resolved"):
+			done++
+		case strings.Contains(lower, "progress") || strings.Contains(lower, "review"):
+			inProgress++
+		case strings.Contains(lower, "block"):
+			blocked++
+		default:
+			todo++
+		}
+	}
+
+	p := &memdom.DailyProgress{
+		SprintName:  sprint.Name,
+		BoardID:     boardID,
+		Date:        time.Now(),
+		TotalIssues: len(issues),
+		Done:        done,
+		InProgress:  inProgress,
+		Todo:        todo,
+		Blocked:     blocked,
+		PointsDone:  req.GetInt("points_done", 0),
+		PointsTotal: req.GetInt("points_total", 0),
+	}
+
+	if err := h.Memory.SaveDailyProgress(ctx, p); err != nil {
+		return errorResult("Failed to save progress: " + err.Error()), nil
+	}
+
+	return textResult(fmt.Sprintf("Daily progress recorded for %s:\nDone: %d | In Progress: %d | Todo: %d | Blocked: %d | Total: %d",
+		sprint.Name, done, inProgress, todo, blocked, len(issues))), nil
+}
+
+// GetBurndown shows daily progress over time for a sprint.
+func (h *Handlers) GetBurndown(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	boardID, err := req.RequireInt("board_id")
+	if err != nil {
+		return errorResult("board_id required"), nil
+	}
+
+	sprintName := req.GetString("sprint_name", "")
+	if sprintName == "" {
+		sprints, err := h.Jira.GetActiveSprints(ctx, boardID)
+		if err != nil || len(sprints) == 0 {
+			return textResult("No active sprint found. Provide sprint_name explicitly."), nil
+		}
+		sprintName = sprints[0].Name
+	}
+
+	progress, err := h.Memory.GetDailyProgress(ctx, boardID, sprintName)
+	if err != nil {
+		return errorResult("Failed to get progress: " + err.Error()), nil
+	}
+	if len(progress) == 0 {
+		return textResult("No daily progress recorded yet. Use pm_track_daily to capture data."), nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Burndown: %s\n\n", sprintName))
+	sb.WriteString("Date       | Done | InProg | Todo | Blocked | Total\n")
+	sb.WriteString("-----------|------|--------|------|---------|------\n")
+	for _, p := range progress {
+		sb.WriteString(fmt.Sprintf("%s | %d | %d | %d | %d | %d\n",
+			p.Date.Format("2006-01-02"), p.Done, p.InProgress, p.Todo, p.Blocked, p.TotalIssues))
+	}
+
+	return textResult(sb.String()), nil
+}
+
+// SetSprintGoal sets an explicit sprint goal with key results.
+func (h *Handlers) SetSprintGoal(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	boardID, err := req.RequireInt("board_id")
+	if err != nil {
+		return errorResult("board_id required"), nil
+	}
+	goal, err := req.RequireString("goal")
+	if err != nil {
+		return errorResult("goal required"), nil
+	}
+
+	sprintName := req.GetString("sprint_name", "")
+	if sprintName == "" {
+		sprints, _ := h.Jira.GetActiveSprints(ctx, boardID)
+		if len(sprints) > 0 {
+			sprintName = sprints[0].Name
+		}
+	}
+
+	g := &memdom.SprintGoal{
+		SprintName: sprintName,
+		BoardID:    boardID,
+		Goal:       goal,
+		KeyResults: req.GetString("key_results", ""),
+		Status:     "active",
+		CreatedAt:  time.Now(),
+	}
+
+	if err := h.Memory.SaveSprintGoal(ctx, g); err != nil {
+		return errorResult("Failed to save goal: " + err.Error()), nil
+	}
+
+	return textResult(fmt.Sprintf("Sprint goal set for %s:\n%s\nKey Results: %s",
+		sprintName, goal, g.KeyResults)), nil
+}
+
+// CloseSprintGoal closes a sprint goal with outcome.
+func (h *Handlers) CloseSprintGoal(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	goalID, err := req.RequireInt("goal_id")
+	if err != nil {
+		return errorResult("goal_id required"), nil
+	}
+	status, err := req.RequireString("status")
+	if err != nil {
+		return errorResult("status required (achieved, partially_achieved, missed)"), nil
+	}
+
+	now := time.Now()
+	g := &memdom.SprintGoal{
+		ID:       int64(goalID),
+		Status:   status,
+		Outcome:  req.GetString("outcome", ""),
+		ClosedAt: &now,
+	}
+
+	if err := h.Memory.UpdateSprintGoal(ctx, g); err != nil {
+		return errorResult("Failed to close goal: " + err.Error()), nil
+	}
+
+	return textResult(fmt.Sprintf("Goal #%d closed as: %s", goalID, status)), nil
+}
+
+// GetSprintGoals shows active or historical sprint goals.
+func (h *Handlers) GetSprintGoals(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	boardID, err := req.RequireInt("board_id")
+	if err != nil {
+		return errorResult("board_id required"), nil
+	}
+	showHistory := req.GetBool("show_history", false)
+
+	var goals []memdom.SprintGoal
+	if showHistory {
+		goals, err = h.Memory.GetGoalHistory(ctx, boardID, 10)
+	} else {
+		goals, err = h.Memory.GetActiveGoals(ctx, boardID)
+	}
+	if err != nil {
+		return errorResult("Failed to get goals: " + err.Error()), nil
+	}
+	if len(goals) == 0 {
+		return textResult("No goals found."), nil
+	}
+
+	var sb strings.Builder
+	for _, g := range goals {
+		sb.WriteString(fmt.Sprintf("#%d [%s] %s\n  Goal: %s\n", g.ID, g.Status, g.SprintName, g.Goal))
+		if g.KeyResults != "" {
+			sb.WriteString(fmt.Sprintf("  Key Results: %s\n", g.KeyResults))
+		}
+		if g.Outcome != "" {
+			sb.WriteString(fmt.Sprintf("  Outcome: %s\n", g.Outcome))
+		}
+		sb.WriteString("\n")
+	}
+
+	return textResult(sb.String()), nil
+}
+
+// ManageDoD handles Definition of Done list/add/remove.
+func (h *Handlers) ManageDoD(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	action := req.GetString("action", "list")
+	project := req.GetString("project", "*")
+
+	switch action {
+	case "add":
+		item := req.GetString("item", "")
+		if item == "" {
+			return errorResult("item required for add action"), nil
+		}
+		d := &memdom.DoDItem{
+			Project:  project,
+			Item:     item,
+			Category: req.GetString("category", "general"),
+			OrderNum: req.GetInt("order", 0),
+			Active:   true,
+		}
+		if err := h.Memory.SaveDoDItem(ctx, d); err != nil {
+			return errorResult("Failed to save: " + err.Error()), nil
+		}
+		return textResult(fmt.Sprintf("DoD item added: [%s] %s", d.Category, item)), nil
+
+	case "remove":
+		id := req.GetInt("item_id", 0)
+		if id == 0 {
+			return errorResult("item_id required for remove action"), nil
+		}
+		if err := h.Memory.DeleteDoDItem(ctx, int64(id)); err != nil {
+			return errorResult("Failed to remove: " + err.Error()), nil
+		}
+		return textResult(fmt.Sprintf("DoD item #%d removed.", id)), nil
+
+	default: // list
+		items, err := h.Memory.GetDoD(ctx, project)
+		if err != nil {
+			return errorResult("Failed to get DoD: " + err.Error()), nil
+		}
+		if len(items) == 0 {
+			return textResult("No Definition of Done items. Use action=add to create one."), nil
+		}
+		var sb strings.Builder
+		sb.WriteString(fmt.Sprintf("Definition of Done (project: %s):\n\n", project))
+		for _, item := range items {
+			sb.WriteString(fmt.Sprintf("  #%d [%s] %s\n", item.ID, item.Category, item.Item))
+		}
+		return textResult(sb.String()), nil
+	}
+}
+
+// Escalate checks for critical conditions and sends alerts to Lark.
+func (h *Handlers) Escalate(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	boardID, err := req.RequireInt("board_id")
+	if err != nil {
+		return errorResult("board_id required"), nil
+	}
+
+	var escalated []string
+
+	// Critical risks open > 3 days
+	risks, _ := h.Memory.GetOpenRisks(ctx)
+	for _, r := range risks {
+		if (r.Severity == "critical" || r.Severity == "high") && time.Since(r.IdentifiedAt).Hours() > 72 {
+			title := fmt.Sprintf("RISK: [%s] %s (open %d days)", r.Severity, r.Title, int(time.Since(r.IdentifiedAt).Hours()/24))
+			h.Lark.SendMarkdown(ctx, "Risk Escalation", title)
+			h.Memory.SaveEscalation(ctx, &memdom.Escalation{
+				Type:        "risk",
+				ReferenceID: r.ID,
+				Title:       title,
+				Severity:    r.Severity,
+				EscalatedAt: time.Now(),
+				Channel:     "lark",
+			})
+			escalated = append(escalated, title)
+		}
+	}
+
+	// Blockers open > 3 days
+	blockers, _ := h.Memory.GetActiveBlockers(ctx)
+	for _, b := range blockers {
+		if time.Since(b.BlockedSince).Hours() > 72 {
+			title := fmt.Sprintf("BLOCKER: %s (blocked %d days)", b.Description, int(time.Since(b.BlockedSince).Hours()/24))
+			h.Lark.SendMarkdown(ctx, "Blocker Escalation", title)
+			h.Memory.SaveEscalation(ctx, &memdom.Escalation{
+				Type:        "blocker",
+				ReferenceID: b.ID,
+				Title:       title,
+				Severity:    "high",
+				EscalatedAt: time.Now(),
+				Channel:     "lark",
+			})
+			escalated = append(escalated, title)
+		}
+	}
+
+	// Sprint health < 50
+	scores, _ := h.Memory.GetHealthScores(ctx, boardID, 1)
+	if len(scores) > 0 && scores[0].OverallScore < 50 {
+		title := fmt.Sprintf("SPRINT AT RISK: Health score %d/100", scores[0].OverallScore)
+		h.Lark.SendMarkdown(ctx, "Sprint Risk", title)
+		h.Memory.SaveEscalation(ctx, &memdom.Escalation{
+			Type:        "sprint_health",
+			Title:       title,
+			Severity:    "critical",
+			EscalatedAt: time.Now(),
+			Channel:     "lark",
+		})
+		escalated = append(escalated, title)
+	}
+
+	if len(escalated) == 0 {
+		return textResult("No escalation needed. All clear."), nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Escalated %d items to Lark:\n\n", len(escalated)))
+	for _, e := range escalated {
+		sb.WriteString(fmt.Sprintf("- %s\n", e))
+	}
+	return textResult(sb.String()), nil
+}
+// GetEscalations shows recent escalations.
+func (h *Handlers) GetEscalations(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	limit := req.GetInt("limit", 10)
+
+	escalations, err := h.Memory.GetRecentEscalations(ctx, limit)
+	if err != nil {
+		return errorResult("Failed to get escalations: " + err.Error()), nil
+	}
+	if len(escalations) == 0 {
+		return textResult("No escalations recorded."), nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Recent Escalations (%d):\n\n", len(escalations)))
+	for _, e := range escalations {
+		ack := "pending"
+		if e.Acknowledged {
+			ack = "ack"
+		}
+		sb.WriteString(fmt.Sprintf("#%d [%s] [%s] %s (%s via %s)\n",
+			e.ID, e.Severity, ack, e.Title, e.Type, e.Channel))
+	}
+
+	return textResult(sb.String()), nil
+}
