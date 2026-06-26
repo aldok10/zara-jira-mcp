@@ -131,6 +131,25 @@ Setiap sprint delivers usable value. Nggak ada "big bang". PM bisa mulai pakai d
 
 ---
 
+## Sprint +7: OKR/KPI Intelligence (3-4 minggu)
+
+Rationale: "Teams connecting goals to outcomes are 30% more likely to hit them" (OKR Tool, 2026). PM wastes hours/week manually translating Jira data to OKR progress. Lark OKR users doubly penalized — 2 systems, zero auto-sync.
+
+| # | Task | Research Basis | Effort |
+|---|------|---------------|--------|
+| 1 | `pm_kpi_track` + `pm_kpi_dashboard` — simple time-series metric tracking | Foundation for all outcome measurement | 4h |
+| 2 | `pm_okr_map` — link Key Results to Jira signals (JQL, epic, label) | Atlassian: "does this ticket move any KR?" | 6h |
+| 3 | `pm_okr_progress` — auto-calculate KR progress from live Jira data | Eliminate "Friday afternoon slide-making" | 6h |
+| 4 | `pm_okr_report` — generate OKR status per audience (team/PO/exec) | Different stakeholders need different granularity | 4h |
+| 5 | `pm_okr_gaps` — identify KRs with zero linked sprint work | Strategy-execution gap detection | 2h |
+| 6 | `pm_okr_suggest` — AI attribute sprint items to KRs | Output→Outcome bridge, 30% goal achievement improvement | 4h |
+| 7 | `pm_okr_sync_lark` — push calculated progress to Lark OKR via API | Eliminate dual-system manual update | 6h |
+| 8 | `pm_kpi_alert` — alert when KPI crosses threshold | Proactive vs reactive goal management | 3h |
+
+**Exit criteria:** PM can answer "how does this sprint contribute to our quarterly OKRs?" in one tool call, and Lark OKR reflects reality without manual updates.
+
+---
+
 ## Success Metrics
 
 | Metric | Baseline | After 3 Sprints | After 6 Sprints |
