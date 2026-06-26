@@ -415,8 +415,8 @@ func (h *Handlers) Escalate(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	for _, r := range risks {
 		if (r.Severity == "critical" || r.Severity == "high") && time.Since(r.IdentifiedAt).Hours() > 72 {
 			title := fmt.Sprintf("RISK: [%s] %s (open %d days)", r.Severity, r.Title, int(time.Since(r.IdentifiedAt).Hours()/24))
-			h.Lark.SendMarkdown(ctx, "Risk Escalation", title)
-			h.Memory.SaveEscalation(ctx, &memdom.Escalation{
+			_ = h.Lark.SendMarkdown(ctx, "Risk Escalation", title)
+			_ = h.Memory.SaveEscalation(ctx, &memdom.Escalation{
 				Type:        "risk",
 				ReferenceID: r.ID,
 				Title:       title,
@@ -433,8 +433,8 @@ func (h *Handlers) Escalate(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	for _, b := range blockers {
 		if time.Since(b.BlockedSince).Hours() > 72 {
 			title := fmt.Sprintf("BLOCKER: %s (blocked %d days)", b.Description, int(time.Since(b.BlockedSince).Hours()/24))
-			h.Lark.SendMarkdown(ctx, "Blocker Escalation", title)
-			h.Memory.SaveEscalation(ctx, &memdom.Escalation{
+			_ = h.Lark.SendMarkdown(ctx, "Blocker Escalation", title)
+			_ = h.Memory.SaveEscalation(ctx, &memdom.Escalation{
 				Type:        "blocker",
 				ReferenceID: b.ID,
 				Title:       title,
@@ -450,8 +450,8 @@ func (h *Handlers) Escalate(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	scores, _ := h.Memory.GetHealthScores(ctx, boardID, 1)
 	if len(scores) > 0 && scores[0].OverallScore < 50 {
 		title := fmt.Sprintf("SPRINT AT RISK: Health score %d/100", scores[0].OverallScore)
-		h.Lark.SendMarkdown(ctx, "Sprint Risk", title)
-		h.Memory.SaveEscalation(ctx, &memdom.Escalation{
+		_ = h.Lark.SendMarkdown(ctx, "Sprint Risk", title)
+		_ = h.Memory.SaveEscalation(ctx, &memdom.Escalation{
 			Type:        "sprint_health",
 			Title:       title,
 			Severity:    "critical",

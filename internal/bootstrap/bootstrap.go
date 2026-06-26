@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -45,7 +46,9 @@ var Module = fx.Module("bootstrap",
 func provideMemory() (*memory.SQLiteStore, error) {
 	home, _ := os.UserHomeDir()
 	dir := filepath.Join(home, ".zara-jira-mcp")
-	os.MkdirAll(dir, 0o755)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return nil, fmt.Errorf("create data dir: %w", err)
+	}
 	return memory.NewSQLiteStore(filepath.Join(dir, "pm.db"))
 }
 
@@ -87,7 +90,7 @@ func Invoke(p LifecycleParams) {
 				if err := stdio.Listen(context.Background(), os.Stdin, os.Stdout); err != nil {
 					logger.Info("server stopped", "reason", err.Error())
 				}
-				p.Shutdowner.Shutdown()
+				p.Shutdowner.Shutdown() //nolint:errcheck // fire-and-forget shutdown
 			}()
 			return nil
 		},

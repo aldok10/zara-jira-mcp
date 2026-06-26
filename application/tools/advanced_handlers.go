@@ -120,7 +120,7 @@ func (h *Handlers) SprintHealthScore(ctx context.Context, req mcp.CallToolReques
 		TeamScore:     teamScore,
 		Details:       string(detailsJSON),
 	}
-	h.Memory.SaveHealthScore(ctx, score)
+	_ = h.Memory.SaveHealthScore(ctx, score)
 
 	// Determine status
 	status := "HEALTHY"
@@ -379,7 +379,7 @@ func (h *Handlers) AutoDetectRisks(ctx context.Context, req mcp.CallToolRequest)
 		}
 		if staleCount > 0 {
 			findings = append(findings, fmt.Sprintf("STALE: %d issues in active sprint with no update in 7+ days", staleCount))
-			h.Memory.SaveRisk(ctx, &memdom.Risk{
+			_ = h.Memory.SaveRisk(ctx, &memdom.Risk{
 				Title:        fmt.Sprintf("%d stale issues in sprint (auto-detected)", staleCount),
 				Severity:     "medium",
 				Status:       "open",
@@ -410,7 +410,7 @@ func (h *Handlers) AutoDetectRisks(ctx context.Context, req mcp.CallToolRequest)
 			avg := totalAssigned / len(assigneeCounts)
 			if maxCount > avg*2 && maxCount > 5 {
 				findings = append(findings, fmt.Sprintf("OVERLOAD: %s has %d issues (avg: %d)", maxPerson, maxCount, avg))
-				h.Memory.SaveRisk(ctx, &memdom.Risk{
+				_ = h.Memory.SaveRisk(ctx, &memdom.Risk{
 					Title:        fmt.Sprintf("Workload imbalance: %s has %dx average load (auto-detected)", maxPerson, maxCount/avg),
 					Severity:     "high",
 					Status:       "open",
@@ -431,7 +431,7 @@ func (h *Handlers) AutoDetectRisks(ctx context.Context, req mcp.CallToolRequest)
 		}
 		if blockedCount >= 3 {
 			findings = append(findings, fmt.Sprintf("BLOCKED: %d issues currently blocked", blockedCount))
-			h.Memory.SaveRisk(ctx, &memdom.Risk{
+			_ = h.Memory.SaveRisk(ctx, &memdom.Risk{
 				Title:        fmt.Sprintf("%d blocked issues (auto-detected)", blockedCount),
 				Severity:     "high",
 				Status:       "open",

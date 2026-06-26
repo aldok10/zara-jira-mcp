@@ -71,15 +71,6 @@ func (h *Handlers) FlowMetrics(ctx context.Context, req mcp.CallToolRequest) (*m
 	}
 
 	// Flow efficiency: active work time vs total time (approximation)
-	flowEfficiency := 0.0
-	if avgCycleTime > 0 {
-		// Assume active work = cycle time - wait time; rough heuristic
-		flowEfficiency = (1.0 / avgCycleTime) * 100
-		if flowEfficiency > 100 {
-			flowEfficiency = 100
-		}
-	}
-
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Flow Metrics — Sprint: %s\n\n", sprint.Name))
 	sb.WriteString(fmt.Sprintf("WIP (Work In Progress): %d items\n", wipCount))

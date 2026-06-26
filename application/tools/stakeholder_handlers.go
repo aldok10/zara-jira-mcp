@@ -447,7 +447,7 @@ Keep under 150 words. Be specific, reference the data.`
 
 	sendToLark := req.GetBool("send_to_lark", false)
 	if sendToLark {
-		h.Lark.SendMarkdown(ctx, "Weekly Digest", digest)
+		_ = h.Lark.SendMarkdown(ctx, "Weekly Digest", digest)
 		return textResult(digest + "\n\n(Sent to Lark)"), nil
 	}
 

@@ -281,7 +281,7 @@ func (h *Handlers) GetBlockers(ctx context.Context, req mcp.CallToolRequest) (*m
 
 	var sb strings.Builder
 	if showHistory {
-		sb.WriteString(fmt.Sprintf("Blocker History (last 20):\n\n"))
+		sb.WriteString("Blocker History (last 20):\n\n")
 	} else {
 		sb.WriteString(fmt.Sprintf("Active Blockers (%d):\n\n", len(blockers)))
 	}

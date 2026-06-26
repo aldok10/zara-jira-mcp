@@ -372,7 +372,9 @@ func (c *RestClient) CreateSubtask(ctx context.Context, parentKey string, input 
 	var result struct {
 		Key string `json:"key"`
 	}
-	json.NewDecoder(resp.Body).Decode(&result)
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
 	return &domain.Issue{Key: result.Key, Summary: input.Summary}, nil
 }
 
@@ -401,7 +403,9 @@ func (c *RestClient) FindUser(ctx context.Context, query string) ([]domain.User,
 		DisplayName string `json:"displayName"`
 		Email       string `json:"emailAddress"`
 	}
-	json.NewDecoder(resp.Body).Decode(&users)
+	if err := json.NewDecoder(resp.Body).Decode(&users); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
 
 	out := make([]domain.User, len(users))
 	for i, u := range users {
@@ -520,7 +524,9 @@ func (c *RestClient) CreateSprint(ctx context.Context, boardID int, name, goal s
 		ID   int    `json:"id"`
 		Name string `json:"name"`
 	}
-	json.NewDecoder(resp.Body).Decode(&result)
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
 	return &domain.Sprint{ID: result.ID, Name: result.Name, State: "future"}, nil
 }
 

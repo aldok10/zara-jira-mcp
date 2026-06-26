@@ -72,7 +72,7 @@ func (h *Handlers) SmartCommit(ctx context.Context, req mcp.CallToolRequest) (*m
 		for _, t := range transitions {
 			lower := strings.ToLower(t.Name)
 			if strings.Contains(lower, "done") || strings.Contains(lower, "close") || strings.Contains(lower, "resolve") {
-				h.Jira.TransitionIssue(ctx, key, t.ID)
+				_ = h.Jira.TransitionIssue(ctx, key, t.ID)
 				actions = append(actions, "Transitioned to "+t.Name)
 				break
 			}
@@ -82,14 +82,14 @@ func (h *Handlers) SmartCommit(ctx context.Context, req mcp.CallToolRequest) (*m
 	// Check for #time Xh
 	timeRe := regexp.MustCompile(`#time\s+(\d+[hmd])`)
 	if timeMatch := timeRe.FindStringSubmatch(message); len(timeMatch) > 1 {
-		h.Jira.AddWorklog(ctx, key, timeMatch[1], "")
+		_ = h.Jira.AddWorklog(ctx, key, timeMatch[1], "")
 		actions = append(actions, "Logged "+timeMatch[1])
 	}
 
 	// Check for #comment text
 	commentRe := regexp.MustCompile(`#comment\s+(.+?)(?:\s+#|$)`)
 	if commentMatch := commentRe.FindStringSubmatch(message); len(commentMatch) > 1 {
-		h.Jira.AddComment(ctx, key, commentMatch[1])
+		_ = h.Jira.AddComment(ctx, key, commentMatch[1])
 		actions = append(actions, "Comment added")
 	}
 
