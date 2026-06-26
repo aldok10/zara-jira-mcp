@@ -575,3 +575,117 @@ Just as teams accumulate tech debt, they accumulate **communication debt:**
 33. techademy.com — PMs attend 25h/week meetings
 34. grain.com — AI meeting summaries: decisions, owners, due dates
 35. projectmanagement.com — Using AI for team communication without losing trust
+
+---
+
+## 13. ADDITIONAL RESEARCH SUMMARIES (To Explore Further)
+
+Below are additional communication models, theories, and research areas that are relevant but need deeper investigation to determine specific applicability to zara-jira-mcp tooling.
+
+### Classic Communication Models
+
+| Model | Core Idea | PM Relevance | Riset Lanjutan |
+|-------|-----------|-------------|----------------|
+| **Lasswell's 5W** (1948) | Who says what, in which channel, to whom, with what effect | Maps directly to notification routing: sender, message, channel, audience, intended action | Explore how to make every tool output answer all 5W |
+| **Shannon-Weaver** (1948) | Sender → Encoder → Channel → Noise → Decoder → Receiver | "Noise" = notification fatigue, information overload, context loss. Encoding = format for audience | Identify all noise sources in PM communication pipeline |
+| **Schramm's Interactive Model** (1954) | Communication is circular, both parties encode/decode, shared "field of experience" required | Team needs shared mental model. Reports fail when sender/receiver have different context | How to ensure AI-generated comms match receiver's field of experience |
+| **Osgood-Schramm** (1954) | Continuous feedback loop, no fixed sender/receiver | Every communication creates response. AI must listen for feedback on its own outputs | Build feedback mechanisms into every AI-generated report |
+
+**Key insight:** Semua model klasik mengarah ke hal yang sama — komunikasi bukan one-way broadcast. AI tool yang cuma generate report tanpa feedback loop = half the model.
+
+### Behavioral & Psychological Models
+
+| Model | Core Idea | PM Relevance | Riset Lanjutan |
+|-------|-----------|-------------|----------------|
+| **Media Richness Theory** (Daft & Lengel 1986) | Rich media (video/face-to-face) for ambiguous tasks, lean media (text) for routine | Match channel to message complexity. Sprint planning = rich. Status update = lean | Map each PM ceremony to ideal media richness level |
+| **Nudge Theory** (Thaler & Sunstein) | Small environmental changes steer behavior without restricting choice | Notifications as "nudges" — default actions, smart ordering, framing | Design notifications as choice architecture |
+| **Cognitive Load Theory** (Sweller) | Working memory handles 2-4 items max. Reduce extraneous load | Every notification/report competes for limited attention. Less = more | Audit all tool outputs for cognitive load score |
+| **Communication Accommodation Theory** | People adjust speech to reduce/increase social distance | AI should adapt tone to team maturity, culture, individual preferences | Build tone configuration into coaching tools |
+| **Context Switching Cost** (23min recovery per interruption) | Every notification costs 23+ minutes of deep work if it interrupts flow | Push notifications are expensive. Batch unless P1 | Calculate "interruption cost" of notification strategy |
+
+**Key insight:** Setiap notifikasi punya "hidden cost" 23 menit. Kalau 10 notif/hari = 3.8 jam deep work hilang. Tool harus default ke batching.
+
+### Organizational & Leadership Communication
+
+| Model | Core Idea | PM Relevance | Riset Lanjutan |
+|-------|-----------|-------------|----------------|
+| **Mendelow's Power/Interest Grid** | Map stakeholders by power x interest → different engagement strategy per quadrant | High-power/high-interest = manage closely. Low/low = monitor only. Route notifications accordingly | Auto-map stakeholders from Jira roles → notification profile |
+| **PMBOK Communication Plan** | Audience x Message x Channel x Frequency x Owner matrix | Standard PM artifact. AI should auto-generate and maintain this | `pm_communication_plan` tool that generates from team structure |
+| **Psychological Safety** (Edmondson/Google) | 43% of team performance variance explained by feeling safe to speak up | AI coaching tone must never shame. Reports should normalize failure as learning | Audit coaching outputs for psychological safety compliance |
+| **Transparent Communication** (TAEO model) | Transparency + Authenticity + Empathy + Optimism → trust → engagement | AI reports must be transparent about bad news. Never spin. Show empathy for impact | Ensure `pm_exec_report` and `pm_coaching` follow TAEO |
+| **Servant Leadership Communication** | Lead by removing barriers, not commanding. Listen first, speak second | PM tool should ask "what do you need?" not "here's what you should do" | Redesign coaching prompts to servant-leader style |
+
+**Key insight:** AI PM tool harus jadi servant leader — enable team, bukan micromanage. Proactive detection, tapi reactive prescription (offer help, don't force).
+
+### AI-Era Specific Research
+
+| Topic | Key Finding | PM Relevance | Riset Lanjutan |
+|-------|-------------|-------------|----------------|
+| **Human-in-the-Loop (HITL)** | "HITL alone is not a governance strategy" (IBM). Must be meaningful oversight, not rubber stamp | Every AI escalation/recommendation must allow easy override with clear "why" | Design override UX for every proactive AI action |
+| **AI Trust Gap** | 29% trust AI accuracy. Trust drops when AI omits information | Always show what data AI used and what it couldn't access | Add "data sources" section to all AI-generated outputs |
+| **Beyond Psychological Safety** (AI Journal 2025) | AI tools reduce moments where assumptions are tested. Learning becomes private | PM tool should create spaces for collective learning, not just individual dashboards | Design retro/coaching tools that prompt team discussion |
+| **Narrative Intelligence / Data Storytelling** | Stories with data boost retention 65% vs raw data presentation | AI reports should follow narrative arc: situation → complication → resolution | Rewrite all report templates with narrative structure |
+| **Closed-Loop Communication** (Aviation CRM) | Send → Confirm → Verify. If no confirmation, assume not received | Every escalation should track: sent → acknowledged → acted-on. Escalate on silence | Add "acknowledgment required" flag to critical notifications |
+| **Ben Balter: AI-First PM** (2026) | "AI-augmented PM is natural evolution of async-first. Amplifies judgment, doesn't replace it" | Zara-jira-mcp positioned perfectly here. AI + async + human judgment | Use as positioning statement for project |
+| **AI SM Augmentation** (Multiple 2025-26) | SM administrative load reduced 30-50% by AI. Freed time goes to coaching/relationships | Our value prop: not "replace SM" but "give SM 10-15h/week back for human work" | Frame all marketing/docs around time-saved for human work |
+| **Modular Prompting** (PMI 2026) | Reusable prompt structures improve decision-making and team alignment | Internal: how we structure AI prompts for report generation | Audit and standardize all LLM prompts in codebase |
+
+**Key insight:** AI PM tool yang sukses = yang membuat human PM LEBIH human, bukan less human. Free dari admin → more coaching, more empathy, more relationship.
+
+### Communication Anti-Patterns in AI-Era PM (Need Research)
+
+| Anti-Pattern | Hypothesis | What to Validate |
+|-------------|-----------|-----------------|
+| "AI said so" authority | Teams stop questioning AI recommendations | Does our coaching output get accepted without challenge? |
+| Report blindness | Too many AI-generated reports → nobody reads any | Track read rates and action rates on generated reports |
+| Learned helplessness | PM delegates all thinking to AI, loses situational awareness | Does PM engagement decrease over time with tool usage? |
+| Echo chamber | AI trained on team's own data reinforces existing biases | Are anti-patterns detected that the team is blind to? |
+| Trust erosion via hallucination | One wrong forecast = team ignores all future AI signals | Track forecast accuracy, show calibration scores |
+| Notification arms race | Multiple AI tools competing for attention | Monitor total notification volume across all sources |
+
+---
+
+## 14. RESEARCH GAPS & OPEN QUESTIONS
+
+Things we don't yet know and should investigate:
+
+1. **What's the optimal notification:action ratio?** (Current guess: 1 action per 3 notifications max)
+2. **Does AI-generated coaching change behavior?** (Need longitudinal study on teams using `pm_coaching`)
+3. **Cross-cultural notification preferences?** (Do Asian teams want more or fewer notifications than Western teams?)
+4. **Ideal AI report length by audience?** (Executive: <100 words? PO: <300 words? Team: <500 words?)
+5. **When does proactive AI become annoying?** (What's the threshold between helpful and nagging?)
+6. **Does data storytelling in AI reports improve decision quality?** (A/B test narrative vs bullet format)
+7. **HITL friction: how much override is too much?** (If PM overrides >50% of AI suggestions, is the AI useful?)
+8. **PM de-skilling risk:** Does reliance on AI PM tools atrophy PM judgment over time?
+9. **Feedback loop design:** What's the minimum viable feedback mechanism for AI-generated comms?
+10. **Multi-language communication:** How should AI handle mixed-language teams (e.g., Indo/English)?
+
+---
+
+## 15. ADDITIONAL SOURCES (Batch 2)
+
+36. Lasswell's 5W Model (1948) — en.wikipedia.org/wiki/Lasswell's_model_of_communication
+37. Shannon-Weaver Model — en.wikipedia.org/wiki/Shannon-Weaver_model
+38. Schramm Interactive Model — en.wikipedia.org/wiki/Schramm's_model_of_communication
+39. Media Richness Theory — thecommspot.com/communication-theories/media-richness-theory
+40. Nudge Theory / Choice Architecture — pnas.org/doi/10.1073/pnas.2107346118 (meta-analysis)
+41. Communication Accommodation Theory — emergentmind.com/topics/communication-accommodation-theory-cat
+42. Mendelow Power/Interest Grid — mutomorro.com/tools/mendelow-power-interest-matrix
+43. PMBOK Communication Plan — riskpublishing.com/project-communication-plan-example
+44. Psychological Safety — universidadisep.com/en/2026/06/psychological-safety-high-performing-teams-en
+45. Beyond Psychological Safety in AI era — aijourn.com/beyond-psychological-safety
+46. Transparent Communication & Trust — instituteforpr.org/how-does-leadership-communication-impact-employee-trust-during-crisis
+47. Context Switching Cost 223% slower PRs — usehaystack.io/blog/the-true-cost-of-context-switching
+48. Context Switching 40% productivity loss — APA via taskade.com/wiki/productivity/deep-work
+49. Data Storytelling 65% retention boost — moldstud.com/articles/p-mastering-data-storytelling
+50. Closed-Loop Communication (Aviation CRM) — ncbi.nlm.nih.gov/sites/books/NBK551708
+51. Servant Leadership in Agile — toptal.com/project-managers/agile/agile-servant-leadership
+52. Human-in-the-Loop not governance — ibm.com/think/insights/liability-laundering-problem
+53. AI-First Program Management — ben.balter.com/2026/05/31/ai-first-program-management
+54. AI SM reduces admin 30-50% — techademy.com/best-ai-tools-for-scrum-masters
+55. AI won't replace good SM — scrum.org/resources/blog/why-ai-wont-replace-good-scrum-master
+56. Modular Prompting for PM — pmi.org/blog/modular-prompting-practical-guide
+57. Prompt Engineering for PMs — ideaplan.io/guides/prompt-engineering-for-pms
+58. JTBD for Notifications — mrx.sivoinsights.com/blog/jtbd-for-mobile-ux
+59. Forbes: Why Open Door Policies Fail — forbes.com/sites/benjaminlaker/2026
+60. Deloitte: Transparency in Workplace — deloitte.com/us/en/insights/topics/talent/human-capital-trends/2024/transparency-in-the-workplace
