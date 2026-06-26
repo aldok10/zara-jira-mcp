@@ -51,7 +51,7 @@ Priority order. Each item independently shippable.
 
 ---
 
-## Completed This Session (v0.5.0)
+## Completed This Session (v0.5.5)
 
 1. Tool descriptions shortened to <80 chars (all 262 tools)
 2. Tool usage tracking (`pm_tool_usage`)
@@ -64,6 +64,13 @@ Priority order. Each item independently shippable.
 9. Removed deprecated tools (`pm_status_draft`, `pm_forecast_sprint`)
 10. Fixed duplicate tool registration (`registerCommunicationTools`)
 11. Updated README, AGENTS.md, version to v0.5.0
+12. **v0.5.5**: Hypothesis tools (`pm_hypothesis`, `pm_hypothesis_review`, `pm_hypothesis_close`)
+13. Estimation accuracy (`pm_estimation_accuracy`)
+14. SPACE metrics (`pm_space`)
+15. EBM dashboard (`pm_ebm`)
+16. Rate limiter (60 req/min) + io.LimitReader(10MB)
+17. Notification budget enforcement in `NotifyRouted`
+18. Proactive handlers + empathy tools + research blueprint
 
 ---
 
@@ -93,36 +100,34 @@ Based on `research/jira-okr-bridge.md`.
 
 Priority order. Files disappeared mid-session (disk sync issue) — recreate from scratch.
 
-### P2: Hypothesis-Driven Development (HIGH — validates team improvement)
-- [ ] `pm_hypothesis` — Record belief + expected outcome + measure
-- [ ] `pm_hypothesis_review` — Show all, filter by status
-- [ ] `pm_hypothesis_close` — Validate/invalidate with actual outcome
-- [ ] `pm_estimation_accuracy` — committed vs delivered pattern detection
+### P2: Hypothesis-Driven Development (DONE)
+- [x] `pm_hypothesis` — Record belief + expected outcome + measure
+- [x] `pm_hypothesis_review` — Show all, filter by status
+- [x] `pm_hypothesis_close` — Validate/invalidate with actual outcome
+- [x] `pm_estimation_accuracy` — committed vs delivered pattern detection
 
 Research basis: Teams that validate hypotheses improve 2x faster (Spotify model). Sprint experiments without measurement = theater.
 
-### P3: SPACE Metrics (HIGH — replaces velocity as health signal)
-- [ ] `pm_space` — Satisfaction/Performance/Activity/Communication/Efficiency from existing data
-- [ ] Map: S=pulse, P=goal hit rate, A=throughput, C=decisions recorded, E=blocker resolution
+### P3: SPACE Metrics (DONE)
+- [x] `pm_space` — Satisfaction/Performance/Activity/Communication/Efficiency from existing data
+- [x] Map: S=pulse, P=goal hit rate, A=throughput, C=decisions recorded, E=blocker resolution
 
 Research basis: SPACE (Forsgren et al. 2021) replaces velocity as single metric. "Developer productivity cannot be reduced to a single dimension." GitHub, Google, Microsoft all adopted internally.
 
-### P7: Evidence-Based Management (MEDIUM — Scrum.org standard)
-- [ ] `pm_ebm` — 4 Key Value Areas dashboard
-- [ ] Current Value = satisfaction + goal achievement
-- [ ] Unrealized Value = scope growth (demand > capacity signal)
-- [ ] Ability to Innovate = tech debt count + feature/bug ratio
-- [ ] Time to Market = velocity + impediment resolution speed
+### P7: Evidence-Based Management (DONE)
+- [x] `pm_ebm` — 4 Key Value Areas dashboard
+- [x] Current Value = satisfaction + goal achievement
+- [x] Unrealized Value = scope growth (demand > capacity signal)
+- [x] Ability to Innovate = tech debt count + feature/bug ratio
+- [x] Time to Market = velocity + impediment resolution speed
 
 Research basis: EBM (Scrum.org, 2020) — "measure value, not output." Only framework that connects sprint metrics to business outcomes.
 
-### Security Hardening (MEDIUM — production readiness)
-- [ ] Rate limiting Jira API (60 req/min token bucket)
-- [ ] `io.LimitReader(10MB)` on all HTTP response reads
+### Security Hardening (PARTIAL)
+- [x] Rate limiting Jira API (60 req/min token bucket)
+- [x] `io.LimitReader(10MB)` on all HTTP response reads
 - [ ] Sanitize error messages (generic to client, full to log)
 - [ ] Gemini API key from URL to header
-
-Research basis: OWASP API Security Top 10 (2023) — #4 Unrestricted Resource Consumption, #8 Security Misconfiguration.
 
 ### Docker & Deployment (LOW — adoption enabler)
 - [ ] Verify Dockerfile works with `docker build`
