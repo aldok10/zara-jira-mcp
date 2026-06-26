@@ -9,7 +9,7 @@ import (
 func registerSafetyTools(s *server.MCPServer, h *tools.Handlers) {
 	// Communication Templates (P1)
 	s.AddTool(mcp.NewTool("pm_communicate",
-		mcp.WithDescription("Generate or rewrite Minto Pyramid-structured message for any audience. If 'message' provided, rewrites it. If only 'topic', generates from scratch with sprint data."),
+		mcp.WithDescription("Minto Pyramid message for any audience. Rewrites or generates from data."),
 		mcp.WithString("topic", mcp.Required(), mcp.Description("What to communicate")),
 		mcp.WithString("audience", mcp.Required(), mcp.Description("exec, team, po, stakeholder")),
 		mcp.WithString("message", mcp.Description("Optional: existing message to rewrite for audience")),
@@ -17,21 +17,21 @@ func registerSafetyTools(s *server.MCPServer, h *tools.Handlers) {
 	), h.PMCommunicate)
 
 	s.AddTool(mcp.NewTool("pm_feedback_prep",
-		mcp.WithDescription("Generate SBI feedback (Situation-Behavior-Impact). Data-backed when available. Supports positive and constructive feedback."),
+		mcp.WithDescription("SBI feedback (Situation-Behavior-Impact). Data-backed when available."),
 		mcp.WithString("member", mcp.Required(), mcp.Description("Team member name")),
 		mcp.WithString("observation", mcp.Required(), mcp.Description("What you observed")),
 		mcp.WithString("type", mcp.Description("positive or constructive (default: constructive)")),
 	), h.PMFeedbackPrep)
 
 	s.AddTool(mcp.NewTool("pm_escalation_draft",
-		mcp.WithDescription("Generate pyramid-structured escalation: 1-line ask, context, impact, next step, deadline."),
+		mcp.WithDescription("Escalation draft: 1-line ask, context, impact, next step, deadline."),
 		mcp.WithString("issue", mcp.Required(), mcp.Description("What needs escalation")),
 		mcp.WithString("severity", mcp.Description("critical, high, medium (default: high)")),
 		mcp.WithString("deadline", mcp.Description("When resolution is needed")),
 	), h.PMEscalationDraft)
 
 	s.AddTool(mcp.NewTool("pm_decision_record",
-		mcp.WithDescription("Create an Architecture Decision Record (ADR). Stores to memory. Formats: Status, Context, Decision, Alternatives, Consequences."),
+		mcp.WithDescription("Create ADR (Architecture Decision Record). Stores to memory."),
 		mcp.WithString("title", mcp.Required(), mcp.Description("Decision title")),
 		mcp.WithString("decision", mcp.Required(), mcp.Description("What was decided")),
 		mcp.WithString("context", mcp.Description("What situation led to this")),
@@ -41,7 +41,7 @@ func registerSafetyTools(s *server.MCPServer, h *tools.Handlers) {
 
 	// Psychological Safety (P2)
 	s.AddTool(mcp.NewTool("pm_safety_survey",
-		mcp.WithDescription("Record psychological safety survey (7 questions from Project Aristotle). Returns average score."),
+		mcp.WithDescription("Record psych safety survey (7 Aristotle questions). Returns avg score."),
 		mcp.WithString("sprint_name", mcp.Required(), mcp.Description("Sprint name")),
 		mcp.WithString("responses", mcp.Required(), mcp.Description("JSON: {\"member\": {\"q1\": 4, \"q2\": 3, \"q3\": 5, \"q4\": 4, \"q5\": 3, \"q6\": 4, \"q7\": 5}}")),
 	), h.PMSafetySurvey)
@@ -51,7 +51,7 @@ func registerSafetyTools(s *server.MCPServer, h *tools.Handlers) {
 	), h.PMSafetyTrend)
 
 	s.AddTool(mcp.NewTool("pm_team_aristotle",
-		mcp.WithDescription("Full 5-pillar team assessment (Project Aristotle): Safety, Dependability, Clarity, Meaning, Impact. AI-powered with data from all PM sources."),
+		mcp.WithDescription("5-pillar Aristotle assessment: Safety, Dependability, Clarity, Meaning."),
 		mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 	), h.PMTeamAristotle)
 }

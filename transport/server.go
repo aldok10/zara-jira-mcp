@@ -18,7 +18,7 @@ type regFunc func(*server.MCPServer, *tools.Handlers)
 func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	s := server.NewMCPServer(
 		"zara-jira-mcp",
-		"0.4.0",
+		"0.5.0",
 		server.WithToolCapabilities(false),
 		server.WithRecovery(),
 	)
@@ -28,13 +28,13 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	modules := map[string][]regFunc{
 		"jira":          {registerJiraTools, registerIssueOpsTools, registerEpicSprintTools, registerBulkProjectTools, registerLinkWorklogTools, registerVersionTools, registerTraceTools},
 		"pm":            {registerPMTools, registerMemoryTools, registerPMIntelTools, registerAdvancedPMTools, registerDeepPMTools, registerFlowTools, registerForecastTools, registerRecipeTools, registerProcessTools, registerImprovementTools, registerOKRKPITools},
-		"ai": {registerAITools},
+		"ai":            {registerAITools},
 		"notifications": {registerLarkTools, registerSlackTools, registerPlatformTools, registerRoutingTools},
-		"stakeholder": {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools, registerCommunicationTools, registerCommsGapTools, registerSafetyTools},
-		"portfolio": {registerPortfolioTools},
-		"github": {registerGitHubTools, registerGitHubFullTools, registerGitIntegrationTools},
-		"integrations": {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools},
-		"shortcuts":      {registerPMShortcuts, registerHelpTools, registerSmartContextTools, registerCommunicationTools},
+		"stakeholder":   {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools, registerCommunicationTools, registerCommsGapTools, registerSafetyTools},
+		"portfolio":     {registerPortfolioTools},
+		"github":        {registerGitHubTools, registerGitHubFullTools, registerGitIntegrationTools},
+		"integrations":  {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools, registerLarkOKRTools},
+		"shortcuts":     {registerPMShortcuts, registerHelpTools, registerSmartContextTools},
 	}
 
 	for mod, fns := range modules {
@@ -85,7 +85,7 @@ func (m *MCPServer) Server() *server.MCPServer {
 func registerJiraTools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(
 		mcp.NewTool("jira_search",
-			mcp.WithDescription("Search Jira issues using JQL. Returns key, summary, status, priority, assignee."),
+			mcp.WithDescription("Search Jira issues via JQL. Returns key, summary, status, assignee."),
 			mcp.WithString("jql", mcp.Required(), mcp.Description("JQL query string")),
 			mcp.WithNumber("max_results", mcp.Description("Maximum results (default 20, max 50)")),
 			mcp.WithNumber("start_at", mcp.Description("Pagination offset (default 0)")),
@@ -141,7 +141,7 @@ func registerJiraTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("jira_transitions",
-			mcp.WithDescription("List available status transitions for an issue. Use transition IDs with jira_transition."),
+			mcp.WithDescription("Available status transitions for an issue. Use IDs with jira_transition."),
 			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key")),
 		),
 		h.GetTransitions,
@@ -254,7 +254,7 @@ func registerPMTools(s *server.MCPServer, h *tools.Handlers) {
 func registerAITools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(
 		mcp.NewTool("jira_ai_analyze",
-			mcp.WithDescription("AI-powered analysis of Jira tickets. Ask questions like: 'What are the blockers?', 'Which tickets are stale?', 'Sprint health?'"),
+			mcp.WithDescription("AI analysis of Jira tickets. Ask about blockers, health, staleness."),
 			mcp.WithString("query", mcp.Required(), mcp.Description("Your question about the project/tickets")),
 			mcp.WithString("jql", mcp.Description("JQL to scope the analysis")),
 			mcp.WithNumber("max_results", mcp.Description("Max tickets to analyze (default 30)")),
@@ -264,7 +264,7 @@ func registerAITools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("jira_ai_sprint_report",
-			mcp.WithDescription("Generate AI-powered sprint report with health assessment and recommendations. Optionally sends to Lark."),
+			mcp.WithDescription("AI sprint report with health assessment and recommendations. Sends to Lark."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 			mcp.WithBoolean("send_to_lark", mcp.Description("Send report to Lark group")),
 		),
@@ -286,7 +286,7 @@ func registerLarkTools(s *server.MCPServer, h *tools.Handlers) {
 func registerMemoryTools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(
 		mcp.NewTool("pm_snapshot_sprint",
-			mcp.WithDescription("Capture current sprint state into PM memory. Auto-calculates done/in-progress/todo/blocked from Jira. Call at end of each sprint for velocity tracking."),
+			mcp.WithDescription("Snapshot sprint state to memory. Auto-calculates from Jira. Call each sprint end."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 			mcp.WithNumber("velocity", mcp.Description("Story points completed this sprint (manual input)")),
 			mcp.WithNumber("carryover", mcp.Description("Issues carried over from previous sprint")),
@@ -297,7 +297,7 @@ func registerMemoryTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_record_risk",
-			mcp.WithDescription("Record a project risk to the risk register. Track risks, their severity, owners, and mitigation plans."),
+			mcp.WithDescription("Record a project risk: severity, owner, mitigation. Stored in register."),
 			mcp.WithString("title", mcp.Required(), mcp.Description("Risk title")),
 			mcp.WithString("description", mcp.Description("Detailed description")),
 			mcp.WithString("severity", mcp.Description("critical, high, medium, low (default: medium)")),
@@ -329,7 +329,7 @@ func registerMemoryTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_record_decision",
-			mcp.WithDescription("Record a project decision with context and rationale. Build institutional memory."),
+			mcp.WithDescription("Record a project decision with context and rationale. Builds memory."),
 			mcp.WithString("title", mcp.Required(), mcp.Description("Decision title (e.g. 'Use PostgreSQL over MongoDB')")),
 			mcp.WithString("decision", mcp.Required(), mcp.Description("What was decided")),
 			mcp.WithString("context", mcp.Description("What situation led to this decision")),
@@ -421,7 +421,7 @@ func registerMemoryTools(s *server.MCPServer, h *tools.Handlers) {
 func registerPMIntelTools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(
 		mcp.NewTool("pm_recommendations",
-			mcp.WithDescription("AI-powered PM recommendations based on ALL historical memory: sprint trends, risks, blockers, team metrics, decisions. Your AI Scrum Master brain."),
+			mcp.WithDescription("AI recommendations from all PM memory: trends, risks, blockers, metrics."),
 			mcp.WithNumber("board_id", mcp.Description("Board ID for sprint context")),
 			mcp.WithString("focus", mcp.Description("Focus area: general, velocity, risks, team, process (default: general)")),
 		),
@@ -430,7 +430,7 @@ func registerPMIntelTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_velocity_trend",
-			mcp.WithDescription("Show velocity and completion trends over recent sprints. Detect if team is improving, stable, or declining."),
+			mcp.WithDescription("Velocity and completion trends. Detects improvement or decline."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.VelocityTrend,
@@ -438,7 +438,7 @@ func registerPMIntelTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_standup_prep",
-			mcp.WithDescription("Generate daily standup preparation brief. Combines live Jira data with historical blockers, risks, and action items into talking points."),
+			mcp.WithDescription("Standup prep: Jira data + blockers, risks, actions as talking points."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.StandupPrep,
@@ -446,7 +446,7 @@ func registerPMIntelTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_retro_analysis",
-			mcp.WithDescription("AI analysis of sprint patterns across retrospectives: recurring issues, trend detection, root cause patterns, improvement suggestions."),
+			mcp.WithDescription("AI retro analysis: recurring issues, trends, root causes, suggestions."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.SprintRetroAnalysis,
@@ -456,7 +456,7 @@ func registerPMIntelTools(s *server.MCPServer, h *tools.Handlers) {
 func registerAdvancedPMTools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(
 		mcp.NewTool("pm_sprint_health",
-			mcp.WithDescription("Compute sprint health score (0-100) with breakdown: velocity, blockers, scope creep, team balance. Saves to history for trend tracking."),
+			mcp.WithDescription("Sprint health (0-100): velocity, blockers, scope creep, balance. Saves history."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.SprintHealthScore,
@@ -464,7 +464,7 @@ func registerAdvancedPMTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_health_history",
-			mcp.WithDescription("Show health score trends over time. See if the team is getting healthier or declining."),
+			mcp.WithDescription("Health score trends over time. Is team improving or declining?"),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.HealthHistory,
@@ -472,7 +472,7 @@ func registerAdvancedPMTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_record_dependency",
-			mcp.WithDescription("Record a dependency between issues (blocks, blocked_by, external). Track cross-team dependencies."),
+			mcp.WithDescription("Record dependency between issues (blocks, blocked_by, external)."),
 			mcp.WithString("from_issue", mcp.Required(), mcp.Description("Issue that is blocked/dependent")),
 			mcp.WithString("to_issue", mcp.Required(), mcp.Description("Issue/team it depends on")),
 			mcp.WithString("type", mcp.Description("blocks, blocked_by, relates_to, external (default: blocks)")),
@@ -521,7 +521,7 @@ func registerAdvancedPMTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_capacity_plan",
-			mcp.WithDescription("Capacity planning based on velocity history. Calculates recommended story points for next sprint based on team availability."),
+			mcp.WithDescription("Capacity plan from velocity. Recommends next sprint points by availability."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 			mcp.WithNumber("team_size", mcp.Description("Number of team members")),
 			mcp.WithNumber("sprint_days", mcp.Description("Sprint duration in days (default: 10)")),
@@ -532,7 +532,7 @@ func registerAdvancedPMTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_auto_detect_risks",
-			mcp.WithDescription("Proactively scan for risk signals: stale tickets, overloaded members, chronic blockers, overdue actions. Auto-records findings to risk register."),
+			mcp.WithDescription("Scan for risk signals: stale tickets, overload, chronic blockers. Auto-records."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.AutoDetectRisks,
@@ -542,7 +542,7 @@ func registerAdvancedPMTools(s *server.MCPServer, h *tools.Handlers) {
 func registerDeepPMTools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(
 		mcp.NewTool("pm_track_daily",
-			mcp.WithDescription("Track today's sprint progress (burndown data point). Call daily for burndown chart data."),
+			mcp.WithDescription("Track today's sprint progress (burndown data). Call daily."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.TrackDailyProgress,
@@ -559,7 +559,7 @@ func registerDeepPMTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_set_sprint_goal",
-			mcp.WithDescription("Define sprint goal with measurable key results. Track if the team achieves what matters."),
+			mcp.WithDescription("Define sprint goal with measurable key results. Tracks achievement."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 			mcp.WithString("goal", mcp.Required(), mcp.Description("Sprint goal statement")),
 			mcp.WithString("key_results", mcp.Description("Measurable key results (newline-separated)")),
@@ -601,7 +601,7 @@ func registerDeepPMTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_escalate",
-			mcp.WithDescription("Auto-escalate to Lark: critical risks >3 days, blockers >3 days, sprint health <50. Sends alert to configured Lark group."),
+			mcp.WithDescription("Auto-escalate to Lark: risks/blockers >3d or health <50."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.Escalate,
@@ -616,7 +616,7 @@ func registerDeepPMTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_dashboard",
-			mcp.WithDescription("One-shot PM dashboard: sprint progress, health score, risks, blockers, dependencies, goals, actions, escalations. Everything in one view."),
+			mcp.WithDescription("Full PM dashboard: progress, health, risks, blockers, deps, goals, actions."),
 			mcp.WithNumber("board_id", mcp.Description("Board ID for sprint-specific data")),
 		),
 		h.PMDashboard,
@@ -624,7 +624,7 @@ func registerDeepPMTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_release_notes",
-			mcp.WithDescription("Generate categorized release notes from completed sprint issues (features, bugs, tasks). Optionally sends to Lark."),
+			mcp.WithDescription("Release notes from completed sprint issues. Can send to Lark."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 			mcp.WithBoolean("send_to_lark", mcp.Description("Send release notes to Lark group")),
 		),
@@ -635,7 +635,7 @@ func registerDeepPMTools(s *server.MCPServer, h *tools.Handlers) {
 func registerFlowTools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(
 		mcp.NewTool("pm_flow_metrics",
-			mcp.WithDescription("Calculate flow metrics from live Jira data: WIP, throughput, cycle time, lead time. Detects flow problems (high WIP, long cycle time, low throughput)."),
+			mcp.WithDescription("Flow metrics: WIP, throughput, cycle/lead time. Detects flow problems."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.FlowMetrics,
@@ -643,7 +643,7 @@ func registerFlowTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_sprint_compare",
-			mcp.WithDescription("Compare current sprint vs previous: velocity, completion, blockers, carryover. Shows if team is improving or declining."),
+			mcp.WithDescription("Compare current vs previous sprint: velocity, completion, blockers, carryover."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.SprintComparison,
@@ -651,7 +651,7 @@ func registerFlowTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_facilitate",
-			mcp.WithDescription("AI ceremony facilitator — generates fresh, contextual facilitation prompts for any Scrum ceremony."),
+			mcp.WithDescription("AI ceremony facilitator with contextual prompts for any Scrum ceremony."),
 			mcp.WithString("ceremony", mcp.Required(), mcp.Description("standup, planning, retro, grooming, review")),
 			mcp.WithNumber("board_id", mcp.Description("Board ID for context (optional)")),
 		),
@@ -660,7 +660,7 @@ func registerFlowTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_confidence",
-			mcp.WithDescription("Record team/individual confidence level for current sprint (1-5 scale). Track pre-sprint confidence vs actual outcome."),
+			mcp.WithDescription("Record sprint confidence (1-5). Tracks pre-sprint vs actual outcome."),
 			mcp.WithString("sprint_name", mcp.Required(), mcp.Description("Sprint name")),
 			mcp.WithNumber("score", mcp.Required(), mcp.Description("1=very worried, 2=worried, 3=neutral, 4=confident, 5=very confident")),
 			mcp.WithString("member", mcp.Description("Team member name (default: 'team')")),
@@ -671,7 +671,7 @@ func registerFlowTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_goal_check",
-			mcp.WithDescription("AI-powered sprint goal progress check. Evaluates if goal is on track based on current data."),
+			mcp.WithDescription("AI sprint goal progress check. Evaluates if on track from current data."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.SprintGoalCheck,
@@ -681,7 +681,7 @@ func registerFlowTools(s *server.MCPServer, h *tools.Handlers) {
 func registerForecastTools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(
 		mcp.NewTool("pm_forecast",
-			mcp.WithDescription("Monte Carlo forecasting: 'When will it be done?' Runs 10,000 simulations using historical throughput. Returns probability-based dates (50%, 70%, 85%, 95% confidence)."),
+			mcp.WithDescription("Monte Carlo forecast: 10K simulations from throughput. 50/70/85/95% dates."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 			mcp.WithNumber("remaining_items", mcp.Description("Items remaining (default: from active sprint)")),
 			mcp.WithNumber("sprint_days", mcp.Description("Sprint length in days (default: 10)")),
@@ -691,7 +691,7 @@ func registerForecastTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_anti_patterns",
-			mcp.WithDescription("Detect Scrum anti-patterns from data: zombie sprints, hero culture, scope creep, unpredictable velocity, dead retros, rubber-stamp DoD, no sprint goals."),
+			mcp.WithDescription("Detect Scrum anti-patterns: zombie sprints, hero culture, scope creep."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.DetectAntiPatterns,
@@ -699,7 +699,7 @@ func registerForecastTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_coaching",
-			mcp.WithDescription("AI coaching advice for Scrum Masters. Get data-driven suggestions for team improvement."),
+			mcp.WithDescription("AI coaching for Scrum Masters. Data-driven improvement suggestions."),
 			mcp.WithString("topic", mcp.Required(), mcp.Description("team_dynamics, velocity, blockers, morale, conflict, growth, predictability")),
 			mcp.WithNumber("board_id", mcp.Description("Board ID for data context")),
 			mcp.WithString("situation", mcp.Description("Describe the specific situation you need advice on")),
@@ -707,18 +707,10 @@ func registerForecastTools(s *server.MCPServer, h *tools.Handlers) {
 		h.CoachingAdvice,
 	)
 
-	s.AddTool(
-		mcp.NewTool("pm_forecast_sprint",
-			mcp.WithDescription("[DEPRECATED: use pm_forecast] Monte Carlo sprint forecast. Predicts completion probability based on historical throughput. Shows 50%/85% confidence intervals."),
-			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
-			mcp.WithNumber("items_remaining", mcp.Description("Items left to do (auto-detected from sprint if empty)")),
-		),
-		h.ForecastSprint,
-	)
 
 	s.AddTool(
 		mcp.NewTool("pm_nl_to_jql",
-			mcp.WithDescription("Convert natural language to JQL. Ask in plain English, get JQL query back."),
+			mcp.WithDescription("Convert natural language to JQL query."),
 			mcp.WithString("query", mcp.Required(), mcp.Description("Natural language query (e.g. 'my open bugs with high priority')")),
 		),
 		h.NLToJQL,
@@ -734,7 +726,7 @@ func registerForecastTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_backlog_groom",
-			mcp.WithDescription("Find stale backlog items that need grooming or archiving. Items untouched for N days outside active sprints."),
+			mcp.WithDescription("Find stale backlog items needing grooming. Untouched N days, not in sprint."),
 			mcp.WithString("project", mcp.Description("Project key filter")),
 			mcp.WithNumber("days", mcp.Description("Days without update to consider stale (default: 90)")),
 		),
@@ -744,20 +736,20 @@ func registerForecastTools(s *server.MCPServer, h *tools.Handlers) {
 
 func registerRecipeTools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(mcp.NewTool("pm_recipe_start_work",
-		mcp.WithDescription("Start working on an issue: assigns to you, transitions to In Progress, suggests git branch name. One-click workflow."),
+		mcp.WithDescription("Start work: assign, transition to In Progress, suggest branch. One-click."),
 		mcp.WithString("key", mcp.Required(), mcp.Description("Issue key")),
 		mcp.WithString("assignee_id", mcp.Description("Your account ID (use jira_find_user to look up)")),
 	), h.RecipeStartWork)
 
 	s.AddTool(mcp.NewTool("pm_recipe_done",
-		mcp.WithDescription("Mark issue as done: transitions to Done, optionally logs time and adds completion comment."),
+		mcp.WithDescription("Mark done: transition, optionally log time and add comment."),
 		mcp.WithString("key", mcp.Required(), mcp.Description("Issue key")),
 		mcp.WithString("time_spent", mcp.Description("Time to log (e.g. '2h', '30m')")),
 		mcp.WithString("comment", mcp.Description("Completion comment")),
 	), h.RecipeDone)
 
 	s.AddTool(mcp.NewTool("pm_recipe_block",
-		mcp.WithDescription("Flag an issue as blocked: records blocker in memory, adds comment to issue, creates impediment trail."),
+		mcp.WithDescription("Flag blocked: record in memory, comment on issue, create impediment trail."),
 		mcp.WithString("key", mcp.Required(), mcp.Description("Issue key")),
 		mcp.WithString("reason", mcp.Required(), mcp.Description("Why is it blocked?")),
 		mcp.WithString("owner", mcp.Description("Who should resolve this?")),
@@ -767,7 +759,7 @@ func registerRecipeTools(s *server.MCPServer, h *tools.Handlers) {
 func registerStakeholderTools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(
 		mcp.NewTool("pm_exec_report",
-			mcp.WithDescription("Generate executive stakeholder report. Business outcomes, risks, team health — no jargon, no story points. Written for a VP with 30 seconds."),
+			mcp.WithDescription("Executive report: outcomes, risks, health. No jargon. VP-ready."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 			mcp.WithBoolean("send_to_lark", mcp.Description("Send to Lark group")),
 		),
@@ -776,7 +768,7 @@ func registerStakeholderTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_scorecard",
-			mcp.WithDescription("Sprint scorecard: quantified 0-100 grade across completion, goal focus, predictability, quality, team balance."),
+			mcp.WithDescription("Sprint scorecard (0-100): completion, goals, predictability, quality."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.SprintScorecard,
@@ -784,7 +776,7 @@ func registerStakeholderTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_team_kb",
-			mcp.WithDescription("Team knowledge base: DoD, decisions, patterns, metrics, retro themes. Ask questions or browse. Great for onboarding."),
+			mcp.WithDescription("Team knowledge base: DoD, decisions, patterns, metrics. Ask or browse."),
 			mcp.WithNumber("board_id", mcp.Description("Board ID for metrics context")),
 			mcp.WithString("question", mcp.Description("Ask a question about how the team works (AI-powered answer)")),
 		),
@@ -793,7 +785,7 @@ func registerStakeholderTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_record_learning",
-			mcp.WithDescription("Record a team learning or tribal knowledge. Builds searchable institutional memory."),
+			mcp.WithDescription("Record team learning or tribal knowledge. Builds searchable memory."),
 			mcp.WithString("title", mcp.Required(), mcp.Description("Learning title")),
 			mcp.WithString("learning", mcp.Required(), mcp.Description("What was learned")),
 			mcp.WithString("context", mcp.Description("What situation triggered this learning")),
@@ -805,7 +797,7 @@ func registerStakeholderTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_weekly_digest",
-			mcp.WithDescription("Generate weekly team digest: decisions, risks, blockers, wins, concerns. AI-summarized from all week's activity."),
+			mcp.WithDescription("Weekly digest: decisions, risks, blockers, wins. AI-summarized."),
 			mcp.WithNumber("board_id", mcp.Description("Board ID")),
 			mcp.WithBoolean("send_to_lark", mcp.Description("Send digest to Lark")),
 		),
@@ -828,7 +820,7 @@ func registerProcessTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_check_ready",
-			mcp.WithDescription("AI evaluates if a Jira story meets Definition of Ready + INVEST criteria. Gives READY/NOT READY verdict."),
+			mcp.WithDescription("AI evaluates if story meets DoR + INVEST. Returns READY/NOT READY."),
 			mcp.WithString("key", mcp.Required(), mcp.Description("Jira issue key to evaluate")),
 		),
 		h.CheckStoryReady,
@@ -836,7 +828,7 @@ func registerProcessTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_agreements",
-			mcp.WithDescription("Manage team working agreements. The rules the team commits to. Actions: list, add."),
+			mcp.WithDescription("Team working agreements (rules team commits to). Actions: list, add."),
 			mcp.WithString("action", mcp.Description("list, add (default: list)")),
 			mcp.WithString("agreement", mcp.Description("Agreement text (for add)")),
 			mcp.WithString("why", mcp.Description("Why this agreement exists")),
@@ -846,7 +838,7 @@ func registerProcessTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_experiment",
-			mcp.WithDescription("Record an improvement experiment from retro. Track hypothesis, action, measurement, duration."),
+			mcp.WithDescription("Record improvement experiment: hypothesis, action, measurement, duration."),
 			mcp.WithString("hypothesis", mcp.Required(), mcp.Description("What we think will improve (e.g. 'reducing WIP will decrease cycle time')")),
 			mcp.WithString("action", mcp.Required(), mcp.Description("What we will try (e.g. 'limit WIP to 2 per person')")),
 			mcp.WithString("measure", mcp.Description("How we'll know it worked (default: observe)")),
@@ -866,7 +858,7 @@ func registerProcessTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_planning_prep",
-			mcp.WithDescription("Complete sprint planning preparation package: last sprint outcome, capacity, carryover, risks, dependencies, experiments, checklist."),
+			mcp.WithDescription("Sprint planning prep: outcome, capacity, carryover, risks, deps."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.SprintPlanningSummary,
@@ -876,7 +868,7 @@ func registerProcessTools(s *server.MCPServer, h *tools.Handlers) {
 func registerTechDebtTools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(
 		mcp.NewTool("pm_tech_debt_add",
-			mcp.WithDescription("Record a tech debt item. Track code shortcuts, architectural issues, testing gaps."),
+			mcp.WithDescription("Record tech debt: code shortcuts, architectural issues, testing gaps."),
 			mcp.WithString("title", mcp.Required(), mcp.Description("Tech debt title")),
 			mcp.WithString("description", mcp.Description("Detailed description")),
 			mcp.WithString("impact", mcp.Description("high (blocks velocity), medium (slows), low (cosmetic). Default: medium")),
@@ -896,7 +888,7 @@ func registerTechDebtTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_tech_debt_budget",
-			mcp.WithDescription("Recommend sprint capacity allocation for tech debt based on debt load and velocity."),
+			mcp.WithDescription("Recommend sprint capacity for tech debt based on debt load and velocity."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.TechDebtBudget,
@@ -904,7 +896,7 @@ func registerTechDebtTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_review_prep",
-			mcp.WithDescription("Sprint review preparation: demo order, talking points, what shipped vs didn't, stakeholder questions."),
+			mcp.WithDescription("Sprint review prep: demo order, talking points, shipped vs not."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.SprintReviewPrep,

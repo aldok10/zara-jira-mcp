@@ -125,6 +125,36 @@ func (c *OKRClient) BatchGetOKRs(ctx context.Context, okrIDs []string) ([]Object
 	return objectives, nil
 }
 
+
+// CreateProgressRecord posts a progress update to a Lark OKR Key Result.
+func (c *OKRClient) CreateProgressRecord(ctx context.Context, krID string, content string) error {
+	token, err := c.getTenantToken(ctx)
+	if err != nil {
+		return err
+	}
+	escaped := strings.ReplaceAll(content, `"`, `\"`)
+	payload := fmt.Sprintf(`{"target_id":"%s","target_type":2,"content":{"blocks":[{"type":"paragraph","content":[{"type":"text","text":"%s"}]}]}}`, krID, escaped)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://open.larksuite.com/open-apis/okr/v1/progress_records", strings.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	var base struct {
+		Code int    `json:"code"`
+		Msg  string `json:"msg"`
+	}
+	if err := json.Unmarshal(body, &base); err == nil && base.Code != 0 {
+		return fmt.Errorf("lark OKR progress error %d: %s", base.Code, base.Msg)
+	}
+	return nil
+}
 // Internal HTTP helpers
 
 func (c *OKRClient) get(ctx context.Context, url string) ([]byte, error) {

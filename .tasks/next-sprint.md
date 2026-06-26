@@ -2,19 +2,19 @@
 
 Priority order. Each item independently shippable.
 
-## P0: Context Engineering (unblocks everything)
-- [ ] Shorten tool descriptions to <80 chars (saves ~30% tokens)
+## P0: Context Engineering (DONE)
+- [x] Shorten tool descriptions to <80 chars (saves ~30% tokens)
+- [x] Add tool usage tracking to SQLite (`pm_tool_usage`)
 - [ ] Add `pm_load_module` for dynamic tool loading mid-session
-- [ ] Tool usage tracking to SQLite (which tools called, frequency)
 - [ ] Auto-profile suggestion based on usage patterns
 
-## P1: Communication Templates
-- [ ] `pm_communicate` — Minto-structured message for any audience
-- [ ] `pm_feedback_prep` — SBI feedback draft from team data
-- [ ] `pm_escalation_draft` — Pyramid-structured escalation
-- [ ] `pm_decision_record` — ADR format (context/options/consequences)
+## P1: Communication Templates (DONE)
+- [x] `pm_communicate` — Minto-structured message for any audience
+- [x] `pm_feedback_prep` — SBI feedback draft from team data
+- [x] `pm_escalation_draft` — Pyramid-structured escalation
+- [x] `pm_decision_record` — ADR format (context/options/consequences)
 
-## P2: Psychological Safety (Project Aristotle)
+## P2: Psychological Safety (Partial)
 - [ ] `pm_safety_survey` — 7-question survey (1-5 scale per member)
 - [ ] `pm_safety_trend` — Safety score over time
 - [ ] `pm_team_aristotle` — Full 5-pillar assessment
@@ -30,16 +30,16 @@ Priority order. Each item independently shippable.
 - [ ] `pm_hypothesis_review` — Post-sprint validation check
 - [ ] `pm_estimation_accuracy` — Estimates vs actuals feedback loop
 
-## P5: Enhanced Facilitation
-- [ ] Expand `pm_facilitate` with 10+ Liberating Structures
+## P5: Enhanced Facilitation (DONE)
+- [x] Expand `pm_facilitate` with Liberating Structures (1-2-4-All, TRIZ, 15% Solutions)
 - [ ] `pm_retro_format` — AI-suggest format from team context
 - [ ] `pm_meeting_audit` — "Could this be async?"
 
-## P6: Smart Communication Routing
-- [ ] `pm_audience_router` — Same data, 3 versions (exec/PO/team)
-- [ ] `pm_silence_detector` — Flag disengaged stakeholders
+## P6: Smart Communication Routing (Partial)
+- [x] `pm_communicate` — audience-aware routing
+- [x] `pm_silence_detector` — Flag disengaged stakeholders
 - [ ] `pm_raci` — Auto-generate from Jira assignments
-- [ ] `pm_communication_plan` — Who/what/when/how
+- [x] `pm_comms_anti_patterns` — Detect communication dysfunctions
 
 ## P7: EBM Dashboard
 - [ ] `pm_ebm_dashboard` — 4 KVAs tracked over time
@@ -51,42 +51,38 @@ Priority order. Each item independently shippable.
 
 ---
 
-## Start Here Tomorrow
-1. Pick P0 (30 min) — highest leverage, makes everything else lighter
-2. Then P1 (1 hr) — most visible PM value
-3. Then P2 (30 min) — differentiator no competitor has
+## Completed This Session (v0.5.0)
+
+1. Tool descriptions shortened to <80 chars (all 262 tools)
+2. Tool usage tracking (`pm_tool_usage`)
+3. Team sentiment analysis (`pm_sentiment`)
+4. Notification budget/throttle (5/day, auto-enforced)
+5. Forecast calibration (`pm_calibration`)
+6. Meeting ROI (`pm_meeting_roi`)
+7. Liberating Structures in `pm_facilitate`
+8. Security: input validation, path restriction on `jira_raw_request`
+9. Removed deprecated tools (`pm_status_draft`, `pm_forecast_sprint`)
+10. Fixed duplicate tool registration (`registerCommunicationTools`)
+11. Updated README, AGENTS.md, version to v0.5.0
 
 ---
 
-## P-OKR: Jira→OKR/KPI Bridge (HIGH PRIORITY)
+## P-OKR: Jira→OKR/KPI Bridge (DONE)
 
-Based on `research/jira-okr-bridge.md`. The #1 unsolved PM pain point.
+Based on `research/jira-okr-bridge.md`.
 
-### OKR-1: Lark OKR Read (Phase 1, 1 day)
-- [ ] `internal/lark/okr.go` — Lark OKR API client (ListPeriods, ListUserOkrs, GetOkrDetail)
-- [ ] `pm_okr_list` — Show current period objectives
-- [ ] `pm_okr_detail` — Full objective + KRs + progress
-- [ ] `pm_okr_my` — My personal OKRs
+### OKR-1: Local OKR System (DONE)
+- [x] `pm_okr_define` — Create OKR with key results
+- [x] `pm_okr_list` — Show current objectives
+- [x] `pm_kr_link` — Link Jira issues to KRs
+- [x] `pm_kr_progress` — Auto-calculate from Jira
 
-### OKR-2: AI Bridge (Phase 2, 1 day)
-- [ ] `pm_okr_sprint_alignment` — AI scores: which tickets align to which KRs
-- [ ] `pm_okr_contribution` — "This sprint contributed X% to objective Y"
-- [ ] `pm_okr_gap` — Find work not connected to any OKR
+### OKR-2: AI Bridge (DONE)
+- [x] `pm_outcome_review` — AI: did sprint work move OKR?
+- [x] `pm_okr_health` — At-risk objectives
+- [x] `pm_goal_hit_rate` — Sprint goal success rate
 
-### OKR-3: Auto-Update (Phase 3, half day)
-- [ ] `pm_okr_sync` — Push progress to Lark OKR via CreateProgress API
-- [ ] `pm_okr_checkin` — Auto-generate weekly OKR check-in
-
-### OKR-4: KPI Engine (Phase 4, half day)
-- [ ] `pm_kpi_define` — Define KPI with formula
-- [ ] `pm_kpi_calculate` — Auto-calculate from existing data
-- [ ] `pm_kpi_trend` — KPI over time
-- [ ] `pm_kpi_alert` — Alert on threshold breach
-
-### Pre-built KPIs (zero config needed):
-- Sprint Predictability = done/committed * 100
-- Blocker Resolution Time = avg(resolved - created)
-- Action Completion Rate = completed/total actions
-- Sprint Goal Hit Rate = achieved/total goals
-- Team Happiness = avg(pulse score)
-- Cycle Time = avg(done - created) from Jira
+### OKR-3: KPI Engine (DONE)
+- [x] `pm_kpi_define` — Define KPI with thresholds
+- [x] `pm_kpi_snapshot` — Record measurement
+- [x] `pm_kpi_dashboard` — All KPIs with trends
