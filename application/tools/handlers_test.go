@@ -74,6 +74,16 @@ func (m *mockJira) CloseSprint(_ context.Context, _ int) error              { re
 func (m *mockJira) MoveIssuesToSprint(_ context.Context, _ int, _ []string) error {
 	return m.err
 }
+func (m *mockJira) AddLabel(_ context.Context, _, _ string) error { return m.err }
+func (m *mockJira) GetProjects(_ context.Context) ([]jiradom.Project, error) {
+	return nil, m.err
+}
+func (m *mockJira) GetProject(_ context.Context, _ string) (*jiradom.ProjectDetail, error) {
+	return &jiradom.ProjectDetail{Key: "TEST", Name: "Test Project"}, m.err
+}
+func (m *mockJira) RawRequest(_ context.Context, _, _ string, _ []byte) ([]byte, int, error) {
+	return []byte(`{}`), 200, m.err
+}
 func (m *mockJira) LinkIssues(_ context.Context, _, _, _ string) error { return m.err }
 func (m *mockJira) GetLinkTypes(_ context.Context) ([]jiradom.LinkType, error) {
 	return nil, m.err

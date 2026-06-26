@@ -28,6 +28,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerAdvancedPMTools(s, handlers)
 	registerDeepPMTools(s, handlers)
 	registerEpicSprintTools(s, handlers)
+	registerBulkProjectTools(s, handlers)
 	registerLinkWorklogTools(s, handlers)
 
 	return &MCPServer{s: s}
