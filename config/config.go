@@ -47,6 +47,7 @@ type RedisConfig struct {
 
 type WebhookConfig struct {
 	Enabled bool   // WEBHOOK_ENABLED
+	Port    string // WEBHOOK_PORT (default: 8081)
 	Secret  string // WEBHOOK_SECRET (for signature verification)
 }
 
