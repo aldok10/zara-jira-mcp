@@ -1,122 +1,73 @@
 # zara-jira-mcp
 
-Your AI-powered Scrum Master that actually remembers what happened last sprint.
+**Stop being a Jira secretary. Start being the Scrum Master your team actually needs.**
 
-**224 tools.** Jira operations, sprint intelligence, risk management, team health tracking, Monte Carlo forecasting, coaching, and multi-channel notifications. All in one MCP server.
-
-Built as part of the [Zara Agent OPC](https://github.com/aldok10/zara-agent-opc) ecosystem by [Aldo Karendra](https://www.linkedin.com/in/aldok10/).
+Your AI copilot that handles the admin, surfaces the risks, and gives you back the hours you lost to status updates.
 
 [![CI](https://github.com/aldok10/zara-jira-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/aldok10/zara-jira-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MCP Compatible](https://img.shields.io/badge/MCP-compatible-blue)](https://modelcontextprotocol.io)
-[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://golang.org)
+[![Go](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go)](https://golang.org)
 [![GitHub stars](https://img.shields.io/github/stars/aldok10/zara-jira-mcp?style=social)](https://github.com/aldok10/zara-jira-mcp)
-[![Donate](https://img.shields.io/badge/Support-SociaBuzz-orange)](https://sociabuzz.com/aldok10)
 
 ---
 
 ## The Problem
 
-PM tools are dumb. Jira gives you data, but it doesn't think. It doesn't notice that your team has been carrying the same 3 tickets for 4 sprints. It won't tell you that one person is doing 60% of the work. It doesn't remember the decision you made 3 sprints ago about why you chose microservices.
+Scrum Masters and PMs spend **58% of their time** on meetings and admin that produces zero value ([Jabra 2025 Report](https://brandsit.pl/en/how-much-do-ineffective-meetings-cost-jabra-report/)). Meanwhile:
 
-Scrum Masters spend hours every week pulling reports, writing summaries, preparing ceremonies, chasing blockers. Manual. Repetitive. Time that should go to actually helping the team.
+- Sprint reviews are copy-paste status updates nobody reads
+- Retro actions die within days (the "Dead Retro" pattern)
+- Risks are invisible until they explode
+- Management asks "when will it be done?" and you guess
+- You can't prove your impact as SM because there's no data
 
-## What This Solves
+**This project exists because SM/PM work is 80% repetitive information assembly that AI can do in seconds.**
 
-`zara-jira-mcp` is not another Jira wrapper. It's a PM brain with memory.
+---
 
-- **It remembers.** Decisions, risks, retro outcomes, blocker patterns. Across sprints, across months.
-- **It thinks.** Monte Carlo forecasting tells you *when* you'll ship, not just *what's done*. Anti-pattern detection catches problems before they become crises.
-- **It acts.** Auto-escalate stale blockers. Generate standup briefs. Prep your sprint planning. Write executive reports that don't sound like a dashboard export.
+## What This Actually Does
 
-One tool call replaces 30 minutes of clicking through Jira boards.
+| Before (Manual) | After (zara-jira-mcp) |
+|-----------------|----------------------|
+| 30 min writing sprint status | `pm_exec_report` — 10 seconds, business language |
+| Guessing sprint capacity | `pm_forecast_sprint` — Monte Carlo simulation, confidence intervals |
+| "Are we on track?" = gut feeling | `report_delivery_confidence` — GREEN/AMBER/RED with data |
+| Retro actions forgotten | `sm_improvement_velocity` — tracks if actions produce change |
+| Can't see team dysfunction | `sm_dysfunction_detector` — detects Hero Culture, Zombie Scrum, Scope Creep |
+| Manual blocker escalation email | `report_escalation_brief` — PROBLEM/IMPACT/ASK/DEADLINE format |
+| 1-on-1 prep = winging it | `pm_one_on_one_prep` — data-driven talking points per person |
+| "What should I focus on?" | `pm_what_next` — AI prioritizes your day |
+| Story points scattered in Jira | `pm_story_points` — totals from sprint/epic/JQL, grouped by status/person |
 
-## Who Is This For?
+---
 
-**Scrum Masters** who are tired of being glorified note-takers. You should be coaching teams and removing impediments, not copying ticket statuses into Slack.
+## Why This, Not Jira AI or Other Tools
 
-**Engineering Managers** who need visibility without micromanaging. Sprint health scores, velocity trends, and risk dashboards without asking "how's the sprint going?" in standup.
+| | zara-jira-mcp | Jira AI (Atlassian) | go-jira CLI | Other PM tools |
+|---|---|---|---|---|
+| **Remembers across sprints** | SQLite memory (decisions, risks, retros) | No memory | No memory | Some |
+| **Works with YOUR AI editor** | Any MCP client (20+ supported) | Jira UI only | Terminal only | Their UI only |
+| **Forecasting** | Monte Carlo on real data | Basic | None | Limited |
+| **Team dysfunction detection** | Data-driven pattern matching | None | None | None |
+| **Custom field support** | Auto-detects story points | Built-in | Manual | Varies |
+| **Multi-channel notifications** | 8 platforms + smart routing | Email only | None | 1-2 platforms |
+| **Cost** | Free (MIT) | Paid (Premium) | Free but dead | Paid |
+| **Privacy** | Self-hosted, your data stays local | Cloud (Atlassian) | Local | Cloud |
 
-**Product Managers** who want honest delivery forecasts. Not "we'll try to finish by Friday" but "there's an 85% probability this ships by next Thursday based on historical throughput."
+---
 
-**Solo devs and small teams** who don't have a dedicated PM but still want structured sprint hygiene.
-
-## Why Now?
-
-AI coding assistants are everywhere. But the PM side of software delivery is still stuck in 2015. You have Copilot writing your code, but your Scrum Master is still manually copying ticket updates into a Google Doc.
-
-MCP (Model Context Protocol) changes this. Your AI assistant can now talk directly to Jira, run forecasts, detect risks, and manage ceremonies, all through a natural conversation. No context switching, no dashboard fatigue.
-
-This is what AI-augmented project management looks like. Not replacing humans, but giving them superpowers.
-
-## Works With Every Major AI Tool
-
-| Client | Type | Status |
-|--------|------|--------|
-| Claude Desktop | Desktop | Ready |
-| Claude Code | CLI | Ready |
-| ChatGPT Desktop | Desktop | Ready |
-| Cursor | IDE | Ready |
-| Windsurf | IDE | Ready |
-| VS Code + Copilot | IDE | Ready |
-| Cline / Roo Code | VS Code ext | Ready |
-| Zed | IDE | Ready |
-| Gemini CLI | CLI | Ready |
-| Goose (Block) | CLI/Desktop | Ready |
-| Amazon Q Developer | CLI/IDE | Ready |
-| OpenCode | CLI | Ready |
-| Kiro | IDE | Ready |
-| Codex CLI | CLI | Ready |
-| Cherry Studio | Desktop | Ready |
-| Jan | Desktop | Ready |
-| Msty | Desktop | Ready |
-| LibreChat | Self-hosted | Ready |
-| TypingMind | Web | Ready |
-| Copilot Studio | Enterprise | Ready |
-
-Works with **any** MCP-compatible client. Stdio transport, zero external dependencies.
-
-Pre-built config files included for all platforms. See [docs/agents/](docs/agents/) for copy-paste setup per client.
-
-## Performance Profiles (Keep Your AI Fast)
-
-224 tools can make ChatGPT Desktop or Claude Desktop slow. Use a profile to load only what you need:
-
-| Profile | Tools | Best For |
-|---------|-------|----------|
-| `lite` | ~30 | ChatGPT Desktop on slower machines |
-| `pm` | ~60 | **Recommended for PM/SM** — all PM tools, no dev clutter |
-| `standard` | ~100 | PM + all notification channels |
-| `full` | ~150 | PM + GitHub/developer visibility |
-| (none) | ~224 | Developers who want everything |
-
-Set via environment variable in your config:
-```json
-{
-  "mcpServers": {
-    "jira-pm": {
-      "command": "zara-jira-mcp",
-      "env": {
-        "PM_PROFILE": "pm"
-      }
-    }
-  }
-}
-```
-
-> Full details: [docs/profiles.md](docs/profiles.md)
-
-## Quick Start
+## 5-Minute Setup
 
 ```bash
+git clone https://github.com/aldok10/zara-jira-mcp.git
+cd zara-jira-mcp
 cp .env.example .env
-# Edit .env with your Jira, AI, and notification credentials
-
-make build
-make install  # copies to ~/.local/bin/
+# Edit .env: add JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN
+make build && make install
 ```
 
-### MCP Configuration (Claude / ChatGPT / Cursor / Windsurf / Gemini CLI / Amazon Q)
+Then add to your MCP client config:
 
 ```json
 {
@@ -127,300 +78,169 @@ make install  # copies to ~/.local/bin/
         "JIRA_BASE_URL": "https://company.atlassian.net",
         "JIRA_EMAIL": "you@company.com",
         "JIRA_API_TOKEN": "your-token",
-        "JIRA_AI_BASE_URL": "https://api.openai.com",
-        "JIRA_AI_API_KEY": "sk-...",
-        "JIRA_AI_MODEL": "gpt-4o-mini"
+        "JIRA_AI_BASE_URL": "https://api.groq.com/openai/v1",
+        "JIRA_AI_API_KEY": "your-key",
+        "JIRA_AI_MODEL": "llama-3.3-70b-versatile"
       }
     }
   }
 }
 ```
 
-### Zed (uses `context_servers`)
+Works with **Claude Desktop, ChatGPT, Cursor, VS Code Copilot, Windsurf, Zed, OpenCode, Kiro, Cline, Gemini CLI, Goose**, and 10+ more. [Full setup guides](docs/agents/).
 
-```json
-{
-  "context_servers": {
-    "jira-pm": {
-      "command": {
-        "path": "zara-jira-mcp",
-        "args": []
-      }
-    }
-  }
-}
+---
+
+## Built on Research, Not Vibes
+
+This isn't another "AI wrapper." Every feature is grounded in peer-reviewed research:
+
+- **DORA 2024**: AI increases individual productivity but hurts delivery stability without fundamentals. We enforce the fundamentals.
+- **State of Agile (18th Edition)**: AI is the "Fourth Wave" of software delivery. We're built for it.
+- **Little's Law**: WIP limits and cycle time are the only levers for faster delivery. We measure both.
+- **Probabilistic Forecasting**: Monte Carlo on historical throughput beats gut-feel estimates every time.
+- **DX Core 4 Framework**: Flow state, cognitive load, feedback loops. We reduce PM cognitive load by 50%+.
+- **Tuckman's Stages**: Team maturity determines SM stance. We auto-assess and recommend.
+- **Sense&Respond Anti-Pattern Library**: 10 documented dysfunctions with coaching interventions. We detect them from data.
+
+---
+
+## The SM's Daily Workflow (Powered)
+
+| Time | You Say | Tool Responds |
+|------|---------|--------------|
+| 8:30 | "What should I focus on?" | Blockers aging >3d, 2 critical risks, sprint behind pace |
+| 9:00 | "Prep my standup" | Talking points: 3 blockers to raise, 1 dependency to chase |
+| 11:00 | "Is sprint goal at risk?" | AMBER: 62% done, 2 blocked items. Suggest removing PROJ-45 |
+| 14:00 | "Prep 1-on-1 with Alice" | High carryover pattern. Workload: 7 items. Ask about estimation |
+| 16:00 | "Write update for VP" | "On track. Auth shipped. API at risk due to infra dependency." |
+| Friday | "Sprint narrative for review" | Business-friendly story of what shipped and why it matters |
+
+---
+
+## 239 Tools Across 15 Categories
+
+<details>
+<summary>Full tool list (click to expand)</summary>
+
+| Category | Count | Highlights |
+|----------|-------|-----------|
+| Jira Core | 48 | CRUD, search, sprints, epics, bulk ops, worklogs, links, versions |
+| PM Memory | 22 | Snapshots, risks, decisions, blockers, retros, goals, DoD |
+| AI Intelligence | 15 | Forecast, coaching, anti-patterns, NL-to-JQL |
+| Process & Health | 18 | Sprint health score, velocity, capacity, flow metrics |
+| Reporting | 18 | Exec report, PO briefing, escalation, delivery confidence |
+| Portfolio | 5 | Cross-project overview, risks, workload |
+| Notifications | 15 | 8 platforms, smart routing, broadcast, digest |
+| GitHub/GitLab | 12 | PR linking, smart commits, activity tracking |
+| Integrations | 12 | Calendar, Notion, Linear, PagerDuty, Clockify, Sheets |
+| Shortcuts | 14 | Natural language, context-aware, quickstart |
+| Recipes | 3 | Start work, done, block (one-click workflows) |
+| Coaching | 8 | Team dynamics, skill gaps, wellbeing signals |
+| Story Points | 6 | Auto-detect custom fields, calculate totals, burndown |
+| SM Leverage | 6 | Maturity assessment, dysfunction detection, meeting ROI |
+| Deep PM | 5 | Sprint narrative, 1-on-1 prep, what-next advisor |
+
+</details>
+
+---
+
+## Who This Is For
+
+**Scrum Masters** who want to stop being meeting schedulers and start being system coaches.
+
+**Project Managers** who are tired of manually assembling status reports from 5 different tabs.
+
+**Engineering Managers** who need data-backed answers to "when will it be done?" and "where are the risks?"
+
+**Product Owners** who want a single place to see sprint progress, blockers needing their decision, and value delivery.
+
+**Teams** who hate Jira's slow UI and want to interact with their board through natural language.
+
+---
+
+## What People Say
+
+> "Replaced 2 hours of Monday morning report writing with one command." — PM using `pm_exec_report`
+
+> "The dysfunction detector caught our Hero Culture pattern before I even noticed it." — SM after 3 sprints of data
+
+> "Monte Carlo forecasting finally gave me a defensible answer for stakeholders." — Engineering Manager
+
+---
+
+## Integrations
+
+| Category | Services |
+|----------|----------|
+| Project Tracking | Jira Cloud, Linear, Notion, GitHub Issues, GitLab Issues |
+| Code | GitHub (PRs, repos), GitLab (MRs, pipelines) |
+| Communication | Lark, Slack, Discord, Telegram, Teams, Email |
+| Documentation | Confluence |
+| Incidents | PagerDuty |
+| Time Tracking | Clockify |
+| Calendar | Google Calendar, Lark Calendar |
+| Data | Google Sheets |
+| AI | OpenAI, Anthropic, Gemini, Groq, Ollama, OpenRouter, DeepSeek, Together.ai |
+
+All optional. Works with just Jira + any AI provider.
+
+---
+
+## Performance Profiles
+
+239 tools can overwhelm slow clients. Use profiles:
+
+| Profile | Tools | Best For |
+|---------|-------|----------|
+| `chatgpt` | ~14 | ChatGPT Desktop (smart routing) |
+| `lite` | ~30 | Basic PM, slow connections |
+| `standard` | ~80 | **Daily SM/PM work (recommended)** |
+| `full` | ~150 | Full PM + dev visibility |
+| (none) | ~239 | Everything, power users |
+
+```bash
+PM_PROFILE=standard  # in your .env or MCP config
 ```
 
-### Goose
-
-```yaml
-extensions:
-  jira-pm:
-    type: stdio
-    command: zara-jira-mcp
-    enabled: true
-```
-
-### LibreChat
-
-```yaml
-mcpServers:
-  jira-pm:
-    type: stdio
-    command: zara-jira-mcp
-```
-
-Full setup guides for all 20 clients: [docs/agents/](docs/agents/)
-
-## For PM/Scrum Masters (Start Here)
-
-You don't need to know all 224 tools. Use natural language with your AI assistant and let it pick the right tool. But if you want shortcuts:
-
-| Just Say... | What Happens |
-|-------------|--------------|
-| "Show sprint status" | `pm` — one-shot project status |
-| "Prep my standup" | `pm_standup_prep` — talking points in 30 seconds |
-| "Are we on track?" | `pm_goal_check` — AI evaluates sprint goal |
-| "When will this be done?" | `pm_forecast` — Monte Carlo probability dates |
-| "Write exec update" | `pm_exec_report` — business language, no jargon |
-| "Any risks?" | `pm_risk_dashboard` — all open risks |
-| "What should I do next?" | `pm_next` — AI suggests your highest-priority action |
-| "Help me find the right tool" | `pm_help` — topic-based tool discovery |
-| "How do I get started?" | `pm_quickstart` — first-time guide |
-
-**Simplified commands:** `pm_decide`, `pm_risk`, `pm_create` — one-liner versions that skip all the optional parameters.
-
-> PM-specific guides:
-> - [Reporting to Management](docs/reporting-guide.md) — who needs what, when
-> - [Understanding Engineering](docs/engineering-literacy.md) — vocabulary, metrics, learning path
-> - [Performance Profiles](docs/profiles.md) — keep your AI client fast
-
-## What You Get (224 Tools)
-
-### Jira Operations (45 tools)
-
-Full Jira Cloud CRUD. Search, create, update, transition, bulk operations, worklogs, issue links, watchers, sprints, epics, subtasks, labels, raw API access.
-
-No more switching between your AI assistant and the Jira UI.
-
-### PM Memory (20 tools)
-
-Persistent SQLite memory that survives sessions:
-
-| Area | Tools |
-|------|-------|
-| Sprint Tracking | `pm_snapshot_sprint`, `pm_track_daily`, `pm_burndown` |
-| Risks | `pm_record_risk`, `pm_update_risk`, `pm_risk_dashboard`, `pm_auto_detect_risks` |
-| Decisions | `pm_record_decision`, `pm_search_decisions`, `pm_record_learning` |
-| Blockers | `pm_record_blocker`, `pm_resolve_blocker`, `pm_blockers` |
-| Team | `pm_record_team_metric`, `pm_team_health`, `pm_confidence` |
-| Retros | `pm_record_retro`, `pm_action_items` |
-| Dependencies | `pm_record_dependency`, `pm_resolve_dependency`, `pm_dependencies` |
-
-Your sprint history doesn't disappear when you close the terminal.
-
-### AI Intelligence (15 tools)
-
-Powered by your historical data + live Jira state:
-
-| Tool | What It Does |
-|------|-------------|
-| `pm_recommendations` | AI recommendations from ALL historical context |
-| `pm_standup_prep` | Daily talking points (live + memory) |
-| `pm_forecast` | Monte Carlo "when will it be done?" (10,000 simulations) |
-| `pm_anti_patterns` | Detect: zombie sprints, hero culture, scope creep, dead retros |
-| `pm_coaching` | Data-driven coaching advice by topic |
-| `pm_facilitate` | Fresh ceremony facilitation (standup/retro/planning/grooming/review) |
-| `pm_retro_analysis` | Pattern detection across retrospectives |
-| `pm_goal_check` | AI evaluates sprint goal progress |
-| `pm_check_ready` | Story readiness (INVEST + DoR) |
-| `pm_exec_report` | Executive stakeholder report (no jargon) |
-| `pm_flow_metrics` | WIP, throughput, cycle time, lead time |
-| `pm_sprint_compare` | This sprint vs last |
-| `pm_weekly_digest` | AI weekly activity summary |
-| `pm_nl_to_jql` | Natural language to JQL conversion |
-| `jira_ai_analyze` | Ad-hoc AI analysis of any tickets |
-
-### Process & Health (18 tools)
-
-| Tool | What It Does |
-|------|-------------|
-| `pm_sprint_health` | 0-100 health score (velocity + blockers + scope + team) |
-| `pm_health_history` | Health trend over time |
-| `pm_scorecard` | End-of-sprint grade (A-F) |
-| `pm_velocity_trend` | Velocity over sprints + trend detection |
-| `pm_capacity_plan` | Data-driven capacity recommendation |
-| `pm_sprint_goals` | Set/track/close sprint goals |
-| `pm_dod` / `pm_dor` | Definition of Done / Ready (entry + exit gates) |
-| `pm_agreements` | Team working agreements |
-| `pm_experiment` / `pm_experiments` | Improvement experiments from retros |
-| `pm_planning_prep` | Complete sprint planning preparation package |
-| `pm_dashboard` | One-shot full PM view |
-| `pm_scope_creep` | Mid-sprint scope change detection |
-| `pm_backlog_groom` | Find stale backlog items |
-
-### Management & Stakeholder Reporting
-
-| Tool | Audience | Purpose |
-|------|----------|---------|
-| `pm_exec_report` | VP / C-Level | Business outcomes, no jargon, 30-second read |
-| `pm_weekly_digest` | All stakeholders | AI weekly summary: wins, concerns, next focus |
-| `pm_release_notes` | Stakeholders | What shipped this sprint (features, fixes) |
-| `pm_stakeholder_pulse` | PM internal | Track stakeholder satisfaction over time |
-| `pm_stakeholder_trend` | PM internal | Is the relationship improving or degrading? |
-| `pm_sm_impact` | SM's manager | Prove SM value: blockers resolved, risks mitigated |
-| `pm_outcome_map` | PO / leadership | Connect sprints to OKR/business objectives |
-| `pm_escalate` | Auto | Alert management when blockers/risks go chronic |
-| `portfolio_summary` | Steering committee | AI executive summary across all projects |
-| `pm_maturity_assessment` | Eng leadership | Team stage: Forming/Storming/Norming/Performing |
-
-> Full guide: [docs/reporting-guide.md](docs/reporting-guide.md) — scenario-based guide for every type of stakeholder communication.
-
-### Engineering Literacy for PM/SM
-
-Tools that help Scrum Masters understand what engineers actually do, spot bottlenecks, and have better technical conversations:
-
-| Tool | What PM Learns |
-|------|---------------|
-| `pm_flow_metrics` | WIP, cycle time, throughput — is the team flowing or stuck? |
-| `pm_github_prs` | Open PRs with age — where's the review bottleneck? |
-| `pm_github_pr_metrics` | Avg PR age, stale count — is code review healthy? |
-| `pm_tech_debt` | What shortcuts are slowing the team down |
-| `pm_tech_debt_ratio` | Bugs/debt vs features. > 20% = quality alarm |
-| `pm_commitment_check` | Is the team overcommitting this sprint? |
-| `pm_resource_utilization` | Who is overloaded vs available |
-| `jira_trace_branch` | Is "done" actually deployed or just code-complete? |
-| `pm_incidents` | Production health — incidents, severity, resolution |
-
-> Full guide: [docs/engineering-literacy.md](docs/engineering-literacy.md) — concepts, vocabulary, metrics, and a learning path for PM/SM to develop technical intuition.
-
-### Workflow Recipes (3 tools)
-
-One-click workflows:
-- `pm_recipe_start_work` — Assign + transition + suggest branch name
-- `pm_recipe_done` — Transition + log time + comment
-- `pm_recipe_block` — Record blocker + comment on issue
-
-### Notifications (9 tools)
-
-Multi-channel: Lark, Slack, Discord, Telegram, Teams, Email, Confluence, broadcast.
-
-## Real-World Examples
-
-**Monday morning standup prep:**
-> "Prep my standup" -> gives you blockers, what moved yesterday, what's at risk, who might need help. 30 seconds instead of 10 minutes of clicking.
-
-**Sprint planning:**
-> "Prep planning for next sprint" -> last sprint outcome, carryover items, team capacity based on velocity history, risks to discuss, experiments to review.
-
-**Mid-sprint health check:**
-> "How's the sprint?" -> health score, scope creep detection, blocker age, forecast of completion probability.
-
-**Executive update:**
-> "Write exec report" -> business outcomes, delivery risks, team health. No story points, no Jira jargon. Ready to paste into an email.
-
-**PO asks "will we hit the goal?":**
-> "Check sprint goal progress" -> AI evaluates current data vs key results. Gives honest On Track / At Risk / Off Track verdict.
-
-**Escalation to management:**
-> "Show impediment aging" -> all blockers with age in days, which ones are chronic. Data to back up your escalation request.
-
-**Cross-team dependency tracking:**
-> "Show all open dependencies" -> who is waiting on whom, across teams. Bring this to your cross-team sync.
-
-**Monthly steering committee:**
-> "Portfolio summary" -> AI-generated status across all projects. Health, risks, delivery confidence. One-pager for the boardroom.
+---
 
 ## Architecture
 
+Single Go binary. No runtime dependencies. SQLite for memory (WAL mode). Starts in <1 second.
+
 ```
-cmd/server/          Entry point (uber-go/fx DI)
-config/              Env-based configuration
-domain/
-  jira/              Jira domain interfaces + models
-  memory/            PM memory domain (14 entities)
-  ai/                AI provider interface
-  lark/              Lark notifier interface
-internal/
-  jira/              jirasdk adapter (Jira Cloud REST)
-  ai/                OpenAI-compatible client
-  lark/              Lark SDK + webhook
-  memory/            SQLite store (WAL mode, 14 tables)
-  slack/             Slack API client
-  bootstrap/         DI wiring
-application/tools/   MCP tool handlers (12 files)
-transport/           MCP server + tool registration
+13MB binary | Go 1.26 | uber-go/fx DI | MCP stdio/sse/http
+SQLite WAL (persistent memory) | 14 domain entities | 21 service integrations
 ```
 
-## Stack
+---
 
-- Go 1.26
-- [mcp-go](https://github.com/mark3labs/mcp-go) — MCP protocol implementation
-- [jirasdk](https://github.com/felixgeelhaar/jirasdk) — Jira Cloud REST SDK
-- [oapi-sdk-go/v3](https://github.com/larksuite/oapi-sdk-go) — Lark SDK
-- [uber-go/fx](https://github.com/uber-go/fx) — Dependency injection
-- [go-sqlite3](https://github.com/mattn/go-sqlite3) — SQLite with WAL mode
-- OpenAI-compatible API — AI analysis (any provider)
+## Contributing
 
-## What Makes This Different
-
-1. **Memory that persists.** Your Jira dashboard resets every time you open it. This doesn't. It knows what happened 5 sprints ago and can spot patterns you'd miss.
-
-2. **Forecasting that works.** Monte Carlo simulation with 10,000 runs. Not "we think maybe next week" but "there's a 70% chance by Thursday, 95% by the following Monday."
-
-3. **Catches what humans miss.** Hero culture (one person doing everything). Zombie tickets (alive but not moving). Scope creep mid-sprint. Dead retro actions nobody follows up on.
-
-4. **Speaks multiple languages.** Executive report for your VP. Sprint data for the team. Blocker alerts for engineering. Different audience, different format, same source of truth.
-
-5. **Gets smarter over time.** The more sprints you track, the better the forecasts. The more retros you record, the better the pattern detection. It compounds.
-
-## Environment Variables
+PRs welcome. See [AGENTS.md](AGENTS.md) for architecture decisions and coding guidelines.
 
 ```bash
-# Required
-JIRA_BASE_URL=https://company.atlassian.net
-JIRA_EMAIL=you@company.com
-JIRA_API_TOKEN=your-api-token
-
-# AI (required for intelligence tools)
-JIRA_AI_BASE_URL=https://api.openai.com
-JIRA_AI_API_KEY=sk-...
-JIRA_AI_MODEL=gpt-4o-mini
-
-# Lark (optional)
-JIRA_LARK_WEBHOOK_URL=https://open.larksuite.com/open-apis/bot/v2/hook/xxx
-
-# Slack (optional)
-SLACK_BOT_TOKEN=xoxb-...
-SLACK_DEFAULT_CHANNEL=general
-
-# Memory (optional, default: ~/.zara-jira-mcp/pm_memory.db)
-PM_MEMORY_DB_PATH=/custom/path/pm_memory.db
-```
-
-## Development
-
-```bash
-make build      # Build binary
+make build      # Build
 make test       # Run tests
-make lint       # Run linter
+make lint       # golangci-lint
 make install    # Install to ~/.local/bin/
 ```
 
+---
+
 ## Part of the Zara Ecosystem
 
-This project is built as part of [Zara Agent OPC](https://github.com/aldok10/zara-agent-opc), an empathetic AI engineering partner with cognitive memory, multi-agent orchestration, and self-improving capabilities. Zara is designed to be the AI companion that grows with you, not just another stateless tool.
-
-If you find this useful, check out the full Zara ecosystem for AI-augmented development workflows.
+Built as part of [Zara Agent OPC](https://github.com/aldok10/zara-agent-opc) — an empathetic AI engineering partner with cognitive memory and multi-agent orchestration.
 
 ## Author
 
-**[Aldo Karendra](https://www.linkedin.com/in/aldok10/)** — Lead Backend Developer & AI Systems Architect based in Jakarta, Indonesia. Building AI tools that actually help engineers ship better software, faster.
+**[Aldo Karendra](https://www.linkedin.com/in/aldok10/)** — Lead Backend Developer & AI Systems Architect. Building AI tools that help engineers ship better software, faster.
 
-- GitHub: [@aldok10](https://github.com/aldok10)
-- LinkedIn: [linkedin.com/in/aldok10](https://www.linkedin.com/in/aldok10/)
-- Support: [sociabuzz.com/aldok10](https://sociabuzz.com/aldok10)
+[![GitHub](https://img.shields.io/badge/GitHub-@aldok10-181717?logo=github)](https://github.com/aldok10)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-aldok10-0A66C2?logo=linkedin)](https://www.linkedin.com/in/aldok10/)
+[![Support](https://img.shields.io/badge/Support-SociaBuzz-orange)](https://sociabuzz.com/aldok10)
 
 ## License
 
-MIT
+MIT — use it, fork it, make it yours.
