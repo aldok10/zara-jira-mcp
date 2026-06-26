@@ -89,9 +89,9 @@ func enabledModules() map[string]bool {
 		// Under Microsoft Research's <40 guidance for PM teams.
 		return map[string]bool{"smart-router": true, "pm-quick": true, "jira": true, "pm-memory": true, "ai": true}
 	case "full":
-		// ~56 tools: standard + jira-ops + pm-analysis + notify-lark + stakeholder exec.
+		// ~59 tools: smart router + PM core + Jira + analysis + AI + notify.
 		// Acceptable with good tool descriptions (research-backed: 40-60).
-		return map[string]bool{"smart-router": true, "pm-quick": true, "help": true, "jira": true, "jira-ops": true, "pm-memory": true, "pm-analysis": true, "ai": true, "notify-lark": true}
+		return map[string]bool{"smart-router": true, "pm-quick": true, "help": true, "jira": true, "pm-memory": true, "pm-analysis": true, "ai": true, "notify-lark": true}
 	}
 
 	// Custom module selection via PM_ENABLED_MODULES
