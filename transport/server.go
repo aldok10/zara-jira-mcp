@@ -27,7 +27,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 
 	modules := map[string][]regFunc{
 		"jira":          {registerJiraTools, registerIssueOpsTools, registerEpicSprintTools, registerBulkProjectTools, registerLinkWorklogTools, registerVersionTools, registerTraceTools},
-		"pm":            {registerPMTools, registerMemoryTools, registerPMIntelTools, registerAdvancedPMTools, registerDeepPMTools, registerFlowTools, registerForecastTools, registerRecipeTools, registerProcessTools, registerImprovementTools, registerOKRKPITools},
+		"pm":            {registerPMTools, registerMemoryTools, registerPMIntelTools, registerAdvancedPMTools, registerDeepPMTools, registerFlowTools, registerForecastTools, registerRecipeTools, registerProcessTools, registerImprovementTools, registerOKRKPITools, registerInsightTools},
 		"ai":            {registerAITools},
 		"notifications": {registerLarkTools, registerSlackTools, registerPlatformTools, registerRoutingTools},
 		"stakeholder":   {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools, registerCommunicationTools, registerCommsGapTools, registerSafetyTools},

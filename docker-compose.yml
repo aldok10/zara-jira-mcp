@@ -4,3 +4,5 @@ services:
     env_file: .env
     stdin_open: true
     restart: unless-stopped
+    volumes:
+      - ./data:/data
