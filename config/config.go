@@ -11,7 +11,14 @@ type Config struct {
 	Jira   JiraConfig
 	AI     AIConfig
 	Lark   LarkConfig
+	Slack  SlackConfig
 	Memory MemoryConfig
+}
+
+type SlackConfig struct {
+	BotToken       string // SLACK_BOT_TOKEN (xoxb-...)
+	DefaultChannel string // SLACK_DEFAULT_CHANNEL (channel ID or name)
+	WebhookURL     string // SLACK_WEBHOOK_URL (fallback, no token needed)
 }
 
 type MemoryConfig struct {
@@ -54,6 +61,11 @@ func Load() (*Config, error) {
 			AppID:      os.Getenv("LARK_APP_ID"),
 			AppSecret:  os.Getenv("LARK_APP_SECRET"),
 			ChatID:     os.Getenv("LARK_CHAT_ID"),
+		},
+		Slack: SlackConfig{
+			BotToken:       os.Getenv("SLACK_BOT_TOKEN"),
+			DefaultChannel: os.Getenv("SLACK_DEFAULT_CHANNEL"),
+			WebhookURL:     os.Getenv("SLACK_WEBHOOK_URL"),
 		},
 		Memory: MemoryConfig{
 			DBPath: os.Getenv("PM_MEMORY_DB_PATH"),
