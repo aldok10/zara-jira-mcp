@@ -168,7 +168,7 @@
 - `research/scrum-master-papers.md` — 508 academic papers on SM effectiveness
 - `research/pm-integration-platforms.md` — Notification routing, escalation patterns
 - `research/pm-leverage-research.md` — DORA metrics, priority churn, tech debt frameworks
-- `research/communication-frameworks.md` — Minto Pyramid, SBI, RACI, Radical Candor, ADR, AI-era patterns
+- `docs/communication-frameworks.md` — 14 frameworks: Minto Pyramid, SCARF, SBI, RACI/DACI, Radical Candor, NVC, 5W1H, Async Protocol, Ceremony Patterns, Escalation/TIRED, Crucial Conversations, Signal-over-Noise, Communication Anti-Patterns, Trust Pyramid
 - DORA 2025: PRs merged +98%, incidents +242% — velocity metrics lie without quality signals
 - Industry standard: 15-20% sprint capacity for tech debt (confirmed across 6 sources)
 - Sprint goal success rate: only 52% of teams achieve goals (Scrum Alliance)
@@ -178,39 +178,129 @@
 
 ## Next Phase: AI Communication Layer
 
-Based on `research/communication-frameworks.md`. The thesis: **PM's #1 job in the AI era is communication — framing, routing, timing. AI handles data; PM handles meaning.**
+Based on `docs/communication-frameworks.md` + fresh research (Jun 2026). The thesis: **PM's #1 job in the AI era is communication — framing, routing, timing. AI handles data; PM handles meaning.**
 
-### Phase 7: Communication Templates (next)
+**Research backing:**
+- $75M at risk per $1B spent from bad communication (PMI)
+- Teams with communication overload: 3x slower decisions (ITS Dart)
+- Trust in AI tools -31%, agentic AI -89% (Axis Intelligence 2026)
+- 15.4 hrs/week meetings vs 12.1 hrs deep work (Microsoft 2026)
+- Structured async = 25% fewer meetings (multiple sources)
+- Monte Carlo confidence intervals build stakeholder trust > single-point estimates
 
-| Tool | Framework | What |
-|------|-----------|------|
-| `pm_communicate` | Minto Pyramid | Generate audience-specific updates (exec vs team vs PO) |
-| `pm_feedback_prep` | SBI Model | AI-generate structured feedback from team data |
-| `pm_escalation_draft` | Pyramid + RACI | Draft escalation with context + ask + deadline |
-| `pm_decision_record` | ADR/MADR | Enhanced decisions: context → options → consequences |
+---
 
-### Phase 8: Smart Communication Routing
+### Comms Phase 1: Signal-over-Noise (next — low effort, high impact)
 
-| Tool | Framework | What |
-|------|-----------|------|
-| `pm_audience_router` | Minto + Audience | Same data, auto-reframe per recipient |
-| `pm_communication_plan` | RACI + Timing | Who needs what, when, for any event |
-| `pm_raci` | RACI Matrix | Auto-generate from Jira assignments |
-| `pm_silence_detector` | Sentiment | Flag disengaged stakeholders |
+**Thesis:** Reduce noise, amplify signal. Make decisions searchable, make status self-service.
 
-### Phase 9: AI Coaching Communication
+| Tool | Framework | What | Effort |
+|------|-----------|------|--------|
+| `pm_communicate` | Minto Pyramid | Generate audience-specific updates (exec vs team vs PO) | Medium |
+| `pm_feedback_prep` | SBI Model | AI-generate structured feedback from team data | Medium |
+| `pm_escalation_draft` | TIRED + Pyramid | Draft escalation with context + ask + deadline | Low |
+| `pm_decision_record` | ADR/MADR | Enhanced decisions: context → options → consequences | Low |
+| `pm_comms_health` | Signal-over-Noise | Score: re-decision rate, blocker escalation speed, stakeholder responsiveness | Medium |
 
-| Tool | Framework | What |
-|------|-----------|------|
-| `pm_hard_conversation` | Radical Candor + SBI | Prep difficult conversations with data |
-| `pm_meeting_prep` | Pyramid | Agenda + talking points for any meeting |
-| `pm_async_update` | Async-first | Status that replaces a meeting |
-| `pm_trust_signals` | Trust Pyramid | Track trust indicators over time |
+**Success metric:** Decision re-occurrence drops 50% (same topic not revisited). Blocker avg age drops 30%.
 
-### Phase 10: Organizational Communication (stretch)
+---
 
-| Tool | Framework | What |
-|------|-----------|------|
-| `pm_change_communication` | Kotter + ADKAR | Plan comms for org changes |
-| `pm_conflict_mediation` | Thomas-Kilmann | AI conflict diagnosis + resolution |
-| `pm_influence_map` | Power/Interest | Stakeholder influence strategy |
+### Comms Phase 2: Audience-Aware Routing (medium effort, high impact)
+
+**Thesis:** Same data, different framing per audience. SCARF-aware message construction.
+
+| Tool | Framework | What | Effort |
+|------|-----------|------|--------|
+| `pm_audience_router` | Minto + SCARF | Same data, auto-reframe: remove jargon for exec, add certainty for anxious stakeholders | Medium |
+| `pm_communication_plan` | RACI + Timing | Who needs what, when, via which channel — auto-enforced | Medium |
+| `pm_raci` | RACI Matrix | Auto-generate from Jira assignments | Low |
+| `pm_silence_detector` | Ghost Stakeholders | Flag disengaged stakeholders (no pulse, no decisions, no comments) | Low |
+| `pm_comms_anti_patterns` | Community Smells | Detect: information hoarding, over-communication, meeting addiction, re-deciding | Medium |
+
+**Success metric:** Stakeholder pulse scores improve. "I didn't know about that" incidents drop to zero.
+
+---
+
+### Comms Phase 3: AI Coaching Communication (medium effort, high impact)
+
+**Thesis:** AI preps the PM for difficult human interactions — data + script, but human delivers.
+
+| Tool | Framework | What | Effort |
+|------|-----------|------|--------|
+| `pm_hard_conversation` | Crucial Conversations + SBI + data | Prep: facts, your story, their likely perspective, SCARF risks, opening line | High |
+| `pm_meeting_prep` | Pyramid + 5W1H | Agenda + talking points + pre-read links for any meeting | Low |
+| `pm_async_update` | Signal-over-Noise | Structured status that replaces a sync meeting | Low |
+| `pm_trust_signals` | Trust Pyramid | Track: forecast accuracy, override rate, team confidence trend | Medium |
+| `pm_nvc_reframe` | NVC | Reframe blaming/judgmental language → observation + feeling + need + request | Medium |
+
+**Success metric:** pm_stakeholder_pulse trend positive. Team confidence scores stable/rising.
+
+---
+
+### Comms Phase 4: Organizational Communication (stretch — high effort)
+
+**Thesis:** Communication architecture at org level — change management, conflict resolution, influence mapping.
+
+| Tool | Framework | What | Effort |
+|------|-----------|------|--------|
+| `pm_change_communication` | Kotter 8-step + ADKAR | Plan comms for org changes (reorgs, tool migrations, process shifts) | High |
+| `pm_conflict_mediation` | Thomas-Kilmann + NVC | AI conflict diagnosis + suggest resolution approach | High |
+| `pm_influence_map` | Power/Interest Matrix | Stakeholder influence strategy per initiative | Medium |
+| `pm_calibration_report` | Superforecasting | How accurate were past AI forecasts? Build institutional trust | Medium |
+| `pm_ceremony_optimizer` | Meeting ROI + async-first | Recommend: which ceremonies to keep sync, which to go async, which to kill | Low |
+
+**Success metric:** PM time saved 5+ hrs/week. Forecast accuracy within 20% at 85% confidence. Zero surprise escalations.
+
+---
+
+## Context Engineering: Tool Delivery Optimization
+
+Based on `research/context-engineering.md`. The problem: 231 tools = ~50K tokens overhead. Most clients choke.
+
+### Phase 11: Optimize Current (low effort)
+
+| Task | Impact |
+|------|--------|
+| Shorten all tool descriptions to <50 chars in `all` profile | -30% token overhead |
+| Add `pm_load_module` for dynamic tool loading mid-session | Lazy registration |
+| Track tool usage per PM (which tools actually called) | Data for auto-profile |
+| Auto-suggest optimal profile based on usage history | PM friction = 0 |
+
+### Phase 12: Dynamic Discovery (medium effort)
+
+| Task | Impact |
+|------|--------|
+| Hierarchical tool listing (category → sub → tool) | Agent drills down |
+| `pm_discover intent="X"` returns only relevant 5-10 tools | Smart routing |
+| Lazy tool registration (tools loaded on first category access) | Minimal initial schema |
+
+### Phase 13: Intent-Based Selection (high effort, transformative)
+
+| Task | Impact |
+|------|--------|
+| AI intent classification before tool selection | Right tool every time |
+| Auto-compress descriptions based on conversation context | Adaptive schema |
+| Cross-session tool preference learning | Personalized per PM |
+
+---
+
+## Implementation Priority Matrix
+
+| Priority | Phase | Effort | Impact | Ship target |
+|----------|-------|--------|--------|-------------|
+| 1 | 11 (Context optimize) | Low | High | This week |
+| 2 | 7 (Communication templates) | Low | High | Next week |
+| 3 | 8 (Smart routing) | Medium | High | Sprint +1 |
+| 4 | 12 (Dynamic discovery) | Medium | High | Sprint +1 |
+| 5 | 9 (AI coaching comms) | Medium | Medium | Sprint +2 |
+| 6 | 13 (Intent-based) | High | Transformative | Sprint +3 |
+| 7 | 10 (Org communication) | High | Medium | Backlog |
+
+---
+
+## North Star
+
+> A PM opens ChatGPT/Claude/OpenCode, types "how's my sprint going?" and gets an answer in 2 seconds — backed by live Jira data, historical memory, team health signals, and stakeholder context. No manual tool selection. No profile configuration. No lag.
+
+That's the end state. Everything else is a step toward it.
