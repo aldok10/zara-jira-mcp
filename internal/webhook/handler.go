@@ -134,5 +134,7 @@ func (h *Handler) handleSprintClosed(ctx context.Context, event *Event) {
 		Notes:       fmt.Sprintf("Sprint '%s' was closed via webhook. PM should run pm_snapshot_sprint.", event.Sprint.Name),
 		SprintName:  event.Sprint.Name,
 	}
-	_ = h.memory.SaveMeetingNote(ctx, note)
+	if err := h.memory.SaveMeetingNote(ctx, note); err != nil {
+		h.logger.Error("webhook: failed to save sprint close note", "err", err)
+	}
 }

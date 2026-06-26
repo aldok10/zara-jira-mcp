@@ -161,6 +161,48 @@ Priority: Ship tools that reduce PM communication noise and make decisions searc
 
 ---
 
+## Phase 5: Remaining Gaps (Next — from dedup audit)
+
+### Task 5.1: Notification Budget/Throttle
+- **What:** Track notifications sent per channel/day. Enforce configurable daily cap (default 5). Critical bypasses budget. Surface stats in `pm_mcp_stats`.
+- **Research:** Notification Fatigue (#6) — users have 3-5 unsolicited AI update ceiling/day. 10th notification/week = muted by Friday.
+- **Schema:** `notification_log` table (timestamp, channel, severity, title_hash, sent_by)
+- **Logic:** Before any send in `notify_routed`/`broadcast`/`daily_digest`: check counter. If exceeded, batch into next digest or skip with log.
+- **Effort:** Low-Medium
+- **Files:** `application/tools/routing_handlers.go` (add budget check), new `internal/memory/sqlite_notifications.go`
+
+### Task 5.2: Meeting ROI Tracking
+- **What:** `pm_meeting_roi` — record meeting length/attendees/decisions/actions. Score = (decisions + actions) / (hours * attendees). Track over time.
+- **Research:** Microsoft 2026 Work Trend: 15.4hrs/week meetings, 12.1hrs deep work. Meeting ROI separates useful ceremonies from status theater.
+- **Params:** `meeting_type`, `duration_minutes`, `attendees`, `decisions_count`, `actions_count`
+- **Output:** ROI score + comparison to past meetings of same type + recommendation (keep sync / go async / kill)
+- **Effort:** Low
+- **Files:** `application/tools/comms_gap_handlers.go` (add handler), leverage existing `meeting_notes` table
+
+### Task 5.3: Liberating Structures Facilitation Scripts
+- **What:** Enhance `pm_facilitate` to include step-by-step LS scripts with timing. Support: 1-2-4-All (retro), TRIZ (retro), 15% Solutions (planning), Wise Crowds (coaching).
+- **Research:** Liberating Structures (#9) — 33 microstructures for equal-voice participation. "Open discussion" lets loudest voices dominate.
+- **Logic:** When `pm_facilitate(ceremony:"retro")` is called, include a full facilitation script: timing per step, facilitator instructions, prompts to read aloud.
+- **Effort:** Low (content addition to existing AI prompt in coaching_handlers.go)
+- **Files:** `application/tools/coaching_handlers.go` (enhance Facilitate handler prompt)
+
+### Task 5.4: Confidence Calibration Report
+- **What:** `pm_calibration_report` — compare historical forecasts vs actual outcomes. "We said 85% chance by Thursday — did we make it?" Track accuracy to build institutional trust.
+- **Research:** Trust Pyramid (#14), Superforecasting — calibrated forecasts build stakeholder trust over time.
+- **Data:** sprint_snapshots (committed vs done), sprint_goals (achieved vs missed), daily_progress (forecast line vs actual)
+- **Output:** Calibration score (% of time our confidence intervals were correct), trend over sprints, areas where we over/under-estimate
+- **Effort:** Medium
+- **Files:** `application/tools/comms_gap_handlers.go` (add handler)
+
+### Task 5.5: Async Standup Collection
+- **What:** `pm_async_standup` — generate structured async standup from Jira data (what changed since yesterday, who's blocked, what's at risk) so team doesn't need sync standup.
+- **Research:** Signal-over-Noise, Async Protocol — structured async replaces sync meeting, saves 15-30min/day for team of 8.
+- **Logic:** Pull board changes in last 24h (transitions, new blockers, comments), format as per-person update, flag items needing sync discussion.
+- **Effort:** Medium
+- **Files:** `application/tools/comms_gap_handlers.go` (add handler)
+
+---
+
 ## Research Backlog (riset lanjutan sebelum implement)
 
 | Topic | Why | Priority |

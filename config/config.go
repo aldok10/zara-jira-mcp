@@ -387,6 +387,7 @@ func Load() (*Config, error) {
 		},
 		Webhook: WebhookConfig{
 			Enabled: os.Getenv("WEBHOOK_ENABLED") == "true",
+			Port:    os.Getenv("WEBHOOK_PORT"),
 			Secret:  os.Getenv("WEBHOOK_SECRET"),
 		},
 	}
@@ -416,6 +417,9 @@ func Load() (*Config, error) {
 	}
 	if cfg.Lark.BotPort == "" {
 		cfg.Lark.BotPort = "9091"
+	}
+	if cfg.Webhook.Port == "" {
+		cfg.Webhook.Port = "8081"
 	}
 
 	return cfg, nil

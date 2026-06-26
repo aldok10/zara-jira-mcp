@@ -46,10 +46,13 @@ func (c *Client) Get(ctx context.Context, key string) (string, error) {
 	return c.rdb.Get(ctx, key).Result()
 }
 
-// Set stores a string value with the given TTL.
+// Set stores a string value with the given TTL. If ttl is 0, uses the default TTL.
 func (c *Client) Set(ctx context.Context, key, value string, ttl time.Duration) error {
 	if !c.Available() {
 		return nil
+	}
+	if ttl == 0 {
+		ttl = c.ttl
 	}
 	return c.rdb.Set(ctx, key, value, ttl).Err()
 }

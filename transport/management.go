@@ -42,7 +42,7 @@ func registerManagementTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_blocker_aging",
-			mcp.WithDescription("Blocker aging report with SLA tracking. Shows how long each blocker is stuck and who owns resolution. For accountability discussions."),
+			mcp.WithDescription("[DEPRECATED: use pm_impediment_aging] Blocker aging report with SLA tracking. Shows how long each blocker is stuck and who owns resolution."),
 		),
 		h.BlockerAgingReport,
 	)

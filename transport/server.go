@@ -708,7 +708,7 @@ func registerForecastTools(s *server.MCPServer, h *tools.Handlers) {
 
 	s.AddTool(
 		mcp.NewTool("pm_forecast_sprint",
-			mcp.WithDescription("Monte Carlo sprint forecast. Predicts completion probability based on historical throughput. Shows 50%/85% confidence intervals."),
+			mcp.WithDescription("[DEPRECATED: use pm_forecast] Monte Carlo sprint forecast. Predicts completion probability based on historical throughput. Shows 50%/85% confidence intervals."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 			mcp.WithNumber("items_remaining", mcp.Description("Items left to do (auto-detected from sprint if empty)")),
 		),

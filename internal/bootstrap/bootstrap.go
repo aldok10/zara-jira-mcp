@@ -179,9 +179,9 @@ func Invoke(p LifecycleParams) {
 				wh := webhook.NewHandler(p.Config.Webhook.Secret, p.Memory, logger)
 				mux := http.NewServeMux()
 				mux.Handle("/webhook/jira", wh)
-				logger.Info("starting jira webhook receiver", "port", p.Config.Server.Port)
+				logger.Info("starting jira webhook receiver", "port", p.Config.Webhook.Port)
 				go func() {
-					if err := http.ListenAndServe(":"+p.Config.Server.Port, mux); err != nil {
+					if err := http.ListenAndServe(":"+p.Config.Webhook.Port, mux); err != nil {
 						logger.Error("webhook server error", "err", err)
 					}
 				}()
