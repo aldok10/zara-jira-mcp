@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -70,7 +71,8 @@ func (h *Handlers) NotifyRouted(ctx context.Context, req mcp.CallToolRequest) (*
 			}
 		}
 		if sendErr != nil {
-			results = append(results, fmt.Sprintf("%s: %s", ch, sendErr.Error()))
+			slog.Error("notification send failed", "channel", ch, "error", sendErr.Error())
+			results = append(results, fmt.Sprintf("%s: failed", ch))
 		}
 	}
 

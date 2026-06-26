@@ -19,7 +19,7 @@ func (h *Handlers) TrackDailyProgress(ctx context.Context, req mcp.CallToolReque
 
 	sprints, err := h.Jira.GetActiveSprints(ctx, boardID)
 	if err != nil {
-		return errorResult("Failed to get sprints: " + err.Error()), nil
+		return sanitizedError("failed to get sprints", err), nil
 	}
 	if len(sprints) == 0 {
 		return textResult("No active sprint found."), nil
@@ -28,7 +28,7 @@ func (h *Handlers) TrackDailyProgress(ctx context.Context, req mcp.CallToolReque
 	sprint := sprints[0]
 	issues, err := h.Jira.GetSprintIssues(ctx, sprint.ID)
 	if err != nil {
-		return errorResult("Failed to get sprint issues: " + err.Error()), nil
+		return sanitizedError("failed to get sprint issues", err), nil
 	}
 
 	var done, inProgress, todo, blocked int
@@ -60,7 +60,7 @@ func (h *Handlers) TrackDailyProgress(ctx context.Context, req mcp.CallToolReque
 	}
 
 	if err := h.Memory.SaveDailyProgress(ctx, p); err != nil {
-		return errorResult("Failed to save progress: " + err.Error()), nil
+		return sanitizedError("failed to save daily progress", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Daily progress recorded for %s:\nDone: %d | In Progress: %d | Todo: %d | Blocked: %d | Total: %d",
@@ -85,7 +85,7 @@ func (h *Handlers) GetBurndown(ctx context.Context, req mcp.CallToolRequest) (*m
 
 	progress, err := h.Memory.GetDailyProgress(ctx, boardID, sprintName)
 	if err != nil {
-		return errorResult("Failed to get progress: " + err.Error()), nil
+		return sanitizedError("failed to get daily progress", err), nil
 	}
 	if len(progress) == 0 {
 		return textResult("No daily progress recorded yet. Use pm_track_daily to capture data."), nil
@@ -132,7 +132,7 @@ func (h *Handlers) SetSprintGoal(ctx context.Context, req mcp.CallToolRequest) (
 	}
 
 	if err := h.Memory.SaveSprintGoal(ctx, g); err != nil {
-		return errorResult("Failed to save goal: " + err.Error()), nil
+		return sanitizedError("failed to save sprint goal", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Sprint goal set for %s:\n%s\nKey Results: %s",
@@ -159,7 +159,7 @@ func (h *Handlers) CloseSprintGoal(ctx context.Context, req mcp.CallToolRequest)
 	}
 
 	if err := h.Memory.UpdateSprintGoal(ctx, g); err != nil {
-		return errorResult("Failed to close goal: " + err.Error()), nil
+		return sanitizedError("failed to close sprint goal", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Goal #%d closed as: %s", goalID, status)), nil
@@ -180,7 +180,7 @@ func (h *Handlers) GetSprintGoals(ctx context.Context, req mcp.CallToolRequest) 
 		goals, err = h.Memory.GetActiveGoals(ctx, boardID)
 	}
 	if err != nil {
-		return errorResult("Failed to get goals: " + err.Error()), nil
+		return sanitizedError("failed to get sprint goals", err), nil
 	}
 	if len(goals) == 0 {
 		return textResult("No goals found."), nil
@@ -220,7 +220,7 @@ func (h *Handlers) ManageDoD(ctx context.Context, req mcp.CallToolRequest) (*mcp
 			Active:   true,
 		}
 		if err := h.Memory.SaveDoDItem(ctx, d); err != nil {
-			return errorResult("Failed to save: " + err.Error()), nil
+			return sanitizedError("failed to save DoD item", err), nil
 		}
 		return textResult(fmt.Sprintf("DoD item added: [%s] %s", d.Category, item)), nil
 
@@ -230,14 +230,14 @@ func (h *Handlers) ManageDoD(ctx context.Context, req mcp.CallToolRequest) (*mcp
 			return errorResult("item_id required for remove action"), nil
 		}
 		if err := h.Memory.DeleteDoDItem(ctx, int64(id)); err != nil {
-			return errorResult("Failed to remove: " + err.Error()), nil
+			return sanitizedError("failed to remove DoD item", err), nil
 		}
 		return textResult(fmt.Sprintf("DoD item #%d removed.", id)), nil
 
 	default: // list
 		items, err := h.Memory.GetDoD(ctx, project)
 		if err != nil {
-			return errorResult("Failed to get DoD: " + err.Error()), nil
+			return sanitizedError("failed to get DoD items", err), nil
 		}
 		if len(items) == 0 {
 			return textResult("No Definition of Done items. Use action=add to create one."), nil
@@ -369,7 +369,7 @@ func (h *Handlers) GenerateReleaseNotes(ctx context.Context, req mcp.CallToolReq
 	sprint := sprints[0]
 	issues, err := h.Jira.GetSprintIssues(ctx, sprint.ID)
 	if err != nil {
-		return errorResult("Failed to get issues: " + err.Error()), nil
+		return sanitizedError("failed to get sprint issues", err), nil
 	}
 
 	var features, bugs, tasks []string
@@ -494,7 +494,7 @@ func (h *Handlers) GetEscalations(ctx context.Context, req mcp.CallToolRequest) 
 
 	escalations, err := h.Memory.GetRecentEscalations(ctx, limit)
 	if err != nil {
-		return errorResult("Failed to get escalations: " + err.Error()), nil
+		return sanitizedError("failed to get escalations", err), nil
 	}
 	if len(escalations) == 0 {
 		return textResult("No escalations recorded."), nil
