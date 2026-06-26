@@ -149,3 +149,38 @@ type Worklog struct {
 	Started   string
 	Comment   string
 }
+
+// Attachment represents a file attached to an issue.
+type Attachment struct {
+	ID       string
+	Filename string
+	Size     int64
+	MimeType string
+	Author   string
+	Created  string
+	URL      string
+}
+
+// Version represents a project release version.
+type Version struct {
+	ID          string
+	Name        string
+	Description string
+	Released    bool
+	ReleaseDate string
+}
+
+// Component represents a project component.
+type Component struct {
+	ID   string
+	Name string
+	Lead string
+}
+
+// Field represents a Jira field definition.
+type Field struct {
+	ID     string
+	Name   string
+	Custom bool
+	Type   string
+}
