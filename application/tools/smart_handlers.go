@@ -33,7 +33,12 @@ func (h *Handlers) PMSmart(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 	case containsAny(lower, "help"): return h.PMHelp(ctx, req)
 	default:
 		if h.AI != nil {
-			r, e := h.aiComplete(ctx, "Concise PM assistant. 2-3 sentences.", ask)
+			prompt := "You are a PM assistant. The user asked: '" + ask + "'. " +
+				"Available tools handle: blockers, risks, sprint health, dashboard, standup, forecast, velocity, my issues, " +
+				"action items, workload, sentiment, OKRs, coaching, planning, capacity, retro, experiments, decisions, and more. " +
+				"If their question matches one of these, briefly respond and suggest the right tool name. " +
+				"Otherwise answer concisely in 2-3 sentences. Be helpful, not robotic."
+			r, e := h.aiComplete(ctx, prompt, ask)
 			if e == nil { return mcp.NewToolResultText(r), nil }
 		}
 		return h.PMHelp(ctx, req)
@@ -117,7 +122,19 @@ func (h *Handlers) PMRetro(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 func (h *Handlers) PMSearch(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	q, _ := req.RequireString("query")
 	if q == "" { return errorResult("query required"), nil }
-	if containsAny(strings.ToLower(q), "decision") { return h.SearchDecisions(ctx, req) }
+	lower := strings.ToLower(q)
+
+	switch {
+	case containsAny(lower, "decision", "decided", "keputusan"): return h.SearchDecisions(ctx, req)
+	case containsAny(lower, "risk", "resiko", "mitigasi"): return h.GetRiskDashboard(ctx, req)
+	case containsAny(lower, "blocker", "blocked", "impediment", "hambatan"): return h.GetBlockers(ctx, req)
+	case containsAny(lower, "action", "todo", "pending", "tindak lanjut"): return h.GetActionItems(ctx, req)
+	case containsAny(lower, "meeting", "rapat", "notulen"): return h.GetMeetings(ctx, req)
+	case containsAny(lower, "kb", "knowledge", "learning", "tribal", "lesson", "pengetahuan"): return h.TeamKnowledgeBase(ctx, req)
+	case containsAny(lower, "overdue", "stale", "kadaluarsa"): return h.Overdue(ctx, req)
+	}
+
+	// Fallback: AI converts to JQL, or raw Jira search
 	if h.AI != nil { return h.NLToJQL(ctx, req) }
 	return h.SearchIssues(ctx, req)
 }

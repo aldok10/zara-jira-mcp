@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -409,7 +410,8 @@ func (h *Handlers) GenerateReleaseNotes(ctx context.Context, req mcp.CallToolReq
 
 	if req.GetBool("send_to_lark", false) {
 		if err := h.Lark.SendMarkdown(ctx, "Release: "+sprint.Name, sb.String()); err != nil {
-			return textResult(sb.String() + "\n(Lark send failed: " + err.Error() + ")"), nil
+			slog.Warn("Lark release notes send failed", "detail", err.Error())
+			return textResult(sb.String() + "\n(Lark send failed — check server logs)"), nil
 		}
 		return textResult(sb.String() + "\n(Sent to Lark)"), nil
 	}
