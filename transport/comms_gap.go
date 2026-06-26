@@ -44,11 +44,45 @@ func registerCommsGapTools(s *server.MCPServer, h *tools.Handlers) {
 		mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 	), h.LencioniDysfunction)
 
-	// Communication lifecycle
-	s.AddTool(mcp.NewTool("pm_cadence_check",
-		mcp.WithDescription("Check communication cadences. Flags overdue items."),
+	// Empathy & sentiment
+	s.AddTool(mcp.NewTool("pm_team_context",
+		mcp.WithDescription("Record team context: role, motivation, pain points, strengths."),
+		mcp.WithString("person", mcp.Required(), mcp.Description("Team member name")),
+		mcp.WithString("context_type", mcp.Required(), mcp.Description("role, motivation, pain_point, strength")),
+		mcp.WithString("content", mcp.Required(), mcp.Description("The context information")),
+		mcp.WithString("sentiment", mcp.Description("current sentiment: positive, neutral, frustrated, anxious, overwhelmed")),
+	), h.TeamContext)
+
+	s.AddTool(mcp.NewTool("pm_team_recall",
+		mcp.WithDescription("Recall team context notes about a person."),
+		mcp.WithString("person", mcp.Description("Filter by person")),
+		mcp.WithString("context_type", mcp.Description("Filter by context type")),
+	), h.TeamRecall)
+
+	s.AddTool(mcp.NewTool("pm_sentiment_check",
+		mcp.WithDescription("Check team sentiment from multiple signals + coaching suggestion."),
 		mcp.WithNumber("board_id", mcp.Description("Board ID")),
-	), h.CadenceCheck)
+		mcp.WithString("message", mcp.Description("Your concern or observation")),
+	), h.PMSentiment)
+
+	s.AddTool(mcp.NewTool("pm_learn",
+		mcp.WithDescription("Record a learning from a sprint: what worked, what failed, pattern extracted."),
+		mcp.WithString("category", mcp.Required(), mcp.Description("What type of learning: decision, risk, blocker, success")),
+		mcp.WithString("observation", mcp.Required(), mcp.Description("What happened")),
+		mcp.WithString("lesson", mcp.Description("Result or lesson learned")),
+	), h.Learn)
+
+	s.AddTool(mcp.NewTool("pm_wisdom_recall",
+		mcp.WithDescription("Recall wisdom from past learnings."),
+		mcp.WithString("category", mcp.Description("Filter by learning category")),
+		mcp.WithString("applied", mcp.Description("Filter by applied status: 0=not applied, 1=applied")),
+	), h.WisdomRecall)
+
+	s.AddTool(mcp.NewTool("pm_team_mood",
+		mcp.WithDescription("Quick team mood check: positive, neutral, frustrated, anxious, overwhelmed."),
+		mcp.WithNumber("board_id", mcp.Description("Board ID")),
+		mcp.WithString("message", mcp.Description("Optional: specific concern or observation")),
+	), h.TeamMood)
 
 	s.AddTool(mcp.NewTool("pm_comms_nudge",
 		mcp.WithDescription("Proactive communication suggestions from team signals."),

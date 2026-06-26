@@ -134,6 +134,6 @@ Research basis: EBM (Scrum.org, 2020) — "measure value, not output." Only fram
 - [ ] Document one-command deploy in README
 
 ### Stretch: KPI Trend + OKR AI Suggest
-- [ ] `pm_kpi_trend` — Single KPI over time with direction
-- [ ] `pm_okr_suggest` — AI maps sprint work to OKRs
-- [ ] `pm_kpi_to_okr` — Suggest Key Results from underperforming KPIs
+- [x] `pm_kpi_trend` — Single KPI over time with direction
+- [x] `pm_okr_suggest` — AI maps sprint work to OKRs
+- [x] `pm_kpi_to_okr` — Suggest Key Results from underperforming KPIs
