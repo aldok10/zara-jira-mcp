@@ -410,6 +410,10 @@ Follow existing pattern in project:
 - No replacement of existing tools (additive only)
 - No breaking changes to existing API
 
+## Related Specs
+
+- `docs/specs/okr-kpi-bridge-spec.md` — OKR/KPI integration (Jira → Lark OKR translation engine)
+
 ---
 
 ## Relevant Files (for implementor)

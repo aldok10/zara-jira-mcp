@@ -1,7 +1,7 @@
 .PHONY: build install run test test-cover lint clean tidy docker-build docker-run
 
 BINARY := zara-jira-mcp
-VERSION := 0.3.0
+VERSION := 0.4.0
 
 build:
 	go build -ldflags="-s -w -X main.version=$(VERSION)" -o bin/$(BINARY) ./cmd/server
