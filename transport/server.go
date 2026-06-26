@@ -52,9 +52,6 @@ func enabledModules() map[string]bool {
 	// Profile presets for different PM needs
 	profile := os.Getenv("PM_PROFILE")
 	switch profile {
-	case "unified":
-		// 1 tool only: mega-router. For ChatGPT Desktop, ultra-slow clients.
-		return map[string]bool{"unified": true}
 	case "chatgpt":
 		// ~8 tools: shortcuts only. Best for ChatGPT Desktop, mobile, constrained clients.
 		return map[string]bool{"shortcuts": true}
