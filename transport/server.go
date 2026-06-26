@@ -30,11 +30,11 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 		"pm": {registerPMTools, registerMemoryTools, registerPMIntelTools, registerAdvancedPMTools, registerDeepPMTools, registerFlowTools, registerForecastTools, registerProcessTools, registerRecipeTools, registerCareTools, registerCoachingTools, registerOutcomeTools, registerTechSkillTools, registerStoryPointsTools},
 		"ai": {registerAITools},
 		"notifications": {registerLarkTools, registerSlackTools, registerPlatformTools, registerRoutingTools},
-		"stakeholder": {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools},
+		"stakeholder": {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools, registerCommunicationTools},
 		"portfolio": {registerPortfolioTools},
 		"github": {registerGitHubTools, registerGitHubFullTools, registerGitIntegrationTools},
 		"integrations": {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools},
-		"shortcuts":      {registerPMShortcuts, registerHelpTools, registerSmartContextTools},
+		"shortcuts":      {registerPMShortcuts, registerHelpTools, registerSmartContextTools, registerCommunicationTools},
 	}
 
 	for mod, fns := range modules {

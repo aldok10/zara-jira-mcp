@@ -168,7 +168,49 @@
 - `research/scrum-master-papers.md` — 508 academic papers on SM effectiveness
 - `research/pm-integration-platforms.md` — Notification routing, escalation patterns
 - `research/pm-leverage-research.md` — DORA metrics, priority churn, tech debt frameworks
+- `research/communication-frameworks.md` — Minto Pyramid, SBI, RACI, Radical Candor, ADR, AI-era patterns
 - DORA 2025: PRs merged +98%, incidents +242% — velocity metrics lie without quality signals
 - Industry standard: 15-20% sprint capacity for tech debt (confirmed across 6 sources)
 - Sprint goal success rate: only 52% of teams achieve goals (Scrum Alliance)
 - Flow metrics > velocity for predicting delivery (cycle time, throughput, WIP)
+
+---
+
+## Next Phase: AI Communication Layer
+
+Based on `research/communication-frameworks.md`. The thesis: **PM's #1 job in the AI era is communication — framing, routing, timing. AI handles data; PM handles meaning.**
+
+### Phase 7: Communication Templates (next)
+
+| Tool | Framework | What |
+|------|-----------|------|
+| `pm_communicate` | Minto Pyramid | Generate audience-specific updates (exec vs team vs PO) |
+| `pm_feedback_prep` | SBI Model | AI-generate structured feedback from team data |
+| `pm_escalation_draft` | Pyramid + RACI | Draft escalation with context + ask + deadline |
+| `pm_decision_record` | ADR/MADR | Enhanced decisions: context → options → consequences |
+
+### Phase 8: Smart Communication Routing
+
+| Tool | Framework | What |
+|------|-----------|------|
+| `pm_audience_router` | Minto + Audience | Same data, auto-reframe per recipient |
+| `pm_communication_plan` | RACI + Timing | Who needs what, when, for any event |
+| `pm_raci` | RACI Matrix | Auto-generate from Jira assignments |
+| `pm_silence_detector` | Sentiment | Flag disengaged stakeholders |
+
+### Phase 9: AI Coaching Communication
+
+| Tool | Framework | What |
+|------|-----------|------|
+| `pm_hard_conversation` | Radical Candor + SBI | Prep difficult conversations with data |
+| `pm_meeting_prep` | Pyramid | Agenda + talking points for any meeting |
+| `pm_async_update` | Async-first | Status that replaces a meeting |
+| `pm_trust_signals` | Trust Pyramid | Track trust indicators over time |
+
+### Phase 10: Organizational Communication (stretch)
+
+| Tool | Framework | What |
+|------|-----------|------|
+| `pm_change_communication` | Kotter + ADKAR | Plan comms for org changes |
+| `pm_conflict_mediation` | Thomas-Kilmann | AI conflict diagnosis + resolution |
+| `pm_influence_map` | Power/Interest | Stakeholder influence strategy |

@@ -299,6 +299,114 @@ Yang AI TIDAK bisa gantikan:
 
 ---
 
+## 11. Signal-over-Noise Protocol
+
+**Apa:** Prinsip komunikasi dari LaaS/Litmus framework — move from "constant chatter" to highly structured, async-by-default communication yang meninggalkan "searchable decision trail" untuk future team members.
+
+**Rules:**
+1. **Context over pings** — tanya full question up front, no "hey, ada waktu?"
+2. **Async friendly** — assume reader respond later, kasih enough info untuk act tanpa follow-up
+3. **Signal review states** — make status visible tanpa perlu tanya (PR labels, Jira transitions, dashboards)
+4. **One topic per thread** — no spaghetti threads
+5. **Searchable trail** — every decision, every rationale, discoverable later
+
+**Stats:**
+- Teams yang pakai structured async: 25% fewer meetings, 3x faster decisions (Microsoft 2026 Work Trend)
+- $75M at risk per $1B dari komunikasi yang buruk (PMI)
+- Communication overload → 3x slower simple decisions (ITS Dart research)
+
+**Tool:**
+```
+pm_record_decision(...)         → searchable decision trail
+pm_search_decisions(query)      → retrieve past context
+pm_weekly_digest(board_id:X)    → replace sync meetings with structured async
+notify_routed(message, severity) → auto-route to right channel
+pm_team_kb(question)            → self-service knowledge, no need to ask someone
+```
+
+---
+
+## 12. Crucial Conversations (Patterson, Grenny, McMillan, Switzler)
+
+**Apa:** Framework buat high-stakes, opposing opinions, strong emotions conversations — dimana hasilnya sangat berpengaruh.
+
+**Core Steps:**
+1. **Start with heart** — clarify what you really want (for yourself, for them, for the relationship)
+2. **Learn to look** — detect when safety is at risk (silence or violence)
+3. **Make it safe** — mutual purpose + mutual respect
+4. **Master my stories** — separate facts from the narrative you tell yourself
+5. **STATE my path** — Share facts, Tell your story, Ask for their path, Talk tentatively, Encourage testing
+6. **Explore others' path** — AMPP (Ask, Mirror, Paraphrase, Prime)
+7. **Move to action** — Who does What by When, follow up How
+
+**Kapan pakai:** Performance issue, missed commitment, team conflict, scope dispute with PO, escalation to management.
+
+**Tool:**
+```
+pm_coaching(topic:"crucial_conversation", situation:"...")  → AI-prep conversation steps
+pm_hard_conversation(context, data_points)                  → generate talking points with data
+pm_blockers(show_history:true)                             → facts for "Master my stories"
+pm_stakeholder_pulse(...)                                  → track relationship post-conversation
+```
+
+---
+
+## 13. Communication Anti-Patterns in Software Teams
+
+**Research basis:** "Community Smells" (sociotechnical anti-patterns), Signal Retention research, Microsoft golazo patterns.
+
+| Anti-Pattern | Signal | Consequence |
+|---|---|---|
+| **Information hoarding** | Key knowledge in 1 person's head | Bus factor risk, decisions delayed |
+| **Ghost stakeholders** | Stakeholder listed but never engaged | Surprise objections at 11th hour |
+| **Over-communication** | 15+ messages/day in channel, nobody reads | False sense of alignment, decision paralysis |
+| **One-way reporting** | PM broadcasts, team never responds | Zero feedback loop, missed concerns |
+| **Re-deciding** | Same topic decided 3x in 3 sprints | Poor decision record, no searchable trail |
+| **Meeting addiction** | Every question → "let's schedule a call" | Deep work destroyed, async skills atrophy |
+| **Status theater** | Elaborate status reports nobody reads | PM time wasted on reporting, not facilitating |
+| **Blame language** | "You didn't deliver" instead of "We're stuck" | SCARF threat (Status + Relatedness), trust erosion |
+
+**Detection (existing tools):**
+```
+pm_anti_patterns(board_id:X)    → detects hero culture, dead retros (related patterns)
+pm_impediment_aging             → chronic blockers = possible information hoarding
+pm_stakeholder_trend            → declining pulse = ghost stakeholder signal
+pm_sm_impact(sprint_name)       → high meeting count + low decision count = meeting addiction
+```
+
+**Future tool idea:** `pm_comms_health` — scan for these patterns across decision records, blocker aging, stakeholder pulse trends.
+
+---
+
+## 14. Trust-Building in AI-Augmented Teams
+
+**Context:** Trust in AI tools dropped 31% (2025), agentic AI trust dropped 89% (Axis Intelligence 2026). PM yang pakai AI tools perlu actively build trust.
+
+**Trust Pyramid for AI-era PM:**
+```
+Level 4: AUTONOMY    → Team trusts AI recommendations enough to act on them
+Level 3: RELIABILITY → AI consistently delivers accurate, useful outputs
+Level 2: OPENNESS    → PM transparent about what AI does/doesn't know
+Level 1: SAFETY      → Team feels safe to say "AI is wrong here"
+```
+
+**Practical trust-building:**
+1. **Show your work** — when using AI forecast, show confidence intervals not just a date
+2. **Acknowledge uncertainty** — "AI says 85% chance, but doesn't factor in holiday next week"
+3. **Let team override** — AI recommendation is input, not mandate
+4. **Track accuracy** — publish how accurate past forecasts were (calibration)
+5. **Start small** — use AI for low-stakes first (standup prep), build to high-stakes (forecasting)
+
+**Tool:**
+```
+pm_forecast(board_id:X, ...)    → shows 50/70/85/95% (transparent uncertainty)
+pm_confidence(sprint, score)     → human confidence alongside AI
+pm_scorecard(board_id:X)        → tracked accuracy over time
+pm_coaching(topic:"trust")       → how to build trust with specific situation
+```
+
+---
+
 ## References
 
 - Minto, B. (1987). The Pyramid Principle. Logic in Writing and Thinking.
@@ -306,7 +414,17 @@ Yang AI TIDAK bisa gantikan:
 - Scott, K. (2017). Radical Candor: Be a Kick-Ass Boss Without Losing Your Humanity.
 - Center for Creative Leadership. SBI Feedback Model.
 - Rosenberg, M. (2003). Nonviolent Communication: A Language of Life.
+- Patterson, K. et al. (2002, 4th ed 2021). Crucial Conversations: Tools for Talking When Stakes are High.
 - Atlassian Team Playbook. DACI Decision Framework.
 - Frontiers in Psychology (2025). Trust in Human-AI Team Communication.
 - DORA 2025 Report. AI as amplifier of existing capabilities.
 - Gartner (2026). 40% enterprise apps will integrate task-specific AI agents.
+- PMI. Ineffective communication = $75M at risk per $1B spent.
+- Microsoft 2026 Work Trend Index. 15.4 hrs/week in meetings, 12.1 hrs deep work.
+- Axis Intelligence (2026). Trust in company AI declined 31%, agentic AI trust -89%.
+- LaaS/Litmus Framework. Signal-over-Noise Protocol for scaling teams.
+- Microsoft golazo/communication. Context Over Pings, Async Friendly, Signal Review States.
+- ITS Dart Research. Communication overload → 3x slower decisions.
+- EmergentMind/Community Smells. Sociotechnical anti-patterns in software teams.
+- Scrum.org (2025). Smart Scrum Masters using AI to read between the lines.
+- AgileVelocity. Monte Carlo simulations for sprint planning confidence intervals.
