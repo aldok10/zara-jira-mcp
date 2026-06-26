@@ -30,6 +30,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerEpicSprintTools(s, handlers)
 	registerBulkProjectTools(s, handlers)
 	registerLinkWorklogTools(s, handlers)
+	registerFlowTools(s, handlers)
 
 	return &MCPServer{s: s}
 }
@@ -585,5 +586,51 @@ func registerDeepPMTools(s *server.MCPServer, h *tools.Handlers) {
 			mcp.WithBoolean("send_to_lark", mcp.Description("Send release notes to Lark group")),
 		),
 		h.GenerateReleaseNotes,
+	)
+}
+
+func registerFlowTools(s *server.MCPServer, h *tools.Handlers) {
+	s.AddTool(
+		mcp.NewTool("pm_flow_metrics",
+			mcp.WithDescription("Calculate flow metrics from live Jira data: WIP, throughput, cycle time, lead time. Detects flow problems (high WIP, long cycle time, low throughput)."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.FlowMetrics,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_sprint_compare",
+			mcp.WithDescription("Compare current sprint vs previous: velocity, completion, blockers, carryover. Shows if team is improving or declining."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.SprintComparison,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_facilitate",
+			mcp.WithDescription("AI ceremony facilitator — generates fresh, contextual facilitation prompts for any Scrum ceremony."),
+			mcp.WithString("ceremony", mcp.Required(), mcp.Description("standup, planning, retro, grooming, review")),
+			mcp.WithNumber("board_id", mcp.Description("Board ID for context (optional)")),
+		),
+		h.CeremonyFacilitator,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_confidence",
+			mcp.WithDescription("Record team/individual confidence level for current sprint (1-5 scale). Track pre-sprint confidence vs actual outcome."),
+			mcp.WithString("sprint_name", mcp.Required(), mcp.Description("Sprint name")),
+			mcp.WithNumber("score", mcp.Required(), mcp.Description("1=very worried, 2=worried, 3=neutral, 4=confident, 5=very confident")),
+			mcp.WithString("member", mcp.Description("Team member name (default: 'team')")),
+			mcp.WithString("note", mcp.Description("Why this confidence level?")),
+		),
+		h.RecordConfidence,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_goal_check",
+			mcp.WithDescription("AI-powered sprint goal progress check. Evaluates if goal is on track based on current data."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.SprintGoalCheck,
 	)
 }
