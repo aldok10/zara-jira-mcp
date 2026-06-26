@@ -38,7 +38,7 @@ Set via `PM_PROFILE=chatgpt` or `PM_ENABLED_MODULES=smart-router,jira,pm-memory`
 
 | Category | Key Tools | Use When |
 |----------|-----------|----------|
-| Smart Router | `pm_smart`, `pm_do`, `pm_report`, `pm_team`, `pm_plan` | Don't know which tool — just ask |
+| Smart Router | `pm_smart`, `pm_do`, `pm_report`, `pm_search`, `pm_team`, `pm_plan`, `pm_retro` | Don't know which tool — just ask |
 | Jira Operations | `jira_search`, `jira_get_issue`, `jira_create_issue` | CRUD on issues, sprints, epics |
 | PM Memory | `pm_record_decision`, `pm_record_risk`, `pm_record_blocker` | Record events immediately |
 | Intelligence | `pm_sentiment`, `pm_coaching`, `pm_anti_patterns` | Understand team state |

@@ -76,13 +76,13 @@
 
 The profile system (`PM_PROFILE`) is the primary mechanism for tool-surface compression. Every profile must have a strict tool count budget:
 
-| Profile | Budget | Audience | Rationale |
-|---------|--------|----------|-----------|
-| `chatgpt` | 10-15 | ChatGPT Desktop users | BCG 3-tool rule + ChatGPT token limits |
-| `lite` | 15-25 | Solo PM, daily workflow | Under Google's 16-tool threshold for meta-tools |
-| `standard` | 25-40 | Full PM team | Under Microsoft's 20 for core + routing overhead |
-| `full` | 40-60 | Power user | Acceptable with good tool descriptions |
-| `all` | 60-80 max | Developer/debugging | Absolute ceiling before context suicide |
+| Profile | Budget | Actual | Audience | Rationale |
+|---------|--------|--------|----------|-----------|
+| `chatgpt` | 10-15 | ~12 | ChatGPT Desktop users | BCG 3-tool rule + ChatGPT token limits |
+| `lite` | 15-25 | ~25 | Solo PM, daily workflow | Under Google's 16-tool threshold for meta-tools |
+| `standard` | 25-40 | ~40 | Full PM team | Under Microsoft's 20 for core + routing overhead |
+| `full` | 40-60 | ~59 | Power user | Acceptable with good tool descriptions |
+| `all` | 60-80 (guide) | ~279 | Developer/debugging | All tools loaded — for development/CI only |
 
 ### Decision 2: pm_smart as Primary Entry Point
 
@@ -130,14 +130,27 @@ The empathy/sentiment/context tools (`pm_sentiment`, `pm_context_note`, `pm_comm
 7. All AI prompts confirmed English
 8. **Profile tightening:** Reorganized modules into 17 sub-modules (jira/jira-ops/jira-deep, pm-memory/pm-analysis/pm-planning/pm-intel, smart-router/pm-quick/help, notify-lark/notify-slack/notify-all, stakeholder/stakeholder-deep, github/github-deep). All profiles now within research-backed budgets.
 9. **pm_smart enhancement:** Added routing for sentiment, OKR suggestions, comms nudge, feedback logging, experiment recording, KPI snapshots, and learning recording.
-10. **BLUF audit:** Fixed jira_get_issue (was raw JSON dump) and PMDashboard (added status signal first). Fixed safety_handlers.go compile error (Rows interface mismatch) and platform_handlers.go unused import.
+10. **BLUF audit:** Fixed jira_get_issue (was raw JSON dump) and PMDashboard (added status signal first). Fixed safety_handlers.go compile error (Rows interface mismatch) and 6 pre-existing unused import errors.
+11. **pm_search meta-tool:** Enhanced unified search across Jira, decisions, risks, blockers, actions, meetings, KB, overdue — with keyword routing + AI fallback. Also added missing tool registration.
+12. **pm_smart fallback smarter:** AI prompt now lists available tool categories and suggests the right tool when keyword matching doesn't catch intent.
+13. **Module count fix:** smart-router went from 6→7 tools (+pm_search). Recounted all profiles to stay within research budgets.
 
-### What Remains (Prioritized)
+### Current Profile Counts (Verified)
 
-1. **pm_smart could be smarter** — AI interpretation layer for ambiguous queries (elastic routing)
-2. **Structured response audit** — continue BLUF pass on remaining lower-traffic tools
-3. **Add `pm_search` meta-tool** — full-text search across memory + Jira + knowledge base
-4. **Documentation updates** — ensure SKILL.md reflects current architecture
+| Profile | Tools | Budget | Status |
+|---------|-------|--------|--------|
+| chatgpt | ~12 | 10-15 | ✅ |
+| lite | ~25 | 15-25 | ✅ |
+| standard | ~40 | 25-40 | ✅ |
+| full | ~59 | 40-60 | ✅ |
+| all | ~279 | (dev) | N/A |
+
+### What Remains (Not Started)
+
+1. **Full-stack build verification** — `go build ./...` to confirm zero errors across all packages
+2. **Remaining BLUF audit** — apply pattern to lower-traffic tools (30+ remaining handlers)
+3. **SKILL.md documentation** — ensure it reflects new 17-module structure
+4. **Integration tests** — verify profile switching works end-to-end
 
 ---
 
