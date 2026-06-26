@@ -20,7 +20,7 @@ func (h *Handlers) SprintHealthScore(ctx context.Context, req mcp.CallToolReques
 
 	sprints, err := h.Jira.GetActiveSprints(ctx, boardID)
 	if err != nil {
-		return errorResult("Failed to get sprints: " + err.Error()), nil
+		return sanitizedError("Failed to get sprints", err), nil
 	}
 	if len(sprints) == 0 {
 		return textResult("No active sprint."), nil
@@ -29,7 +29,7 @@ func (h *Handlers) SprintHealthScore(ctx context.Context, req mcp.CallToolReques
 	sprint := sprints[0]
 	issues, err := h.Jira.GetSprintIssues(ctx, sprint.ID)
 	if err != nil {
-		return errorResult("Failed to get sprint issues: " + err.Error()), nil
+		return sanitizedError("Failed to get sprint issues", err), nil
 	}
 
 	total := len(issues)
@@ -177,7 +177,7 @@ func (h *Handlers) RecordDependency(ctx context.Context, req mcp.CallToolRequest
 	}
 
 	if err := h.Memory.SaveDependency(ctx, d); err != nil {
-		return errorResult("Failed to save dependency: " + err.Error()), nil
+		return sanitizedError("Failed to save dependency", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Dependency recorded: %s -[%s]-> %s\n%s",
@@ -192,7 +192,7 @@ func (h *Handlers) ResolveDependency(ctx context.Context, req mcp.CallToolReques
 	}
 
 	if err := h.Memory.ResolveDependency(ctx, int64(id)); err != nil {
-		return errorResult("Failed to resolve: " + err.Error()), nil
+		return sanitizedError("Failed to resolve", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Dependency #%d resolved.", id)), nil
