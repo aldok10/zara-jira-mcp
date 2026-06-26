@@ -1,0 +1,28 @@
+# zara-jira-mcp
+
+AI-powered Scrum Master MCP server with 124 tools.
+
+## First Use
+
+Call `jira_boards` to get board_id.
+
+## Key Tools
+
+- `pm_standup_prep(board_id)` — daily standup prep
+- `pm_planning_prep(board_id)` — sprint planning
+- `pm_sprint_health(board_id)` — health score
+- `pm_forecast(board_id, remaining_items:N)` — Monte Carlo forecast
+- `pm_exec_report(board_id)` — executive report (never pm_dashboard for execs)
+- `pm_snapshot_sprint(board_id, velocity:N)` — end-of-sprint capture
+- `pm_record_risk/decision/blocker` — record immediately
+- `pm_auto_detect_risks(board_id)` — weekly risk scan
+- `pm_anti_patterns(board_id)` — detect team dysfunctions
+
+## Architecture
+
+Go 1.26, uber-go/fx DI, SQLite WAL, mcp-go transport.
+Domain-driven: domain/ (interfaces), internal/ (implementations), application/tools/ (handlers).
+
+## Full Reference
+
+See SKILL.md for complete documentation of all 124 tools.

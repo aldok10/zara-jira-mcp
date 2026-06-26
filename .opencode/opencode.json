@@ -1,0 +1,18 @@
+{
+  "mcp": {
+    "jira-pm": {
+      "type": "local",
+      "command": ["zara-jira-mcp"],
+      "env": {
+        "JIRA_BASE_URL": "https://company.atlassian.net",
+        "JIRA_EMAIL": "you@company.com",
+        "JIRA_API_TOKEN": "{{env:JIRA_API_TOKEN}}",
+        "JIRA_AI_BASE_URL": "https://api.openai.com",
+        "JIRA_AI_API_KEY": "{{env:JIRA_AI_API_KEY}}",
+        "JIRA_AI_MODEL": "gpt-4o-mini"
+      },
+      "timeout": 30000,
+      "enabled": true
+    }
+  }
+}
