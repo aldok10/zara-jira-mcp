@@ -30,7 +30,7 @@ func (h *Handlers) RecordTechDebt(ctx context.Context, req mcp.CallToolRequest) 
 	}
 
 	if err := h.Memory.SaveRisk(ctx, r); err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("failed to record tech debt", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Tech debt recorded: [%s] %s\nCategory: %s\nFix: %s",
@@ -41,7 +41,7 @@ func (h *Handlers) RecordTechDebt(ctx context.Context, req mcp.CallToolRequest) 
 func (h *Handlers) TechDebtDashboard(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	allRisks, err := h.Memory.GetAllRisks(ctx, 100)
 	if err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("failed to get risks", err), nil
 	}
 
 	var debts []memdom.Risk
