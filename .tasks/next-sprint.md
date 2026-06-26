@@ -32,8 +32,8 @@ Priority order. Each item independently shippable.
 
 ## P5: Enhanced Facilitation (DONE)
 - [x] Expand `pm_facilitate` with Liberating Structures (1-2-4-All, TRIZ, 15% Solutions)
-- [ ] `pm_retro_format` — AI-suggest format from team context
-- [ ] `pm_meeting_audit` — "Could this be async?"
+- [x] `pm_retro_format` — AI-suggest format from team context (blockers, pulse, goal success, safety)
+- [x] `pm_meeting_audit` — "Could this be async?" with async score + recommendation
 
 ## P6: Smart Communication Routing (Partial)
 - [x] `pm_communicate` — audience-aware routing
