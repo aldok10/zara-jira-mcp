@@ -41,7 +41,15 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerRecipeTools(s, handlers)
 	registerPortfolioTools(s, handlers)
 	registerGitHubTools(s, handlers)
+	registerGitHubFullTools(s, handlers)
+	registerGitIntegrationTools(s, handlers)
+	registerCalendarTools(s, handlers)
+	registerNotionTools(s, handlers)
 	registerTechDebtTools(s, handlers)
+	registerLinearTools(s, handlers)
+	registerPagerDutyTools(s, handlers)
+	registerClockifyTools(s, handlers)
+	registerSheetsTools(s, handlers)
 
 	return &MCPServer{s: s}
 }

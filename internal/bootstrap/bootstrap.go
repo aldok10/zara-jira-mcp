@@ -12,12 +12,20 @@ import (
 	"github.com/aldok10/zara-jira-mcp/application/tools"
 	"github.com/aldok10/zara-jira-mcp/config"
 	"github.com/aldok10/zara-jira-mcp/internal/ai"
+	icalendar "github.com/aldok10/zara-jira-mcp/internal/calendar"
+	"github.com/aldok10/zara-jira-mcp/internal/clockify"
 	"github.com/aldok10/zara-jira-mcp/internal/confluence"
 	idiscord "github.com/aldok10/zara-jira-mcp/internal/discord"
 	iemail "github.com/aldok10/zara-jira-mcp/internal/email"
+	igithub "github.com/aldok10/zara-jira-mcp/internal/github"
+	igitlab "github.com/aldok10/zara-jira-mcp/internal/gitlab"
 	"github.com/aldok10/zara-jira-mcp/internal/jira"
 	"github.com/aldok10/zara-jira-mcp/internal/lark"
+	"github.com/aldok10/zara-jira-mcp/internal/linear"
 	"github.com/aldok10/zara-jira-mcp/internal/memory"
+	inotion "github.com/aldok10/zara-jira-mcp/internal/notion"
+	"github.com/aldok10/zara-jira-mcp/internal/pagerduty"
+	"github.com/aldok10/zara-jira-mcp/internal/sheets"
 	islack "github.com/aldok10/zara-jira-mcp/internal/slack"
 	iteams "github.com/aldok10/zara-jira-mcp/internal/teams"
 	itelegram "github.com/aldok10/zara-jira-mcp/internal/telegram"
@@ -37,6 +45,14 @@ var Module = fx.Module("bootstrap",
 		iteams.NewClient,
 		iemail.NewClient,
 		confluence.NewClient,
+		icalendar.NewClient,
+		igithub.NewClient,
+		igitlab.NewClient,
+		inotion.NewClient,
+		linear.NewClient,
+		pagerduty.NewClient,
+		clockify.NewClient,
+		sheets.NewClient,
 		provideMemory,
 		provideHandlers,
 		transport.NewMCPServer,
@@ -56,6 +72,8 @@ func provideHandlers(
 	j *jira.RestClient, a *ai.OpenAIClient, l *lark.WebhookClient,
 	s *islack.Client, d *idiscord.Client, t *itelegram.Client,
 	te *iteams.Client, e *iemail.Client, c *confluence.Client,
+	cal *icalendar.Client, gh *igithub.Client, gl *igitlab.Client, n *inotion.Client,
+	lin *linear.Client, pd *pagerduty.Client, cl *clockify.Client, sh *sheets.Client,
 	m *memory.SQLiteStore,
 ) *tools.Handlers {
 	return &tools.Handlers{
@@ -68,6 +86,14 @@ func provideHandlers(
 		Teams:      te,
 		Email:      e,
 		Confluence: c,
+		Calendar:   cal,
+		GitHub:     gh,
+		GitLab:     gl,
+		Notion:     n,
+		Linear:     lin,
+		PagerDuty:  pd,
+		Clockify:   cl,
+		Sheets:     sh,
 		Memory:     m,
 	}
 }

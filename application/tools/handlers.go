@@ -10,9 +10,17 @@ import (
 	domain "github.com/aldok10/zara-jira-mcp/domain/jira"
 	larkdom "github.com/aldok10/zara-jira-mcp/domain/lark"
 	"github.com/aldok10/zara-jira-mcp/domain/memory"
+	icalendar "github.com/aldok10/zara-jira-mcp/internal/calendar"
+	"github.com/aldok10/zara-jira-mcp/internal/clockify"
 	"github.com/aldok10/zara-jira-mcp/internal/confluence"
 	idiscord "github.com/aldok10/zara-jira-mcp/internal/discord"
 	iemail "github.com/aldok10/zara-jira-mcp/internal/email"
+	igithub "github.com/aldok10/zara-jira-mcp/internal/github"
+	igitlab "github.com/aldok10/zara-jira-mcp/internal/gitlab"
+	"github.com/aldok10/zara-jira-mcp/internal/linear"
+	inotion "github.com/aldok10/zara-jira-mcp/internal/notion"
+	"github.com/aldok10/zara-jira-mcp/internal/pagerduty"
+	"github.com/aldok10/zara-jira-mcp/internal/sheets"
 	islack "github.com/aldok10/zara-jira-mcp/internal/slack"
 	iteams "github.com/aldok10/zara-jira-mcp/internal/teams"
 	itelegram "github.com/aldok10/zara-jira-mcp/internal/telegram"
@@ -31,6 +39,14 @@ type Handlers struct {
 	Email      *iemail.Client
 	Confluence *confluence.Client
 	Memory     memory.Store
+	Calendar   *icalendar.Client
+	GitHub     *igithub.Client
+	GitLab     *igitlab.Client
+	Notion     *inotion.Client
+	Linear     *linear.Client
+	PagerDuty  *pagerduty.Client
+	Clockify   *clockify.Client
+	Sheets     *sheets.Client
 }
 
 // SearchIssues searches Jira using JQL.

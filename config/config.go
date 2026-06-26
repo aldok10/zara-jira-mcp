@@ -8,17 +8,65 @@ import (
 
 // Config holds all application configuration parsed from environment variables.
 type Config struct {
-	Server     ServerConfig
-	Jira       JiraConfig
-	AI         AIConfig
-	Lark       LarkConfig
-	Slack      SlackConfig
-	Discord    DiscordConfig
-	Telegram   TelegramConfig
-	Teams      TeamsConfig
-	Email      EmailConfig
-	Confluence ConfluenceConfig
-	Memory     MemoryConfig
+	Server         ServerConfig
+	Jira           JiraConfig
+	AI             AIConfig
+	Lark           LarkConfig
+	Slack          SlackConfig
+	Discord        DiscordConfig
+	Telegram       TelegramConfig
+	Teams          TeamsConfig
+	Email          EmailConfig
+	Confluence     ConfluenceConfig
+	Memory         MemoryConfig
+	GoogleCalendar GoogleCalendarConfig
+	GitHub         GitHubConfig
+	GitLab         GitLabConfig
+	Notion         NotionConfig
+	Clockify       ClockifyConfig
+	Linear         LinearConfig
+	PagerDuty      PagerDutyConfig
+	GoogleSheets   GoogleSheetsConfig
+}
+
+type GoogleCalendarConfig struct {
+	APIKey     string // GOOGLE_CALENDAR_API_KEY
+	CalendarID string // GOOGLE_CALENDAR_ID
+}
+
+type GitHubConfig struct {
+	Token string // GITHUB_TOKEN
+	Owner string // GITHUB_OWNER
+	Repo  string // GITHUB_REPO
+}
+
+type GitLabConfig struct {
+	Token     string // GITLAB_TOKEN
+	BaseURL   string // GITLAB_BASE_URL (default: https://gitlab.com)
+	ProjectID string // GITLAB_PROJECT_ID
+}
+
+type NotionConfig struct {
+	APIKey     string // NOTION_API_KEY
+	DatabaseID string // NOTION_DATABASE_ID (optional)
+}
+
+type ClockifyConfig struct {
+	APIKey      string // CLOCKIFY_API_KEY
+	WorkspaceID string // CLOCKIFY_WORKSPACE_ID
+}
+
+type LinearConfig struct {
+	APIKey string // LINEAR_API_KEY
+}
+
+type PagerDutyConfig struct {
+	APIKey string // PAGERDUTY_API_KEY
+}
+
+type GoogleSheetsConfig struct {
+	APIKey        string // GOOGLE_SHEETS_API_KEY
+	SpreadsheetID string // GOOGLE_SHEETS_SPREADSHEET_ID
 }
 
 type DiscordConfig struct {
@@ -61,8 +109,10 @@ type MemoryConfig struct {
 }
 
 type ServerConfig struct {
-	Transport string // MCP_TRANSPORT: stdio (default), sse, http
-	Port      string // MCP_PORT (default: 8080)
+	Transport        string // MCP_TRANSPORT: stdio (default), sse, http
+	Port             string // MCP_PORT (default: 8080)
+	DashboardEnabled bool   // MCP_DASHBOARD: true to enable web dashboard
+	DashboardPort    string // MCP_DASHBOARD_PORT (default: 9090)
 }
 
 type LarkConfig struct {
@@ -137,6 +187,38 @@ func Load() (*Config, error) {
 		},
 		Memory: MemoryConfig{
 			DBPath: os.Getenv("PM_MEMORY_DB_PATH"),
+		},
+		GoogleCalendar: GoogleCalendarConfig{
+			APIKey:     os.Getenv("GOOGLE_CALENDAR_API_KEY"),
+			CalendarID: os.Getenv("GOOGLE_CALENDAR_ID"),
+		},
+		GitHub: GitHubConfig{
+			Token: os.Getenv("GITHUB_TOKEN"),
+			Owner: os.Getenv("GITHUB_OWNER"),
+			Repo:  os.Getenv("GITHUB_REPO"),
+		},
+		GitLab: GitLabConfig{
+			Token:     os.Getenv("GITLAB_TOKEN"),
+			BaseURL:   os.Getenv("GITLAB_BASE_URL"),
+			ProjectID: os.Getenv("GITLAB_PROJECT_ID"),
+		},
+		Notion: NotionConfig{
+			APIKey:     os.Getenv("NOTION_API_KEY"),
+			DatabaseID: os.Getenv("NOTION_DATABASE_ID"),
+		},
+		Clockify: ClockifyConfig{
+			APIKey:      os.Getenv("CLOCKIFY_API_KEY"),
+			WorkspaceID: os.Getenv("CLOCKIFY_WORKSPACE_ID"),
+		},
+		Linear: LinearConfig{
+			APIKey: os.Getenv("LINEAR_API_KEY"),
+		},
+		PagerDuty: PagerDutyConfig{
+			APIKey: os.Getenv("PAGERDUTY_API_KEY"),
+		},
+		GoogleSheets: GoogleSheetsConfig{
+			APIKey:        os.Getenv("GOOGLE_SHEETS_API_KEY"),
+			SpreadsheetID: os.Getenv("GOOGLE_SHEETS_SPREADSHEET_ID"),
 		},
 	}
 
