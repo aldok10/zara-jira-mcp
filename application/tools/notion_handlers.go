@@ -22,7 +22,7 @@ func (h *Handlers) NotionSearch(ctx context.Context, req mcp.CallToolRequest) (*
 
 	results, err := h.Notion.Search(ctx, query, limit)
 	if err != nil {
-		return errorResult("Notion API error: " + err.Error()), nil
+		return sanitizedError("Notion: search failed", err), nil
 	}
 	if len(results) == 0 {
 		return textResult("No results found for: " + query), nil
@@ -57,7 +57,7 @@ func (h *Handlers) NotionCreatePage(ctx context.Context, req mcp.CallToolRequest
 
 	page, err := h.Notion.CreatePage(ctx, parentID, title, content)
 	if err != nil {
-		return errorResult("Notion create failed: " + err.Error()), nil
+		return sanitizedError("Notion: failed to create page", err), nil
 	}
 	return textResult(fmt.Sprintf("Created page: %s\nURL: %s", page.Title, page.URL)), nil
 }
@@ -76,7 +76,7 @@ func (h *Handlers) NotionQueryDB(ctx context.Context, req mcp.CallToolRequest) (
 
 	results, err := h.Notion.QueryDatabase(ctx, dbID, filter, limit)
 	if err != nil {
-		return errorResult("Notion query failed: " + err.Error()), nil
+		return sanitizedError("Notion: database query failed", err), nil
 	}
 	if len(results) == 0 {
 		return textResult("No results from database query."), nil

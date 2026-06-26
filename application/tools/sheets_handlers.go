@@ -21,7 +21,7 @@ func (h *Handlers) SheetsRead(ctx context.Context, req mcp.CallToolRequest) (*mc
 
 	data, err := h.Sheets.ReadRange(ctx, spreadsheetID, rangeStr)
 	if err != nil {
-		return errorResult("Sheets API error: " + err.Error()), nil
+		return sanitizedError("Sheets: failed to read range", err), nil
 	}
 	if len(data) == 0 {
 		return textResult("No data found in range."), nil
