@@ -83,4 +83,26 @@ type Store interface {
 	// Team Radar
 	SaveTeamRadar(ctx context.Context, r *TeamRadar) error
 	GetTeamRadarHistory(ctx context.Context, limit int) ([]TeamRadar, error)
+
+	// Raw database access for ad-hoc queries
+	DB() RawDB
+}
+
+// RawDB provides raw database access for custom queries.
+type RawDB interface {
+	Exec(query string, args ...any) (any, error)
+	Query(query string, args ...any) (Rows, error)
+	QueryRow(query string, args ...any) Row
+}
+
+// Rows is a minimal interface for sql.Rows.
+type Rows interface {
+	Next() bool
+	Scan(dest ...any) error
+	Close() error
+}
+
+// Row is a minimal interface for sql.Row.
+type Row interface {
+	Scan(dest ...any) error
 }

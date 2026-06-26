@@ -40,6 +40,22 @@ func NewSQLiteStore(dbPath string) (*SQLiteStore, error) {
 
 func (s *SQLiteStore) Close() error { return s.db.Close() }
 
+func (s *SQLiteStore) DB() domain.RawDB {
+	return &rawDBAdapter{s.db}
+}
+
+type rawDBAdapter struct{ db *sql.DB }
+
+func (a *rawDBAdapter) Exec(query string, args ...any) (any, error) {
+	return a.db.Exec(query, args...)
+}
+func (a *rawDBAdapter) Query(query string, args ...any) (domain.Rows, error) {
+	return a.db.Query(query, args...)
+}
+func (a *rawDBAdapter) QueryRow(query string, args ...any) domain.Row {
+	return a.db.QueryRow(query, args...)
+}
+
 func (s *SQLiteStore) migrate() error {
 	_, err := s.db.Exec(`
 	CREATE TABLE IF NOT EXISTS sprint_snapshots (
