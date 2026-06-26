@@ -70,11 +70,42 @@ pm_close_sprint_goal(goal_id, status)
 pm_exec_report(board_id) -> business outcomes, no story points
 ```
 
+### Report to PO / Product Owner
+```
+pm_goal_check(board_id) -> is sprint goal on track?
+pm_scope_creep(board_id) -> what changed mid-sprint without approval?
+pm_forecast(board_id, remaining_items:N) -> realistic delivery date
+```
+
+### Escalation to Management
+```
+pm_impediment_aging -> all blockers with age, chronic flags
+pm_escalate(board_id) -> auto-alert if risk/blocker > 3 days or health < 50
+pm_stakeholder_pulse(stakeholder, score:1-5, feedback) -> track satisfaction
+```
+
+### Cross-Team Dependencies
+```
+pm_dependencies -> who blocks whom, across teams
+portfolio_blockers -> all blockers across all projects
+portfolio_summary -> AI exec summary for steering committee
+```
+
+### Prove SM Value
+```
+pm_sm_impact(sprint_name) -> blockers resolved, resolution time, risks mitigated
+pm_maturity_assessment(board_id) -> team stage with evidence
+```
+
 ### Team Seems Off
 ```
 pm_anti_patterns(board_id) -> zombie sprints, hero culture, scope creep
 pm_coaching(topic:"team_dynamics", situation:"...")
 ```
+
+## Reporting Guide
+
+See `docs/reporting-guide.md` for scenario-based guide: who needs what report, when, and which tool to use.
 
 ## Architecture (for code contributions)
 

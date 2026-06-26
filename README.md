@@ -205,9 +205,22 @@ Powered by your historical data + live Jira state:
 | `pm_scope_creep` | Mid-sprint scope change detection |
 | `pm_backlog_groom` | Find stale backlog items |
 
-### Escalation & Reporting (8 tools)
+### Management & Stakeholder Reporting
 
-Auto-escalate critical items. Generate release notes. Write executive summaries that talk business outcomes, not story points.
+| Tool | Audience | Purpose |
+|------|----------|---------|
+| `pm_exec_report` | VP / C-Level | Business outcomes, no jargon, 30-second read |
+| `pm_weekly_digest` | All stakeholders | AI weekly summary: wins, concerns, next focus |
+| `pm_release_notes` | Stakeholders | What shipped this sprint (features, fixes) |
+| `pm_stakeholder_pulse` | PM internal | Track stakeholder satisfaction over time |
+| `pm_stakeholder_trend` | PM internal | Is the relationship improving or degrading? |
+| `pm_sm_impact` | SM's manager | Prove SM value: blockers resolved, risks mitigated |
+| `pm_outcome_map` | PO / leadership | Connect sprints to OKR/business objectives |
+| `pm_escalate` | Auto | Alert management when blockers/risks go chronic |
+| `portfolio_summary` | Steering committee | AI executive summary across all projects |
+| `pm_maturity_assessment` | Eng leadership | Team stage: Forming/Storming/Norming/Performing |
+
+> Full guide: [docs/reporting-guide.md](docs/reporting-guide.md) — scenario-based guide for every type of stakeholder communication.
 
 ### Workflow Recipes (3 tools)
 
@@ -233,6 +246,18 @@ Multi-channel: Lark, Slack, Discord, Telegram, Teams, Email, Confluence, broadca
 
 **Executive update:**
 > "Write exec report" -> business outcomes, delivery risks, team health. No story points, no Jira jargon. Ready to paste into an email.
+
+**PO asks "will we hit the goal?":**
+> "Check sprint goal progress" -> AI evaluates current data vs key results. Gives honest On Track / At Risk / Off Track verdict.
+
+**Escalation to management:**
+> "Show impediment aging" -> all blockers with age in days, which ones are chronic. Data to back up your escalation request.
+
+**Cross-team dependency tracking:**
+> "Show all open dependencies" -> who is waiting on whom, across teams. Bring this to your cross-team sync.
+
+**Monthly steering committee:**
+> "Portfolio summary" -> AI-generated status across all projects. Health, risks, delivery confidence. One-pager for the boardroom.
 
 ## Architecture
 
