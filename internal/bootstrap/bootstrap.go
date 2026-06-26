@@ -11,10 +11,15 @@ import (
 	"github.com/aldok10/zara-jira-mcp/application/tools"
 	"github.com/aldok10/zara-jira-mcp/config"
 	"github.com/aldok10/zara-jira-mcp/internal/ai"
+	"github.com/aldok10/zara-jira-mcp/internal/confluence"
+	idiscord "github.com/aldok10/zara-jira-mcp/internal/discord"
+	iemail "github.com/aldok10/zara-jira-mcp/internal/email"
 	"github.com/aldok10/zara-jira-mcp/internal/jira"
 	"github.com/aldok10/zara-jira-mcp/internal/lark"
 	"github.com/aldok10/zara-jira-mcp/internal/memory"
 	islack "github.com/aldok10/zara-jira-mcp/internal/slack"
+	iteams "github.com/aldok10/zara-jira-mcp/internal/teams"
+	itelegram "github.com/aldok10/zara-jira-mcp/internal/telegram"
 	"github.com/aldok10/zara-jira-mcp/transport"
 	mcpserver "github.com/mark3labs/mcp-go/server"
 )
@@ -26,6 +31,11 @@ var Module = fx.Module("bootstrap",
 		ai.NewOpenAIClient,
 		lark.NewWebhookClient,
 		islack.NewClient,
+		idiscord.NewClient,
+		itelegram.NewClient,
+		iteams.NewClient,
+		iemail.NewClient,
+		confluence.NewClient,
 		provideMemory,
 		provideHandlers,
 		transport.NewMCPServer,
@@ -39,13 +49,23 @@ func provideMemory() (*memory.SQLiteStore, error) {
 	return memory.NewSQLiteStore(filepath.Join(dir, "pm.db"))
 }
 
-func provideHandlers(j *jira.RestClient, a *ai.OpenAIClient, l *lark.WebhookClient, s *islack.Client, m *memory.SQLiteStore) *tools.Handlers {
+func provideHandlers(
+	j *jira.RestClient, a *ai.OpenAIClient, l *lark.WebhookClient,
+	s *islack.Client, d *idiscord.Client, t *itelegram.Client,
+	te *iteams.Client, e *iemail.Client, c *confluence.Client,
+	m *memory.SQLiteStore,
+) *tools.Handlers {
 	return &tools.Handlers{
-		Jira:   j,
-		AI:     a,
-		Lark:   l,
-		Slack:  s,
-		Memory: m,
+		Jira:       j,
+		AI:         a,
+		Lark:       l,
+		Slack:      s,
+		Discord:    d,
+		Telegram:   t,
+		Teams:      te,
+		Email:      e,
+		Confluence: c,
+		Memory:     m,
 	}
 }
 

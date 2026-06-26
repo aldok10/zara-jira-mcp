@@ -8,11 +8,45 @@ import (
 
 // Config holds all application configuration parsed from environment variables.
 type Config struct {
-	Jira   JiraConfig
-	AI     AIConfig
-	Lark   LarkConfig
-	Slack  SlackConfig
-	Memory MemoryConfig
+	Jira       JiraConfig
+	AI         AIConfig
+	Lark       LarkConfig
+	Slack      SlackConfig
+	Discord    DiscordConfig
+	Telegram   TelegramConfig
+	Teams      TeamsConfig
+	Email      EmailConfig
+	Confluence ConfluenceConfig
+	Memory     MemoryConfig
+}
+
+type DiscordConfig struct {
+	BotToken  string // DISCORD_BOT_TOKEN
+	ChannelID string // DISCORD_CHANNEL_ID (default channel)
+	WebhookURL string // DISCORD_WEBHOOK_URL (fallback)
+}
+
+type TelegramConfig struct {
+	BotToken string // TELEGRAM_BOT_TOKEN
+	ChatID   string // TELEGRAM_CHAT_ID (default chat/group)
+}
+
+type TeamsConfig struct {
+	WebhookURL string // TEAMS_WEBHOOK_URL (incoming webhook connector)
+}
+
+type EmailConfig struct {
+	SMTPHost string // EMAIL_SMTP_HOST
+	SMTPPort string // EMAIL_SMTP_PORT (default: 587)
+	Username string // EMAIL_USERNAME
+	Password string // EMAIL_PASSWORD
+	From     string // EMAIL_FROM
+}
+
+type ConfluenceConfig struct {
+	BaseURL string // CONFLUENCE_BASE_URL
+	Email   string // CONFLUENCE_EMAIL
+	Token   string // CONFLUENCE_API_TOKEN
 }
 
 type SlackConfig struct {
@@ -66,6 +100,30 @@ func Load() (*Config, error) {
 			BotToken:       os.Getenv("SLACK_BOT_TOKEN"),
 			DefaultChannel: os.Getenv("SLACK_DEFAULT_CHANNEL"),
 			WebhookURL:     os.Getenv("SLACK_WEBHOOK_URL"),
+		},
+		Discord: DiscordConfig{
+			BotToken:   os.Getenv("DISCORD_BOT_TOKEN"),
+			ChannelID:  os.Getenv("DISCORD_CHANNEL_ID"),
+			WebhookURL: os.Getenv("DISCORD_WEBHOOK_URL"),
+		},
+		Telegram: TelegramConfig{
+			BotToken: os.Getenv("TELEGRAM_BOT_TOKEN"),
+			ChatID:   os.Getenv("TELEGRAM_CHAT_ID"),
+		},
+		Teams: TeamsConfig{
+			WebhookURL: os.Getenv("TEAMS_WEBHOOK_URL"),
+		},
+		Email: EmailConfig{
+			SMTPHost: os.Getenv("EMAIL_SMTP_HOST"),
+			SMTPPort: os.Getenv("EMAIL_SMTP_PORT"),
+			Username: os.Getenv("EMAIL_USERNAME"),
+			Password: os.Getenv("EMAIL_PASSWORD"),
+			From:     os.Getenv("EMAIL_FROM"),
+		},
+		Confluence: ConfluenceConfig{
+			BaseURL: strings.TrimRight(os.Getenv("CONFLUENCE_BASE_URL"), "/"),
+			Email:   os.Getenv("CONFLUENCE_EMAIL"),
+			Token:   os.Getenv("CONFLUENCE_API_TOKEN"),
 		},
 		Memory: MemoryConfig{
 			DBPath: os.Getenv("PM_MEMORY_DB_PATH"),

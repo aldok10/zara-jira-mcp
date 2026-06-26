@@ -10,17 +10,27 @@ import (
 	domain "github.com/aldok10/zara-jira-mcp/domain/jira"
 	larkdom "github.com/aldok10/zara-jira-mcp/domain/lark"
 	"github.com/aldok10/zara-jira-mcp/domain/memory"
+	"github.com/aldok10/zara-jira-mcp/internal/confluence"
+	idiscord "github.com/aldok10/zara-jira-mcp/internal/discord"
+	iemail "github.com/aldok10/zara-jira-mcp/internal/email"
 	islack "github.com/aldok10/zara-jira-mcp/internal/slack"
+	iteams "github.com/aldok10/zara-jira-mcp/internal/teams"
+	itelegram "github.com/aldok10/zara-jira-mcp/internal/telegram"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // Handlers holds all MCP tool handler methods.
 type Handlers struct {
-	Jira   domain.Client
-	AI     aiprovider.Provider
-	Lark   larkdom.Notifier
-	Slack  *islack.Client
-	Memory memory.Store
+	Jira       domain.Client
+	AI         aiprovider.Provider
+	Lark       larkdom.Notifier
+	Slack      *islack.Client
+	Discord    *idiscord.Client
+	Telegram   *itelegram.Client
+	Teams      *iteams.Client
+	Email      *iemail.Client
+	Confluence *confluence.Client
+	Memory     memory.Store
 }
 
 // SearchIssues searches Jira using JQL.
