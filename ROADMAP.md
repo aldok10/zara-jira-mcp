@@ -1,42 +1,45 @@
 # ROADMAP: zara-jira-mcp
 
-> AI-powered Scrum Master MCP — 224 tools. Persistent memory. 20 AI clients. Profile system.
+> AI-powered Scrum Master MCP — 285 tools. Persistent memory. 20+ AI clients. Profile system.
 > The PM/SM's unfair advantage.
 
 ---
 
-## Current State (v0.4.0)
+## Current State (v0.5.0)
 
-**224 MCP tools** | 14 SQLite tables | 8 notification platforms | 20 AI client configs | 5 performance profiles
+**285 MCP tools** | 16+ SQLite tables | 8 notification platforms | 20+ AI client configs | 5 performance profiles
 
 ### What's Built
 
 | Domain | Tools | Coverage |
 |--------|-------|----------|
-| Jira Core | 55 | Full CRUD + epics + sprints + bulk ops + versions |
-| PM Intelligence | 30 | Flow metrics, Monte Carlo, coaching, anti-patterns, forecasting |
+| Jira Core | 55 | Full CRUD + epics + sprints + bulk ops + versions + link/worklog |
+| PM Intelligence | 30 | Flow metrics, Monte Carlo, coaching, anti-patterns, forecasting, sentiment |
 | PM Memory | 22 | Sprints, risks, decisions, blockers, team, retros, deps, goals, DoD/DoR |
-| Notifications | 15 | Lark, Slack, Discord, Telegram, Teams, Email, Confluence, routing |
+| Communication | 12 | Cadence check, conversation prep, nudge, effectiveness, gap analysis |
+| Feedback & Team Care | 14 | Feedback log/due/close, burnout risk, safety signals, reality check |
+| OKR/KPI | 12 | OKR define/link/progress/health, KPI trend/snapshot/dashboard |
+| Lark OKR | 3 | Bi-directional OKR period, pull, progress sync |
+| Notifications | 15 | Lark, Slack, Discord, Telegram, Teams, Email, routing, budget |
 | GitHub/GitLab | 13 | Issues, milestones, MRs, file reading, branch tracing |
-| Management Reporting | 10 | Exec report, management brief, escalation, dependency, resource util |
+| Stakeholder & Portfolio | 16 | Impediment aging, SM impact, stakeholder pulse/trend, portfolio, escalations |
 | SM Leverage | 10 | Maturity, dysfunction, meeting ROI, commitment, impact, autonomy |
-| Portfolio | 5 | Cross-project overview, risks, workload, blockers, AI summary |
-| Shortcuts & Help | 8 | pm, pm_create, pm_decide, pm_risk, pm_next, pm_help, pm_quickstart, pm_workflow |
-| Stakeholder | 8 | Pulse, trend, outcome map, improvement velocity, scorecard, KB |
-| Integrations | 17 | Linear, PagerDuty, Clockify, Notion, Google Sheets, Calendar |
-| Database | 5 | Postgres, MySQL, MongoDB read queries |
+| Shortcuts & Help | 14 | pm, pm_create, pm_decide, pm_risk, pm_next, pm_help, pm_quickstart, pm_workflow |
+| Integrations | 17 | Linear, PagerDuty, Clockify, Notion, Google Sheets, Calendar, Lark |
+| Coaching | 9 | Team dynamics, skill gaps, wellbeing, 5 dysfunctions, lencioni |
 | Tech Skill | 5 | PM technical literacy tools |
-| Meta | 3 | Health check, MCP stats, NL-to-JQL |
 
-### What's New in v0.4.0
+### What's New in v0.5.0
 
-- Performance profiles (PM_PROFILE: lite/pm/standard/full/all)
-- 20 AI client pre-built configs
-- Management reporting tools (brief, dependency, escalation, resource, commitment)
-- SM leverage tools (maturity, dysfunction, meeting ROI)
+- **Communication tools**: CadenceCheck, ConversationPrep, CommsNudge, CommsEffectiveness — framework-backed coaching (SCARF, SBI, Radical Candor)
+- **Feedback & sentiment**: FeedbackLog, FeedbackDue, FeedbackClose, PMSentiment, PMContextNote, PMContextRecall — close the feedback loop
+- **OKR/KPI intelligence**: KPITrend, PMOKRSuggest, PMKPIToOKR — suggest Key Results from current metrics
+- **Lark OKR sync**: Bi-directional OKR period listing, user OKR pull, progress record creation
+- **Proactive team care**: PMBurnoutRisk, PMRealityCheck, PMSafetySignals — detect productivity theater, burnout indicators, psychological safety gaps
+- **Performance profiles** (PM_PROFILE: lite/pm/standard/full/all)
+- 20+ AI client pre-built configs
 - Engineering literacy documentation for PM/SM
 - CI pipeline (GitHub Actions)
-- llms.txt for AI discoverability
 
 ---
 
@@ -140,9 +143,9 @@
 
 | Metric | Current | Target v1.0 |
 |--------|---------|-------------|
-| Tools | 224 | 230+ (stable) |
-| Test coverage | ~27% | 70%+ |
-| AI client configs | 20 | 25+ |
+| Tools | 285 | 300 (stable) |
+| Test coverage | ~30% | 70%+ |
+| AI client configs | 20+ | 25+ |
 | Daily active use | 0 | 1 team |
 | Sprint snapshots captured | 0 | 10+ per board |
 | Decisions recorded | 0 | 50+ |

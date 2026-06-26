@@ -365,7 +365,7 @@ func (h *Handlers) PMOutcomeReview(ctx context.Context, req mcp.CallToolRequest)
 3. What's the biggest gap between effort and outcome?
 Be direct. 3-5 sentences max.`
 
-	aiResult, aiErr := h.AI.Complete(ctx, prompt, sb.String())
+	aiResult, aiErr := h.aiComplete(ctx, prompt, sb.String())
 	if aiErr != nil {
 		return textResult(sb.String() + "\n(AI assessment failed)"), nil
 	}
@@ -625,6 +625,197 @@ func (h *Handlers) PMOKRHealth(ctx context.Context, req mcp.CallToolRequest) (*m
 		return textResult("No active OKRs to assess."), nil
 	}
 	return textResult(sb.String()), nil
+}
+
+// PMKPITrend shows a single KPI's trend over time.
+func (h *Handlers) PMKPITrend(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	h.initOKRTables()
+	name := req.GetString("name", "")
+	if name == "" {
+		return errorResult("kpi_name required"), nil
+	}
+
+	db := h.Memory.DB()
+	if db == nil {
+		return errorResult("memory not configured"), nil
+	}
+
+	// Find KPI definition
+	var kpiID int64
+	var unit string
+	err := db.QueryRow("SELECT id, COALESCE(unit,'%') FROM kpi_definition WHERE name = ?", name).Scan(&kpiID, &unit)
+	if err != nil {
+		return errorResult("KPI not found: " + name + ". Use pm_kpi_define first."), nil
+	}
+
+	snapRows, err := db.Query("SELECT value, created_at FROM kpi_snapshot WHERE kpi_id = ? ORDER BY created_at DESC LIMIT 20", kpiID)
+	if err != nil {
+		return errorResult("query failed: " + err.Error()), nil
+	}
+	defer snapRows.Close()
+
+	var values []float64
+	var timestamps []string
+	for snapRows.Next() {
+		var v float64
+		var ts string
+		if err := snapRows.Scan(&v, &ts); err == nil {
+			values = append(values, v)
+			timestamps = append(timestamps, ts)
+		}
+	}
+	if len(values) == 0 {
+		return textResult(fmt.Sprintf("KPI '%s': no snapshots yet. Use pm_kpi_snapshot to record data.", name)), nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("KPI Trend: %s\n\n", name))
+	for i, v := range values {
+		trend := " "
+		if i < len(values)-1 {
+			if v > values[i+1] {
+				trend = "^"
+			} else if v < values[i+1] {
+				trend = "v"
+			}
+		}
+		sb.WriteString(fmt.Sprintf("  %s %6.1f%s %s\n", timestamps[i], v, unit, trend))
+	}
+	return textResult(sb.String()), nil
+}
+
+// PMOKRSuggest uses AI to suggest which sprint items align with which OKRs.
+func (h *Handlers) PMOKRSuggest(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	boardID, err := req.RequireInt("board_id")
+	if err != nil {
+		return errorResult("board_id required"), nil
+	}
+	h.initOKRTables()
+	db := h.Memory.DB()
+
+	var sb strings.Builder
+
+	// Get active OKRs
+	okrRows, err := db.Query("SELECT id, title FROM okr WHERE status = 'active' ORDER BY created_at DESC LIMIT 10")
+	if err == nil {
+		sb.WriteString("Active OKRs:\n")
+		defer okrRows.Close()
+		count := 0
+		for okrRows.Next() {
+			var id int64
+			var title string
+			if err := okrRows.Scan(&id, &title); err == nil {
+				count++
+				if count <= 5 {
+					sb.WriteString(fmt.Sprintf("  #%d %s\n", id, title))
+				}
+			}
+		}
+		if count == 0 {
+			sb.WriteString("  (none — define OKRs with pm_okr_define)\n")
+		} else if count > 5 {
+			sb.WriteString(fmt.Sprintf("  ... and %d more\n", count-5))
+		}
+	} else {
+		sb.WriteString("Active OKRs: (query failed)\n")
+	}
+
+	// Get current sprint issues
+	sb.WriteString("\nSprint Issues:\n")
+	sprints, sprintErr := h.Jira.GetActiveSprints(ctx, boardID)
+	if sprintErr == nil && len(sprints) > 0 {
+		issues, issueErr := h.Jira.GetSprintIssues(ctx, sprints[0].ID)
+		if issueErr == nil {
+			issueCount := 0
+			for _, i := range issues {
+				if issueCount >= 10 {
+					sb.WriteString(fmt.Sprintf("  ... and %d more\n", len(issues)-10))
+					break
+				}
+				sb.WriteString(fmt.Sprintf("  %s: %s [%s] (%s)\n", i.Key, i.Summary, i.Type, i.Status))
+				issueCount++
+			}
+			if issueCount == 0 {
+				sb.WriteString("  (no issues in active sprint)\n")
+			}
+		} else {
+			sb.WriteString("  (failed to fetch issues)\n")
+		}
+	} else {
+		sb.WriteString("  (no active sprint)\n")
+	}
+
+	if h.AI == nil {
+		return textResult(sb.String() + "\n(AI not configured — cannot generate alignment suggestions)"), nil
+	}
+
+	prompt := `Based on the active OKRs and sprint issues above, suggest:
+1. Which sprint items clearly align to specific OKRs (list pairings)
+2. Which items seem misaligned (no clear OKR connection)
+3. One suggestion to improve OKR-sprint alignment
+
+Keep it concise. 3-5 sentences max.`
+
+	aiResult, aiErr := h.aiComplete(ctx, prompt, sb.String())
+	if aiErr != nil {
+		return textResult(sb.String() + "\n(AI suggestion unavailable)"), nil
+	}
+
+	return textResult(sb.String() + "\n\nAI Alignment Suggestions:\n" + aiResult), nil
+}
+
+// PMKPIToOkr uses AI to suggest Key Results from current KPI metrics.
+func (h *Handlers) PMKPIToOkr(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	h.initOKRTables()
+	db := h.Memory.DB()
+	if db == nil {
+		return errorResult("memory not configured"), nil
+	}
+
+	rows, err := db.Query("SELECT d.name, COALESCE(d.unit,'%'), d.target_value, COALESCE(s.value,0) FROM kpi_definition d LEFT JOIN kpi_snapshot s ON s.kpi_id = d.id AND s.id = (SELECT id FROM kpi_snapshot WHERE kpi_id = d.id ORDER BY created_at DESC LIMIT 1) ORDER BY d.name")
+	if err != nil {
+		return errorResult("query failed: " + err.Error()), nil
+	}
+	defer rows.Close()
+
+	var kpis []string
+	for rows.Next() {
+		var name, unit string
+		var target, current float64
+		if err := rows.Scan(&name, &unit, &target, &current); err == nil {
+			gap := target - current
+			direction := "above"
+			if current < target {
+				direction = "below"
+			}
+			kpis = append(kpis, fmt.Sprintf("- %s: %.1f%s (target: %.1f%s, gap: %.1f%s %s)", name, current, unit, target, unit, gap, unit, direction))
+		}
+	}
+
+	if len(kpis) == 0 {
+		return textResult("No KPIs defined. Use pm_kpi_define to create KPIs first."), nil
+	}
+
+	data := strings.Join(kpis, "\n")
+
+	if h.AI == nil {
+		return textResult(fmt.Sprintf("Current KPIs:\n\n%s\n\n(AI not configured — suggest Key Results manually)", data)), nil
+	}
+
+	prompt := `Based on these KPI metrics, suggest 2-3 measurable Key Results for an OKR cycle.
+For each KR provide:
+- KR title (specific and measurable)
+- Target value with unit
+- Why it matters (1 sentence)
+
+Focus on the biggest gaps between current and target values. Be practical.`
+
+	aiResult, aiErr := h.aiComplete(ctx, prompt, data)
+	if aiErr != nil {
+		return textResult(fmt.Sprintf("Current KPIs:\n\n%s\n\n(AI suggestion unavailable)", data)), nil
+	}
+
+	return textResult(fmt.Sprintf("KPI → Key Result Suggestions\n\nCurrent KPIs:\n%s\n\nSuggested Key Results:\n%s", data, aiResult)), nil
 }
 
 // helpers

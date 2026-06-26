@@ -163,7 +163,7 @@ func (h *Handlers) ConversationPrep(ctx context.Context, req mcp.CallToolRequest
 		return textResult(fmt.Sprintf("Prep (%s):\nFramework: %s\nContext: %s\nPerson: %s", convType, framework, contextStr, person)), nil
 	}
 
-	result, aiErr := h.AI.Complete(ctx,
+	result, aiErr := h.aiComplete(ctx,
 		fmt.Sprintf("Prepare talking points for a %s conversation. Framework: %s. Be direct, under 100 words.", convType, framework),
 		fmt.Sprintf("Situation: %s\nPerson: %s", contextStr, person))
 	if aiErr != nil {
@@ -252,7 +252,7 @@ func (h *Handlers) PMSentiment(ctx context.Context, req mcp.CallToolRequest) (*m
 	if h.AI == nil {
 		return textResult(fmt.Sprintf("Signals: %d blockers, %d retros (AI unavailable for analysis)", len(blockers), len(retros))), nil
 	}
-	result, err := h.AI.Complete(ctx,
+	result, err := h.aiComplete(ctx,
 		`Empathetic team coach. Assess:
 1. MOOD (one word)
 2. ROOT CAUSE (1-2 sentences)

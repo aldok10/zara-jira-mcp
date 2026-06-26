@@ -54,7 +54,7 @@ Rules:
 		return errorResult("AI provider not configured"), nil
 	}
 
-	result, err := h.AI.Complete(ctx, systemPrompt, userData.String())
+	result, err := h.aiComplete(ctx, systemPrompt, userData.String())
 	if err != nil {
 		return errorResult("AI failed: " + err.Error()), nil
 	}
@@ -101,7 +101,7 @@ Rules:
 		return errorResult("AI provider not configured"), nil
 	}
 
-	result, err := h.AI.Complete(ctx, systemPrompt, userData.String())
+	result, err := h.aiComplete(ctx, systemPrompt, userData.String())
 	if err != nil {
 		return errorResult("AI failed: " + err.Error()), nil
 	}
@@ -139,7 +139,7 @@ Be direct. No filler. Under 100 words total.`
 
 	userData := fmt.Sprintf("Issue: %s\nSeverity: %s\nDeadline: %s", issue, severity, deadline)
 
-	result, err := h.AI.Complete(ctx, systemPrompt, userData)
+	result, err := h.aiComplete(ctx, systemPrompt, userData)
 	if err != nil {
 		return errorResult("AI failed: " + err.Error()), nil
 	}

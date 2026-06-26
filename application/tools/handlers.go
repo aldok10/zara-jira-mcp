@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -69,7 +70,7 @@ func (h *Handlers) SearchIssues(ctx context.Context, req mcp.CallToolRequest) (*
 
 	result, err := h.Jira.SearchIssues(ctx, jql, maxResults, startAt)
 	if err != nil {
-		return errorResult("Jira search failed: " + err.Error()), nil
+		return sanitizedError("Jira search failed", err), nil
 	}
 
 	var sb strings.Builder
@@ -89,7 +90,7 @@ func (h *Handlers) GetIssue(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	}
 	issue, err := h.Jira.GetIssue(ctx, key)
 	if err != nil {
-		return errorResult("Failed to get issue: " + err.Error()), nil
+		return sanitizedError("Failed to get issue", err), nil
 	}
 	data, _ := json.MarshalIndent(issue, "", "  ")
 	return textResult(string(data)), nil
@@ -106,7 +107,7 @@ func (h *Handlers) GetBoards(ctx context.Context, req mcp.CallToolRequest) (*mcp
 
 	boards, err := h.Jira.GetBoards(ctx)
 	if err != nil {
-		return errorResult("Failed to get boards: " + err.Error()), nil
+		return sanitizedError("Failed to get boards", err), nil
 	}
 	var sb strings.Builder
 	for _, b := range boards {
@@ -133,7 +134,7 @@ func (h *Handlers) GetSprintSummary(ctx context.Context, req mcp.CallToolRequest
 
 	sprints, err := h.Jira.GetActiveSprints(ctx, boardID)
 	if err != nil {
-		return errorResult("Failed to get sprints: " + err.Error()), nil
+		return sanitizedError("Failed to get sprints", err), nil
 	}
 	if len(sprints) == 0 {
 		return textResult("No active sprints found for this board."), nil
@@ -142,7 +143,7 @@ func (h *Handlers) GetSprintSummary(ctx context.Context, req mcp.CallToolRequest
 	sprint := sprints[0]
 	issues, err := h.Jira.GetSprintIssues(ctx, sprint.ID)
 	if err != nil {
-		return errorResult("Failed to get sprint issues: " + err.Error()), nil
+		return sanitizedError("Failed to get sprint issues", err), nil
 	}
 
 	var sb strings.Builder
@@ -194,7 +195,7 @@ func (h *Handlers) CreateIssue(ctx context.Context, req mcp.CallToolRequest) (*m
 
 	created, err := h.Jira.CreateIssue(ctx, input)
 	if err != nil {
-		return errorResult("Failed to create issue: " + err.Error()), nil
+		return sanitizedError("Failed to create issue", err), nil
 	}
 	return textResult(fmt.Sprintf("Created: %s - %s", created.Key, created.Summary)), nil
 }
@@ -211,7 +212,7 @@ func (h *Handlers) AddComment(ctx context.Context, req mcp.CallToolRequest) (*mc
 	}
 
 	if err := h.Jira.AddComment(ctx, key, body); err != nil {
-		return errorResult("Failed to add comment: " + err.Error()), nil
+		return sanitizedError("Failed to add comment", err), nil
 	}
 	return textResult(fmt.Sprintf("Comment added to %s", key)), nil
 }
@@ -228,7 +229,7 @@ func (h *Handlers) TransitionIssue(ctx context.Context, req mcp.CallToolRequest)
 	}
 
 	if err := h.Jira.TransitionIssue(ctx, key, transitionID); err != nil {
-		return errorResult("Failed to transition issue: " + err.Error()), nil
+		return sanitizedError("Failed to transition issue", err), nil
 	}
 	return textResult(fmt.Sprintf("Issue %s transitioned successfully", key)), nil
 }
@@ -242,7 +243,7 @@ func (h *Handlers) GetTransitions(ctx context.Context, req mcp.CallToolRequest) 
 
 	transitions, err := h.Jira.GetTransitions(ctx, key)
 	if err != nil {
-		return errorResult("Failed to get transitions: " + err.Error()), nil
+		return sanitizedError("Failed to get transitions", err), nil
 	}
 
 	var sb strings.Builder
@@ -271,7 +272,7 @@ func (h *Handlers) MyIssues(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 
 	result, err := h.Jira.SearchIssues(ctx, jql, 30, 0)
 	if err != nil {
-		return errorResult("Failed to get my issues: " + err.Error()), nil
+		return sanitizedError("Failed to get my issues", err), nil
 	}
 
 	var sb strings.Builder
@@ -296,7 +297,7 @@ func (h *Handlers) Overdue(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 
 	result, err := h.Jira.SearchIssues(ctx, jql, 30, 0)
 	if err != nil {
-		return errorResult("Failed to get overdue issues: " + err.Error()), nil
+		return sanitizedError("Failed to get overdue issues", err), nil
 	}
 
 	var sb strings.Builder
@@ -326,7 +327,7 @@ func (h *Handlers) Workload(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 
 	result, err := h.Jira.SearchIssues(ctx, jql, 200, 0)
 	if err != nil {
-		return errorResult("Failed to get workload: " + err.Error()), nil
+		return sanitizedError("Failed to get workload", err), nil
 	}
 
 	workload := map[string]int{}
@@ -358,7 +359,7 @@ func (h *Handlers) AIAnalyze(ctx context.Context, req mcp.CallToolRequest) (*mcp
 
 	result, err := h.Jira.SearchIssues(ctx, jql, maxResults, 0)
 	if err != nil {
-		return errorResult("Jira search failed: " + err.Error()), nil
+		return sanitizedError("Jira search failed", err), nil
 	}
 
 	var issueContext strings.Builder
@@ -388,7 +389,7 @@ Be concise and data-driven. Reference specific ticket keys when relevant.`
 
 	analysis, err := h.aiComplete(ctx, systemPrompt, userPrompt)
 	if err != nil {
-		return errorResult("AI analysis failed: " + err.Error()), nil
+		return sanitizedError("AI analysis failed", err), nil
 	}
 	return textResult(analysis), nil
 }
@@ -402,7 +403,7 @@ func (h *Handlers) NotifyLark(ctx context.Context, req mcp.CallToolRequest) (*mc
 	title := req.GetString("title", "Jira Update")
 
 	if err := h.Lark.SendMarkdown(ctx, title, content); err != nil {
-		return errorResult("Failed to send to Lark: " + err.Error()), nil
+		return sanitizedError("Failed to send to Lark", err), nil
 	}
 	return textResult("Message sent to Lark successfully."), nil
 }
@@ -417,7 +418,7 @@ func (h *Handlers) AISprintReport(ctx context.Context, req mcp.CallToolRequest) 
 
 	sprints, err := h.Jira.GetActiveSprints(ctx, boardID)
 	if err != nil {
-		return errorResult("Failed to get sprints: " + err.Error()), nil
+		return sanitizedError("Failed to get sprints", err), nil
 	}
 	if len(sprints) == 0 {
 		return textResult("No active sprints found."), nil
@@ -426,7 +427,7 @@ func (h *Handlers) AISprintReport(ctx context.Context, req mcp.CallToolRequest) 
 	sprint := sprints[0]
 	issues, err := h.Jira.GetSprintIssues(ctx, sprint.ID)
 	if err != nil {
-		return errorResult("Failed to get sprint issues: " + err.Error()), nil
+		return sanitizedError("Failed to get sprint issues", err), nil
 	}
 
 	var issueContext strings.Builder
@@ -450,7 +451,7 @@ Format in markdown. Keep it under 500 words.`
 
 	report, err := h.aiComplete(ctx, systemPrompt, userPrompt)
 	if err != nil {
-		return errorResult("AI report generation failed: " + err.Error()), nil
+		return sanitizedError("AI report generation failed", err), nil
 	}
 
 	if sendToLark {
@@ -482,7 +483,7 @@ func (h *Handlers) UpdateIssue(ctx context.Context, req mcp.CallToolRequest) (*m
 	}
 
 	if err := h.Jira.UpdateIssue(ctx, input); err != nil {
-		return errorResult("Failed to update issue: " + err.Error()), nil
+		return sanitizedError("Failed to update issue", err), nil
 	}
 	return textResult(fmt.Sprintf("Issue %s updated successfully", key)), nil
 }
@@ -503,4 +504,11 @@ func errorResult(msg string) *mcp.CallToolResult {
 		IsError: true,
 		Content: []mcp.Content{mcp.TextContent{Type: "text", Text: msg}},
 	}
+}
+
+// sanitizedError logs the detailed error and returns a generic message to the client.
+// Use for all external-facing calls where err.Error() might leak internals.
+func sanitizedError(logMsg string, err error) *mcp.CallToolResult {
+	slog.Error(logMsg, "detail", err.Error())
+	return errorResult("Operation failed. Contact your administrator.")
 }

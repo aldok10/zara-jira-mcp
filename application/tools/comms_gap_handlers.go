@@ -263,7 +263,7 @@ ONE-LINER VERSION: [condensed NVC version in one sentence]
 
 Rules: Keep the core meaning. Remove blame, judgment, demands. Be specific.`
 
-	result, aiErr := h.AI.Complete(ctx, systemPrompt, message)
+	result, aiErr := h.aiComplete(ctx, systemPrompt, message)
 	if aiErr != nil {
 		return textResult(fmt.Sprintf("Original: %s\n\nNVC Reframe (template - AI error):\n- Observation: When I notice [specific behavior]...\n- Feeling: I feel [emotion]...\n- Need: Because I need [value/need]...\n- Request: Would you be willing to [specific action]?", message)), nil
 	}
@@ -323,7 +323,7 @@ Rules:
 - Keep each section under 50 words
 - Be direct and practical`
 
-	result, aiErr := h.AI.Complete(ctx, systemPrompt, dataContext.String())
+	result, aiErr := h.aiComplete(ctx, systemPrompt, dataContext.String())
 	if aiErr != nil {
 		return errorResult("AI failed: " + aiErr.Error()), nil
 	}

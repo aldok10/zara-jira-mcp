@@ -118,28 +118,30 @@ This isn't another "AI wrapper." Every feature is grounded in peer-reviewed rese
 
 ---
 
-## 239 Tools Across 15 Categories
+## 285 Tools Across 17 Categories
 
 <details>
 <summary>Full tool list (click to expand)</summary>
 
 | Category | Count | Highlights |
 |----------|-------|-----------|
-| Jira Core | 48 | CRUD, search, sprints, epics, bulk ops, worklogs, links, versions |
+| Jira Core | 55 | CRUD, search, sprints, epics, bulk ops, worklogs, links, versions |
 | PM Memory | 22 | Snapshots, risks, decisions, blockers, retros, goals, DoD |
-| AI Intelligence | 15 | Forecast, coaching, anti-patterns, NL-to-JQL |
+| AI Intelligence | 18 | Forecast, coaching, anti-patterns, NL-to-JQL, sentiment analysis |
 | Process & Health | 18 | Sprint health score, velocity, capacity, flow metrics |
 | Reporting | 18 | Exec report, PO briefing, escalation, delivery confidence |
-| Portfolio | 5 | Cross-project overview, risks, workload |
-| Notifications | 15 | 8 platforms, smart routing, broadcast, digest |
-| GitHub/GitLab | 12 | PR linking, smart commits, activity tracking |
-| Integrations | 12 | Calendar, Notion, Linear, PagerDuty, Clockify, Sheets |
-| Shortcuts | 14 | Natural language, context-aware, quickstart |
-| Recipes | 3 | Start work, done, block (one-click workflows) |
-| Coaching | 8 | Team dynamics, skill gaps, wellbeing signals |
-| Story Points | 6 | Auto-detect custom fields, calculate totals, burndown |
-| SM Leverage | 6 | Maturity assessment, dysfunction detection, meeting ROI |
-| Deep PM | 5 | Sprint narrative, 1-on-1 prep, what-next advisor |
+| Communication | 12 | Cadence check, conversation prep, nudge, effectiveness, SCARF, SBI |
+| Feedback & Team Care | 14 | Feedback log/due/close, burnout risk, safety signals, reality check |
+| OKR/KPI | 12 | OKR define/link/progress/health, KPI trend/snapshot, OKR suggest |
+| Lark OKR | 3 | Bi-directional OKR period, pull, progress sync |
+| Notifications | 15 | 8 platforms, smart routing, budget, digest |
+| GitHub/GitLab | 13 | PR linking, smart commits, activity tracking |
+| Integrations | 17 | Calendar, Notion, Linear, PagerDuty, Clockify, Sheets, Lark |
+| Shortcuts & Help | 14 | Natural language, context-aware, quickstart, help |
+| Coaching | 9 | Team dynamics, skill gaps, wellbeing, 5 dysfunctions |
+| Stakeholder & Portfolio | 16 | Impediment aging, SM impact, stakeholder pulse, portfolio, maturity |
+| SM Leverage | 10 | Maturity assessment, dysfunction detection, meeting ROI, improvement velocity |
+| Tech Skills | 5 | PM technical literacy, engineering vocabulary |
 
 </details>
 
@@ -189,7 +191,7 @@ All optional. Works with just Jira + any AI provider.
 
 ## Performance Profiles
 
-239 tools can overwhelm slow clients. Use profiles:
+285 tools can overwhelm slow clients. Use profiles:
 
 | Profile | Tools | Best For |
 |---------|-------|----------|
@@ -197,7 +199,7 @@ All optional. Works with just Jira + any AI provider.
 | `lite` | ~30 | Basic PM, slow connections |
 | `standard` | ~80 | **Daily SM/PM work (recommended)** |
 | `full` | ~150 | Full PM + dev visibility |
-| (none) | ~239 | Everything, power users |
+| (none) | ~285 | Everything, power users |
 
 ```bash
 PM_PROFILE=standard  # in your .env or MCP config
@@ -211,7 +213,7 @@ Single Go binary. No runtime dependencies. SQLite for memory (WAL mode). Starts 
 
 ```
 13MB binary | Go 1.26 | uber-go/fx DI | MCP stdio/sse/http
-SQLite WAL (persistent memory) | 14 domain entities | 21 service integrations
+SQLite WAL (persistent memory) | 16+ domain entities | 25+ service integrations
 ```
 
 ---

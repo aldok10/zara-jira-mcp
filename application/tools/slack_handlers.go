@@ -10,6 +10,9 @@ import (
 
 // SlackSendMessage sends a message to a Slack channel.
 func (h *Handlers) SlackSendMessage(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	if !h.CheckNotificationBudget() {
+		return errorResult("Daily notification budget exceeded (5/day)."), nil
+	}
 	if h.Slack == nil || !h.Slack.Available() {
 		return errorResult("Slack not configured. Set SLACK_BOT_TOKEN or SLACK_WEBHOOK_URL."), nil
 	}
@@ -29,6 +32,7 @@ func (h *Handlers) SlackSendMessage(ctx context.Context, req mcp.CallToolRequest
 			return errorResult("Slack send failed: " + err.Error()), nil
 		}
 	}
+	h.LogNotification("slack", "medium", title)
 	return textResult("Message sent to Slack."), nil
 }
 
@@ -84,6 +88,9 @@ func (h *Handlers) SlackChannelHistory(ctx context.Context, req mcp.CallToolRequ
 
 // SlackNotifyTeam sends a formatted PM notification to the team channel.
 func (h *Handlers) SlackNotifyTeam(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	if !h.CheckNotificationBudget() {
+		return errorResult("Daily notification budget exceeded (5/day)."), nil
+	}
 	if h.Slack == nil || !h.Slack.Available() {
 		return errorResult("Slack not configured."), nil
 	}
@@ -97,5 +104,6 @@ func (h *Handlers) SlackNotifyTeam(ctx context.Context, req mcp.CallToolRequest)
 	if err := h.Slack.SendRichMessage(ctx, channel, title, content); err != nil {
 		return errorResult("Slack notify failed: " + err.Error()), nil
 	}
+	h.LogNotification("slack_team", "high", title)
 	return textResult("Team notified on Slack."), nil
 }

@@ -26,15 +26,39 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	enabled := enabledModules()
 
 	modules := map[string][]regFunc{
-		"jira":          {registerJiraTools, registerIssueOpsTools, registerEpicSprintTools, registerBulkProjectTools, registerLinkWorklogTools, registerVersionTools, registerTraceTools},
-		"pm":            {registerPMTools, registerMemoryTools, registerPMIntelTools, registerAdvancedPMTools, registerDeepPMTools, registerFlowTools, registerForecastTools, registerRecipeTools, registerProcessTools, registerImprovementTools, registerOKRKPITools, registerInsightTools, registerCoachingTools, registerStoryPointsTools, registerV6Tools},
-		"ai":            {registerAITools},
-		"notifications": {registerLarkTools, registerSlackTools, registerPlatformTools, registerRoutingTools},
-		"stakeholder":   {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools, registerCommunicationTools, registerCommsGapTools, registerSafetyTools, registerCareTools, registerOutcomeTools, registerTechSkillTools},
-		"portfolio":     {registerPortfolioTools},
-		"github":        {registerGitHubTools, registerGitHubFullTools, registerGitIntegrationTools},
-		"integrations":  {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools, registerLarkOKRTools},
-		"shortcuts":     {registerPMShortcuts, registerHelpTools, registerSmartContextTools},
+		// Jira (split by depth)
+		"jira":        {registerJiraTools},          // 10: search, get, boards, sprint, create, comment, transitions, update, health
+		"jira-ops":    {registerIssueOpsTools},      // 5: assign, unassign, delete, subtask, find_user
+		"jira-deep":   {registerEpicSprintTools, registerBulkProjectTools, registerLinkWorklogTools, registerVersionTools, registerTraceTools}, // 28: epics, bulk, worklog, versions, trace
+
+		// PM (split by function)
+		"pm-memory":   {registerPMTools, registerMemoryTools},       // 16: my_issues, overdue, workload, snapshot, risks, decisions, blockers, retros
+		"pm-analysis": {registerPMIntelTools, registerForecastTools, registerFlowTools}, // 15: recommendations, velocity, standup, retro, forecast, anti-patterns, scope, flow
+		"pm-planning": {registerAdvancedPMTools, registerDeepPMTools, registerProcessTools, registerRecipeTools}, // 28: health, goals, DoD, capacity, deps, burndown, process, recipes
+		"pm-intel":    {registerOKRKPITools, registerCoachingTools, registerInsightTools, registerV6Tools, registerStoryPointsTools, registerImprovementTools}, // 35: OKR, KPI, coaching, experiments, metrics
+
+		// AI
+		"ai": {registerAITools}, // 2: analyze, sprint_report
+
+		// Notifications (split by platform)
+		"notify-lark":  {registerLarkTools},   // 1: lark notify
+		"notify-slack": {registerSlackTools},  // 4: slack channel/msg/reactions
+		"notify-all":   {registerPlatformTools, registerRoutingTools}, // 9: multi-platform routing
+
+		// Stakeholder (split by depth)
+		"stakeholder":      {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools, registerCommunicationTools}, // 25: exec, scorecard, kb, tech debt, meetings, leverage
+		"stakeholder-deep": {registerCommsGapTools, registerSafetyTools, registerCareTools, registerOutcomeTools, registerTechSkillTools}, // 44: sentiment, feedback, safety, NVC, hard convos
+
+		// Portfolio, GitHub, Integrations
+		"portfolio":    {registerPortfolioTools},                   // 5
+		"github":       {registerGitHubTools},                      // 3: link PR, branch, smart commit
+		"github-deep":  {registerGitHubFullTools, registerGitIntegrationTools}, // 17: issues, repos, CI, full GitHub ops
+		"integrations": {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools, registerLarkOKRTools}, // 19
+
+		// Smart routing (primary entry points)
+		"smart-router": {registerSmartContextTools}, // 6: pm_smart, pm_do, pm_report + predictive
+		"pm-quick":     {registerPMShortcuts},       // 5: pm, pm_create, pm_decide, pm_risk, pm_next
+		"help":         {registerHelpTools},         // 3: pm_help, pm_quickstart, pm_workflow
 	}
 
 	for mod, fns := range modules {
@@ -49,27 +73,41 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 }
 
 func enabledModules() map[string]bool {
-	// Profile presets for different PM needs
+	// Profile presets — research-backed tool counts (BCG 2026, Microsoft Research, Google Research)
+	// See docs/research-blueprint.md for methodology.
 	profile := os.Getenv("PM_PROFILE")
 	switch profile {
 	case "chatgpt":
-		// 14 tools: smart routing + shortcuts. Safe for ChatGPT Desktop.
-		return map[string]bool{"shortcuts": true}
+		// ~11 tools: smart router + quick actions. Safe for ChatGPT Desktop (under 15).
+		return map[string]bool{"smart-router": true, "pm-quick": true}
 	case "lite":
-		// ~30 tools: shortcuts + basic PM memory
-		return map[string]bool{"shortcuts": true, "pm": true}
+		// ~24 tools: smart router + quick + help + Jira core.
+		// Under Google's 16-tool threshold once factoring agent overhead.
+		return map[string]bool{"smart-router": true, "pm-quick": true, "help": true, "jira": true}
 	case "standard":
-		// ~80 tools: daily PM work + Jira + notifications
-		return map[string]bool{"jira": true, "pm": true, "ai": true, "notifications": true, "shortcuts": true}
+		// ~39 tools: lite + pm-memory + Jira ops + AI + lark notify.
+		// Under Microsoft Research's <40 guidance for PM teams.
+		return map[string]bool{"smart-router": true, "pm-quick": true, "jira": true, "jira-ops": true, "pm-memory": true, "ai": true, "notify-lark": true}
 	case "full":
-		// everything except external integrations
-		return map[string]bool{"jira": true, "pm": true, "ai": true, "notifications": true, "stakeholder": true, "portfolio": true, "github": true, "shortcuts": true}
+		// ~48 tools: standard + help + pm-analysis + basic stakeholder.
+		// Acceptable with good tool descriptions (research-backed: 40-60).
+		return map[string]bool{"smart-router": true, "pm-quick": true, "help": true, "jira": true, "jira-ops": true, "pm-memory": true, "pm-analysis": true, "ai": true, "notify-lark": true, "stakeholder": true}
 	}
 
 	// Custom module selection via PM_ENABLED_MODULES
 	env := os.Getenv("PM_ENABLED_MODULES")
 	if env == "" || env == "all" {
-		return map[string]bool{"jira": true, "pm": true, "ai": true, "notifications": true, "stakeholder": true, "portfolio": true, "github": true, "integrations": true, "shortcuts": true}
+		return map[string]bool{
+			"jira": true, "jira-ops": true, "jira-deep": true,
+			"pm-memory": true, "pm-analysis": true, "pm-planning": true, "pm-intel": true,
+			"ai": true,
+			"notify-lark": true, "notify-slack": true, "notify-all": true,
+			"stakeholder": true, "stakeholder-deep": true,
+			"portfolio": true,
+			"github": true, "github-deep": true,
+			"integrations": true,
+			"smart-router": true, "pm-quick": true, "help": true,
+		}
 	}
 	m := map[string]bool{}
 	for _, s := range strings.Split(env, ",") {

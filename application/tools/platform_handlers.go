@@ -34,6 +34,7 @@ func (h *Handlers) DiscordSend(ctx context.Context, req mcp.CallToolRequest) (*m
 			return errorResult("Discord send failed: " + err.Error()), nil
 		}
 	}
+	h.LogNotification("discord", "medium", title)
 	return textResult("Message sent to Discord."), nil
 }
 
@@ -66,6 +67,9 @@ func (h *Handlers) TelegramSend(ctx context.Context, req mcp.CallToolRequest) (*
 // Teams handlers
 
 func (h *Handlers) TeamsSend(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	if !h.CheckNotificationBudget() {
+		return errorResult("Daily notification budget exceeded (5/day)."), nil
+	}
 	if h.Teams == nil || !h.Teams.Available() {
 		return errorResult("Teams not configured. Set TEAMS_WEBHOOK_URL."), nil
 	}
@@ -84,12 +88,16 @@ func (h *Handlers) TeamsSend(ctx context.Context, req mcp.CallToolRequest) (*mcp
 			return errorResult("Teams send failed: " + err.Error()), nil
 		}
 	}
+	h.LogNotification("teams", "medium", title)
 	return textResult("Message sent to Teams."), nil
 }
 
 // Email handlers
 
 func (h *Handlers) EmailSend(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	if !h.CheckNotificationBudget() {
+		return errorResult("Daily notification budget exceeded (5/day)."), nil
+	}
 	if h.Email == nil || !h.Email.Available() {
 		return errorResult("Email not configured. Set EMAIL_SMTP_HOST and EMAIL_FROM."), nil
 	}
@@ -109,6 +117,7 @@ func (h *Handlers) EmailSend(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	if err := h.Email.Send(ctx, to, subject, body); err != nil {
 		return errorResult("Email send failed: " + err.Error()), nil
 	}
+	h.LogNotification("email", "low", subject)
 	return textResult(fmt.Sprintf("Email sent to %s.", to)), nil
 }
 
@@ -185,6 +194,9 @@ func (h *Handlers) ConfluenceCreatePage(ctx context.Context, req mcp.CallToolReq
 
 // Broadcast sends to ALL configured channels at once.
 func (h *Handlers) Broadcast(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	if !h.CheckNotificationBudget() {
+		return errorResult("Daily notification budget exceeded (5/day)."), nil
+	}
 	content, err := req.RequireString("content")
 	if err != nil {
 		return errorResult("content parameter required"), nil
@@ -233,5 +245,6 @@ func (h *Handlers) Broadcast(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	if len(results) == 0 {
 		return errorResult("No notification channels configured."), nil
 	}
+	h.LogNotification("broadcast", "medium", title)
 	return textResult("Broadcast results:\n" + strings.Join(results, "\n")), nil
 }

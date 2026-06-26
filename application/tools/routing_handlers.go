@@ -83,6 +83,9 @@ func (h *Handlers) NotifyRouted(ctx context.Context, req mcp.CallToolRequest) (*
 
 // DailyDigest generates and sends a daily digest of overnight changes.
 func (h *Handlers) DailyDigest(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	if !h.CheckNotificationBudget() {
+		return errorResult("Daily notification budget exceeded (5/day)."), nil
+	}
 	boardID := req.GetInt("board_id", 0)
 
 	var sections []string
@@ -154,6 +157,7 @@ func (h *Handlers) DailyDigest(ctx context.Context, req mcp.CallToolRequest) (*m
 	} else if h.Teams != nil && h.Teams.Available() {
 		_ = h.Teams.SendCard(ctx, title, digest)
 	}
+	h.LogNotification("digest", "low", title)
 
 	return textResult(fmt.Sprintf("%s\n\n%s", title, digest)), nil
 }

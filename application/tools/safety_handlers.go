@@ -211,7 +211,7 @@ For each pillar give a score (1-5) based on available data, a brief assessment, 
 End with an overall team health verdict and top 2 actions.
 Under 250 words.`
 
-	result, err := h.AI.Complete(ctx, systemPrompt, data.String())
+	result, err := h.aiComplete(ctx, systemPrompt, data.String())
 	if err != nil {
 		return errorResult("AI failed: " + err.Error()), nil
 	}

@@ -413,7 +413,7 @@ Assess based on the data provided. Return:
 
 Be concise and data-driven. No fluff.`
 
-	result, err := h.AI.Complete(ctx, systemPrompt, contextData.String())
+	result, err := h.aiComplete(ctx, systemPrompt, contextData.String())
 	if err != nil {
 		return errorResult("AI analysis failed: " + err.Error()), nil
 	}

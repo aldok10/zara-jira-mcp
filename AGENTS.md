@@ -4,7 +4,7 @@ Instructions for AI agents working with this project.
 
 ## What This Is
 
-`zara-jira-mcp` is a ~270-tool MCP server that acts as an AI-powered Scrum Master with persistent memory, empathy, and learning capability. It connects to Jira Cloud, runs Monte Carlo forecasts, detects anti-patterns, reads team sentiment, manages feedback lifecycles, and sends notifications across Lark/Slack/Discord/Telegram/Teams/Email.
+`zara-jira-mcp` is a ~285-tool MCP server that acts as an AI-powered Scrum Master with persistent memory, empathy, and learning capability. It connects to Jira Cloud, runs Monte Carlo forecasts, detects anti-patterns, reads team sentiment, manages feedback lifecycles, tracks OKR/KPI progress, and sends notifications across Lark/Slack/Discord/Telegram/Teams/Email.
 
 Built with Go 1.26. SQLite for persistent memory (16+ tables). OpenAI-compatible API for AI intelligence. Lark OKR bi-directional sync.
 
@@ -27,10 +27,10 @@ Choose based on your context (BCG research: productivity peaks at 3 tools, degra
 | Profile | Tools | Best For |
 |---------|-------|----------|
 | `chatgpt` | ~14 | ChatGPT Desktop (token-limited) |
-| `lite` | ~100 | Solo PM, daily workflow |
-| `standard` | ~180 | Full PM team + Jira |
-| `full` | ~220 | Power user + GitHub + portfolio |
-| `all` | ~270 | Developer/debugging (all modules) |
+| `lite` | ~65 | Solo PM, daily workflow |
+| `standard` | ~120 | Full PM team + Jira |
+| `full` | ~200 | Power user + GitHub + portfolio |
+| `all` | ~285 | Developer/debugging (all modules) |
 
 Set via `PM_PROFILE=chatgpt` or `PM_ENABLED_MODULES=jira,pm,ai`.
 

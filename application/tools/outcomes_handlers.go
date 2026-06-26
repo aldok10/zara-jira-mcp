@@ -349,7 +349,7 @@ Based on the data, assess:
 
 Be concise. No fluff. Data-driven verdict.`
 
-	result, aiErr := h.AI.Complete(ctx, systemPrompt, contextData.String())
+	result, aiErr := h.aiComplete(ctx, systemPrompt, contextData.String())
 	if aiErr != nil {
 		return errorResult("AI analysis failed: " + aiErr.Error()), nil
 	}

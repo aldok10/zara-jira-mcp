@@ -345,7 +345,7 @@ func (h *Handlers) PMSafetySignals(ctx context.Context, req mcp.CallToolRequest)
 	}
 
 	if score < 50 && h.AI != nil {
-		suggestion, err := h.AI.Complete(ctx, EmpathySystemPrompt+"\nGiven these low psychological safety signals, suggest ONE small action the SM can take in the next ceremony. Be specific and practical. Max 2 sentences.", strings.Join(signals, "\n"))
+		suggestion, err := h.aiComplete(ctx, "Given these low psychological safety signals, suggest ONE small action the SM can take in the next ceremony. Be specific and practical. Max 2 sentences.", strings.Join(signals, "\n"))
 		if err == nil {
 			sb.WriteString("\nSuggestion: " + strings.TrimSpace(suggestion) + "\n")
 		}

@@ -71,4 +71,18 @@ func registerOKRKPITools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(mcp.NewTool("pm_okr_health",
 		mcp.WithDescription("OKR risk assessment: progress vs time elapsed. Flags AT RISK objectives."),
 	), h.PMOKRHealth)
+
+	s.AddTool(mcp.NewTool("pm_kpi_trend",
+		mcp.WithDescription("Single KPI trend over time with direction indicators."),
+		mcp.WithString("name", mcp.Required(), mcp.Description("KPI name (as defined in pm_kpi_define)")),
+	), h.PMKPITrend)
+
+	s.AddTool(mcp.NewTool("pm_okr_suggest",
+		mcp.WithDescription("AI suggests which sprint items serve which OKRs. Takes board_id, returns alignment suggestions."),
+		mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+	), h.PMOKRSuggest)
+
+	s.AddTool(mcp.NewTool("pm_kpi_to_okr",
+		mcp.WithDescription("AI suggests Key Results (KRs) from current KPI metrics. No parameters needed — reads all KPIs."),
+	), h.PMKPIToOkr)
 }
