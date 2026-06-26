@@ -31,6 +31,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerBulkProjectTools(s, handlers)
 	registerLinkWorklogTools(s, handlers)
 	registerFlowTools(s, handlers)
+	registerForecastTools(s, handlers)
 
 	return &MCPServer{s: s}
 }
@@ -632,5 +633,35 @@ func registerFlowTools(s *server.MCPServer, h *tools.Handlers) {
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.SprintGoalCheck,
+	)
+}
+
+func registerForecastTools(s *server.MCPServer, h *tools.Handlers) {
+	s.AddTool(
+		mcp.NewTool("pm_forecast",
+			mcp.WithDescription("Monte Carlo forecasting: 'When will it be done?' Runs 10,000 simulations using historical throughput. Returns probability-based dates (50%, 70%, 85%, 95% confidence)."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+			mcp.WithNumber("remaining_items", mcp.Description("Items remaining (default: from active sprint)")),
+			mcp.WithNumber("sprint_days", mcp.Description("Sprint length in days (default: 10)")),
+		),
+		h.MonteCarloForecast,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_anti_patterns",
+			mcp.WithDescription("Detect Scrum anti-patterns from data: zombie sprints, hero culture, scope creep, unpredictable velocity, dead retros, rubber-stamp DoD, no sprint goals."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.DetectAntiPatterns,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_coaching",
+			mcp.WithDescription("AI coaching advice for Scrum Masters. Get data-driven suggestions for team improvement."),
+			mcp.WithString("topic", mcp.Required(), mcp.Description("team_dynamics, velocity, blockers, morale, conflict, growth, predictability")),
+			mcp.WithNumber("board_id", mcp.Description("Board ID for data context")),
+			mcp.WithString("situation", mcp.Description("Describe the specific situation you need advice on")),
+		),
+		h.CoachingAdvice,
 	)
 }
