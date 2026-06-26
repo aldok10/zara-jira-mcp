@@ -100,9 +100,6 @@ func provideHandlers(
 	}
 }
 
-	// Dashboard feature removed - was incomplete
-}
-
 type LifecycleParams struct {
 	fx.In
 	Lifecycle  fx.Lifecycle
