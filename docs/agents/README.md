@@ -81,16 +81,31 @@ AI Scrum Master with persistent memory. Connected via MCP.
 set -a
 [ -f ~/.config/zara-jira-mcp/.env ] && source ~/.config/zara-jira-mcp/.env
 set +a
+export PM_PROFILE=${PM_PROFILE:-pm}  # lite, pm, standard, full, or remove for all 224 tools
 exec zara-jira-mcp "$@"
 ```
 
 ```bash
-chmod +x ~/.local/bin/zara-jira-mcp-wrapper.sh
+chmod +x ~/.local/bin/zara-jira-mcp-wrapper
 mkdir -p ~/.config/zara-jira-mcp
 # Put your .env there (not in project repo)
 ```
 
-Then use `zara-jira-mcp-wrapper.sh` as command in all configs.
+Then use `zara-jira-mcp-wrapper` as command in all configs.
+
+## Performance Profiles
+
+224 tools can make ChatGPT Desktop or Claude Desktop slow. Use profiles:
+
+| Profile | Tools | Recommended For |
+|---------|-------|-----------------|
+| `lite` | ~30 | Slow machines, mobile, minimal |
+| `pm` | ~60 | **PM/Scrum Master daily work** |
+| `standard` | ~100 | PM + all notification channels |
+| `full` | ~150 | PM + GitHub/developer visibility |
+| (none) | ~224 | Developers who want everything |
+
+Set `PM_PROFILE=pm` in your env or wrapper script. See [docs/profiles.md](profiles.md) for details.
 
 ## Verification
 

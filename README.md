@@ -141,7 +141,30 @@ mcpServers:
 
 Full setup guides for all 20 clients: [docs/agents/](docs/agents/)
 
-## What You Get (124 Tools)
+## For PM/Scrum Masters (Start Here)
+
+You don't need to know all 224 tools. Use natural language with your AI assistant and let it pick the right tool. But if you want shortcuts:
+
+| Just Say... | What Happens |
+|-------------|--------------|
+| "Show sprint status" | `pm` — one-shot project status |
+| "Prep my standup" | `pm_standup_prep` — talking points in 30 seconds |
+| "Are we on track?" | `pm_goal_check` — AI evaluates sprint goal |
+| "When will this be done?" | `pm_forecast` — Monte Carlo probability dates |
+| "Write exec update" | `pm_exec_report` — business language, no jargon |
+| "Any risks?" | `pm_risk_dashboard` — all open risks |
+| "What should I do next?" | `pm_next` — AI suggests your highest-priority action |
+| "Help me find the right tool" | `pm_help` — topic-based tool discovery |
+| "How do I get started?" | `pm_quickstart` — first-time guide |
+
+**Simplified commands:** `pm_decide`, `pm_risk`, `pm_create` — one-liner versions that skip all the optional parameters.
+
+> PM-specific guides:
+> - [Reporting to Management](docs/reporting-guide.md) — who needs what, when
+> - [Understanding Engineering](docs/engineering-literacy.md) — vocabulary, metrics, learning path
+> - [Performance Profiles](docs/profiles.md) — keep your AI client fast
+
+## What You Get (224 Tools)
 
 ### Jira Operations (45 tools)
 

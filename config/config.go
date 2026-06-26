@@ -275,6 +275,7 @@ func Load() (*Config, error) {
 		Server: ServerConfig{
 			Transport:        os.Getenv("MCP_TRANSPORT"),
 			Port:             os.Getenv("MCP_PORT"),
+			Profile:          os.Getenv("PM_PROFILE"),
 			DashboardEnabled: os.Getenv("MCP_DASHBOARD") == "true",
 			DashboardPort:    os.Getenv("MCP_DASHBOARD_PORT"),
 		},
