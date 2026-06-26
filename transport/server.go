@@ -27,14 +27,14 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 
 	modules := map[string][]regFunc{
 		"jira":          {registerJiraTools, registerIssueOpsTools, registerEpicSprintTools, registerBulkProjectTools, registerLinkWorklogTools, registerVersionTools, registerTraceTools},
-		"pm": {registerPMTools, registerMemoryTools, registerPMIntelTools, registerAdvancedPMTools, registerDeepPMTools, registerFlowTools, registerForecastTools, registerProcessTools, registerRecipeTools, registerCareTools, registerCoachingTools, registerOutcomeTools, registerTechSkillTools},
+		"pm": {registerPMTools, registerMemoryTools, registerPMIntelTools, registerAdvancedPMTools, registerDeepPMTools, registerFlowTools, registerForecastTools, registerProcessTools, registerRecipeTools, registerCareTools, registerCoachingTools, registerOutcomeTools, registerTechSkillTools, registerStoryPointsTools},
 		"ai": {registerAITools},
 		"notifications": {registerLarkTools, registerSlackTools, registerPlatformTools, registerRoutingTools},
 		"stakeholder": {registerStakeholderTools, registerTechDebtTools, registerLeverageTools, registerManagementTools, registerReportingTools, registerWhatNextTools},
 		"portfolio": {registerPortfolioTools},
 		"github": {registerGitHubTools, registerGitHubFullTools, registerGitIntegrationTools},
 		"integrations": {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools},
-		"shortcuts": {registerPMShortcuts, registerHelpTools},
+		"shortcuts":      {registerPMShortcuts, registerHelpTools, registerSmartContextTools},
 	}
 
 	for mod, fns := range modules {
@@ -52,20 +52,17 @@ func enabledModules() map[string]bool {
 	// Profile presets for different PM needs
 	profile := os.Getenv("PM_PROFILE")
 	switch profile {
-	case "unified":
-		// 1 tool only: mega-router. For ChatGPT Desktop, slow clients.
-		return map[string]bool{"unified": true}
-	case "smart":
-		// 7 tools: natural language interface, covers everything.
-		return map[string]bool{"smart": true}
+	case "chatgpt":
+		// 14 tools: smart routing + shortcuts. Safe for ChatGPT Desktop.
+		return map[string]bool{"shortcuts": true}
 	case "lite":
-		// ~30 tools: essentials only, fast on any client
-		return map[string]bool{"jira": true, "pm": true, "shortcuts": true}
+		// ~30 tools: shortcuts + basic PM memory
+		return map[string]bool{"shortcuts": true, "pm": true}
 	case "standard":
-		// ~80 tools: daily PM work + notifications
+		// ~80 tools: daily PM work + Jira + notifications
 		return map[string]bool{"jira": true, "pm": true, "ai": true, "notifications": true, "shortcuts": true}
 	case "full":
-		// ~150 tools: everything except external integrations
+		// everything except external integrations
 		return map[string]bool{"jira": true, "pm": true, "ai": true, "notifications": true, "stakeholder": true, "portfolio": true, "github": true, "shortcuts": true}
 	}
 

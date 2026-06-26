@@ -52,7 +52,7 @@ func (c *RestClient) SearchIssues(ctx context.Context, jql string, maxResults in
 	}
 	result, err := c.sdk.Search.SearchJQL(ctx, &search.SearchJQLOptions{
 		JQL:        jql,
-		Fields:     []string{"summary", "description", "status", "priority", "issuetype", "assignee", "reporter", "labels", "created", "updated", "sprint"},
+		Fields:     []string{"summary", "description", "status", "priority", "issuetype", "assignee", "reporter", "labels", "created", "updated", "sprint", "story_points", "customfield_10016", "customfield_10028"},
 		MaxResults: maxResults,
 	})
 	if err != nil {
@@ -109,7 +109,7 @@ func (c *RestClient) GetSprintIssues(ctx context.Context, sprintID int) ([]domai
 	jql := fmt.Sprintf("sprint = %d ORDER BY status ASC", sprintID)
 	result, err := c.sdk.Search.SearchJQL(ctx, &search.SearchJQLOptions{
 		JQL:        jql,
-		Fields:     []string{"summary", "description", "status", "priority", "issuetype", "assignee", "reporter", "labels", "created", "updated"},
+		Fields:     []string{"summary", "description", "status", "priority", "issuetype", "assignee", "reporter", "labels", "created", "updated", "story_points", "customfield_10016", "customfield_10028"},
 		MaxResults: 100,
 	})
 	if err != nil {
@@ -925,7 +925,7 @@ func mapIssue(raw *issue.Issue) domain.Issue {
 	if raw == nil {
 		return domain.Issue{}
 	}
-	return domain.Issue{
+	i := domain.Issue{
 		Key:         raw.Key,
 		Summary:     raw.GetSummary(),
 		Description: raw.GetDescriptionText(),
@@ -938,6 +938,26 @@ func mapIssue(raw *issue.Issue) domain.Issue {
 		Created:     raw.GetCreatedTime(),
 		Updated:     raw.GetUpdatedTime(),
 	}
+	// Extract story points from common custom field IDs
+	if raw.Fields != nil && raw.Fields.Custom != nil {
+		for _, fieldID := range storyPointFields {
+			if sp, ok := raw.Fields.Custom.GetNumber(fieldID); ok && sp > 0 {
+				i.StoryPoints = sp
+				break
+			}
+		}
+	}
+	return i
+}
+
+// storyPointFields lists common Jira custom field IDs for story points.
+// The first match wins. Covers: next-gen story_points, classic story points, and common variants.
+var storyPointFields = []string{
+	"story_points",       // next-gen projects
+	"customfield_10016",  // Jira Cloud default
+	"customfield_10028",  // common alternative
+	"customfield_10004",  // some instances
+	"customfield_10014",  // another variant
 }
 
 func (c *RestClient) GetAttachments(ctx context.Context, issueKey string) ([]domain.Attachment, error) {

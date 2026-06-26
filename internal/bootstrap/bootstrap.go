@@ -16,6 +16,7 @@ import (
 	icalendar "github.com/aldok10/zara-jira-mcp/internal/calendar"
 	"github.com/aldok10/zara-jira-mcp/internal/clockify"
 	"github.com/aldok10/zara-jira-mcp/internal/confluence"
+	"github.com/aldok10/zara-jira-mcp/internal/dashboard"
 	idiscord "github.com/aldok10/zara-jira-mcp/internal/discord"
 	iemail "github.com/aldok10/zara-jira-mcp/internal/email"
 	igithub "github.com/aldok10/zara-jira-mcp/internal/github"
@@ -156,6 +157,12 @@ func Invoke(p LifecycleParams) {
 						logger.Error("lark bot server error", "err", err)
 					}
 				}()
+			}
+			if p.Config.Server.DashboardEnabled {
+				dash := dashboard.New(p.Config, logger)
+				if err := dash.Start(); err != nil {
+					logger.Error("dashboard error", "err", err)
+				}
 			}
 			return nil
 		},

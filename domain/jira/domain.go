@@ -19,6 +19,7 @@ type Issue struct {
 	Created     time.Time
 	Updated     time.Time
 	SprintName  string
+	StoryPoints float64 // from customfield (0 = unestimated)
 }
 
 // SearchResult holds paginated search results.

@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>zara-jira-mcp</title><style>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.hd{background:#1e293b;border-bottom:1px solid #334155;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
+.hd h1{font-size:1.2rem;color:#38bdf8}.hd .m{font-size:.75rem;color:#94a3b8}
+.ct{max-width:1100px;margin:0 auto;padding:1.5rem}
+.stats{display:flex;gap:2rem;margin:1rem 0 1.5rem;flex-wrap:wrap}
+.stat .n{font-size:2.5rem;font-weight:700;color:#38bdf8}.stat .l{font-size:.7rem;color:#94a3b8;text-transform:uppercase}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.75rem}
+.c{background:#1e293b;border:1px solid #334155;border-radius:6px;padding:.8rem}
+.c h3{font-size:.85rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem}
+.d{width:8px;height:8px;border-radius:50%}.d.on{background:#4ade80}.d.off{background:#475569}
+.f{margin-bottom:.3rem}.f label{display:block;font-size:.65rem;color:#64748b;text-transform:uppercase}
+.f .v{font-family:monospace;font-size:.75rem;color:#cbd5e1;background:#0f172a;padding:.2rem .4rem;border-radius:3px}
+.f .v.e{color:#475569;font-style:italic}
+.badge{background:#1d4ed8;color:#fff;padding:.15rem .5rem;border-radius:10px;font-size:.65rem;font-weight:600}
+</style></head><body>
+<div class="hd"><h1>zara-jira-mcp Dashboard</h1><div class="m"><span id="tp"></span> | <span id="pr"></span> | v0.4.0</div></div>
+<div class="ct"><div class="stats" id="st"></div><div class="g" id="gr"></div></div>
+<script>
+async function init(){
+const[cfg,st]=await Promise.all([fetch('/api/config').then(r=>r.json()),fetch('/api/status').then(r=>r.json())]);
+document.getElementById('tp').textContent=(cfg.server?.transport||'stdio').toUpperCase();
+document.getElementById('pr').innerHTML='<span class="badge">'+(cfg.server?.profile||'all')+'</span>';
+const on=st.filter(s=>s.configured).length;
+document.getElementById('st').innerHTML=`<div class="stat"><div class="n">${on}</div><div class="l">Configured</div></div><div class="stat"><div class="n">${st.length-on}</div><div class="l">Available</div></div>`;
+const secs=[
+{k:'jira',t:'Jira',f:['base_url','email','token']},{k:'ai',t:'AI Provider',f:['base_url','api_key','model']},
+{k:'slack',t:'Slack',f:['bot_token','channel']},{k:'lark',t:'Lark',f:['webhook','app_id']},
+{k:'discord',t:'Discord',f:['bot_token','channel_id']},{k:'telegram',t:'Telegram',f:['bot_token','chat_id']},
+{k:'teams',t:'Teams',f:['webhook']},{k:'email',t:'Email',f:['host','port','user']},
+{k:'confluence',t:'Confluence',f:['base_url','token']},{k:'github',t:'GitHub',f:['token','owner','repo']},
+{k:'notion',t:'Notion',f:['api_key']},{k:'calendar',t:'Calendar',f:['api_key']},
+{k:'linear',t:'Linear',f:['api_key']},{k:'pagerduty',t:'PagerDuty',f:['api_key']},
+{k:'clockify',t:'Clockify',f:['api_key']},{k:'sheets',t:'Sheets',f:['api_key']}];
+const sm={};st.forEach(s=>sm[s.name.toLowerCase()]=s);
+document.getElementById('gr').innerHTML=secs.map(s=>{
+const d=cfg[s.k]||{};const x=sm[s.t.toLowerCase()]||{};
+const dc=x.configured?'on':'off';
+const fs=s.f.map(f=>`<div class="f"><label>${f}</label><div class="v${d[f]?'':' e'}">${d[f]||'not set'}</div></div>`).join('');
+return`<div class="c"><h3><span class="d ${dc}"></span>${s.t}</h3>${fs}</div>`;}).join('');
+}
+init();
+</script></body></html>
