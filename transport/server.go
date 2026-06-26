@@ -106,6 +106,26 @@ func registerJiraTools(s *server.MCPServer, h *tools.Handlers) {
 		),
 		h.TransitionIssue,
 	)
+
+	s.AddTool(
+		mcp.NewTool("jira_update_issue",
+			mcp.WithDescription("Update an existing Jira issue. Only provided fields are changed."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key (e.g. PROJ-123)")),
+			mcp.WithString("summary", mcp.Description("New summary/title")),
+			mcp.WithString("description", mcp.Description("New description")),
+			mcp.WithString("priority", mcp.Description("New priority: Highest, High, Medium, Low, Lowest")),
+			mcp.WithString("assignee_id", mcp.Description("New assignee account ID")),
+			mcp.WithString("labels", mcp.Description("Comma-separated labels (replaces existing)")),
+		),
+		h.UpdateIssue,
+	)
+
+	s.AddTool(
+		mcp.NewTool("jira_health",
+			mcp.WithDescription("Health check and version info for zara-jira-mcp server."),
+		),
+		h.Health,
+	)
 }
 
 func registerPMTools(s *server.MCPServer, h *tools.Handlers) {
