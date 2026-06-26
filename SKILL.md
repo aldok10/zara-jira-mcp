@@ -239,7 +239,7 @@ Strategy: Start with `pm_smart` for any PM question. Smart router catches 90%+ o
 
 ---
 
-### Communication Intelligence (~14 tools)
+### Communication Intelligence (~18 tools)
 
 | Tool | Framework | Purpose |
 |------|-----------|---------
@@ -257,6 +257,14 @@ Strategy: Start with `pm_smart` for any PM question. Smart router catches 90%+ o
 | `pm_status_draft` | Pyramid + data | Auto-pull sprint data, format for audience |
 | `pm_announce_decision` | DACI | Communicate decisions with roles and rationale |
 | `pm_comms_plan` | RACI + Timing | Generate communication plan: who, what, when, channel |
+| `pm_cadence_check` | Communication Cadence | Check communication cadences. Flags overdue items |
+| `pm_kpi_trend` | KPI Tracking | Track Key Performance Indicators over time |
+| `pm_comms_nudge` | Proactive Nudges | Proactive communication suggestions from team signals |
+| `pm_conversation_prep` | Framework Prep | Framework-based conversation prep (SBI, NVC, STATE, SCARF) |
+| `pm_feedback_log` | Feedback Lifecycle | Record feedback given. Auto-schedules follow-up |
+| `pm_feedback_due` | Feedback Tracking | Show overdue feedback follow-ups |
+| `pm_feedback_close` | Feedback Closure | Mark feedback as followed up |
+| `pm_comms_effectiveness` | Effectiveness Score | Communication effectiveness score (0-100) |
 
 ---
 
