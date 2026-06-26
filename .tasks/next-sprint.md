@@ -55,3 +55,38 @@ Priority order. Each item independently shippable.
 1. Pick P0 (30 min) — highest leverage, makes everything else lighter
 2. Then P1 (1 hr) — most visible PM value
 3. Then P2 (30 min) — differentiator no competitor has
+
+---
+
+## P-OKR: Jira→OKR/KPI Bridge (HIGH PRIORITY)
+
+Based on `research/jira-okr-bridge.md`. The #1 unsolved PM pain point.
+
+### OKR-1: Lark OKR Read (Phase 1, 1 day)
+- [ ] `internal/lark/okr.go` — Lark OKR API client (ListPeriods, ListUserOkrs, GetOkrDetail)
+- [ ] `pm_okr_list` — Show current period objectives
+- [ ] `pm_okr_detail` — Full objective + KRs + progress
+- [ ] `pm_okr_my` — My personal OKRs
+
+### OKR-2: AI Bridge (Phase 2, 1 day)
+- [ ] `pm_okr_sprint_alignment` — AI scores: which tickets align to which KRs
+- [ ] `pm_okr_contribution` — "This sprint contributed X% to objective Y"
+- [ ] `pm_okr_gap` — Find work not connected to any OKR
+
+### OKR-3: Auto-Update (Phase 3, half day)
+- [ ] `pm_okr_sync` — Push progress to Lark OKR via CreateProgress API
+- [ ] `pm_okr_checkin` — Auto-generate weekly OKR check-in
+
+### OKR-4: KPI Engine (Phase 4, half day)
+- [ ] `pm_kpi_define` — Define KPI with formula
+- [ ] `pm_kpi_calculate` — Auto-calculate from existing data
+- [ ] `pm_kpi_trend` — KPI over time
+- [ ] `pm_kpi_alert` — Alert on threshold breach
+
+### Pre-built KPIs (zero config needed):
+- Sprint Predictability = done/committed * 100
+- Blocker Resolution Time = avg(resolved - created)
+- Action Completion Rate = completed/total actions
+- Sprint Goal Hit Rate = achieved/total goals
+- Team Happiness = avg(pulse score)
+- Cycle Time = avg(done - created) from Jira
