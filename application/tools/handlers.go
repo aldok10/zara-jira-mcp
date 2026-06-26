@@ -10,6 +10,7 @@ import (
 	domain "github.com/aldok10/zara-jira-mcp/domain/jira"
 	larkdom "github.com/aldok10/zara-jira-mcp/domain/lark"
 	"github.com/aldok10/zara-jira-mcp/domain/memory"
+	islack "github.com/aldok10/zara-jira-mcp/internal/slack"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -18,6 +19,7 @@ type Handlers struct {
 	Jira   domain.Client
 	AI     aiprovider.Provider
 	Lark   larkdom.Notifier
+	Slack  *islack.Client
 	Memory memory.Store
 }
 
