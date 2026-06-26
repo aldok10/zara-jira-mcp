@@ -40,7 +40,7 @@ func (h *Handlers) TraceTicketBranch(ctx context.Context, req mcp.CallToolReques
 				prs, err := h.GitHub.SearchPRsByBranch(ctx, b.Name)
 				if err == nil && len(prs) > 0 {
 					for _, pr := range prs {
-						icon := "🔴"
+						var icon string
 						if pr.State == "merged" {
 							icon = "✅"
 						} else if pr.State == "closed" {
@@ -87,7 +87,7 @@ func (h *Handlers) TraceTicketBranch(ctx context.Context, req mcp.CallToolReques
 				mrs, err := h.GitLab.SearchMRsByBranch(ctx, b.Name)
 				if err == nil && len(mrs) > 0 {
 					for _, mr := range mrs {
-						icon := "🔴"
+						var icon string
 						if mr.State == "merged" {
 							icon = "✅"
 						} else if mr.State == "closed" {

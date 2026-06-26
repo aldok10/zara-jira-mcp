@@ -55,6 +55,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerCoachingTools(s, handlers)
 	registerPMShortcuts(s, handlers)
 	registerLeverageTools(s, handlers)
+	registerCareTools(s, handlers)
 
 	return &MCPServer{s: s}
 }

@@ -241,6 +241,7 @@ func (m *mockMemory) SaveTeamRadar(_ context.Context, _ *memdom.TeamRadar) error
 func (m *mockMemory) GetTeamRadarHistory(_ context.Context, _ int) ([]memdom.TeamRadar, error) {
 	return nil, nil
 }
+func (m *mockMemory) DB() memdom.RawDB { return nil }
 
 // --- Helpers ---
 

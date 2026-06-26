@@ -217,7 +217,7 @@ func (h *Handlers) OverloadCheck(ctx context.Context, req mcp.CallToolRequest) (
 
 	// Sustainable pace check
 	sb.WriteString("\nSUSTAINABLE PACE:\n")
-	sb.WriteString(fmt.Sprintf("  Recommended max WIP per person: 2 items\n"))
+	sb.WriteString("  Recommended max WIP per person: 2 items\n")
 	sb.WriteString(fmt.Sprintf("  Recommended max load: %d items (80%% of avg capacity)\n", int(float64(avgLoad)*1.5)))
 	highWIP := 0
 	for _, p := range loads {
@@ -361,7 +361,7 @@ func (h *Handlers) TeamCareReport(ctx context.Context, req mcp.CallToolRequest) 
 	// 3. Pending retro actions (team feels unheard if actions don't happen)
 	actions, _ := h.Memory.GetPendingActionItems(ctx)
 	if len(actions) > 3 {
-		sb.WriteString(fmt.Sprintf("RETRO FOLLOW-THROUGH:\n"))
+		sb.WriteString("RETRO FOLLOW-THROUGH:\n")
 		sb.WriteString(fmt.Sprintf("  %d action items still pending.\n", len(actions)))
 		sb.WriteString("  When retro actions don't happen, team stops raising issues.\n")
 		sb.WriteString("  This erodes psychological safety over time.\n")
@@ -377,7 +377,7 @@ func (h *Handlers) TeamCareReport(ctx context.Context, req mcp.CallToolRequest) 
 		}
 	}
 	if longBlockers > 0 {
-		sb.WriteString(fmt.Sprintf("CHRONIC BLOCKERS:\n"))
+		sb.WriteString("CHRONIC BLOCKERS:\n")
 		sb.WriteString(fmt.Sprintf("  %d blockers open >3 days. Blocked developers feel helpless.\n", longBlockers))
 		sb.WriteString("  Action: Escalate today. Remove impediments — that's YOUR job as SM.\n\n")
 	}
