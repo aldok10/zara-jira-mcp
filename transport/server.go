@@ -13,7 +13,7 @@ type MCPServer struct {
 func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	s := server.NewMCPServer(
 		"zara-jira-mcp",
-		"0.2.0",
+		"0.3.0",
 		server.WithToolCapabilities(false),
 		server.WithRecovery(),
 	)
