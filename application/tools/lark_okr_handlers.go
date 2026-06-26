@@ -16,7 +16,7 @@ func (h *Handlers) LarkOKRPeriods(ctx context.Context, req mcp.CallToolRequest) 
 
 	periods, err := h.OKR.ListPeriods(ctx)
 	if err != nil {
-		return errorResult("Failed to fetch periods: " + err.Error()), nil
+		return sanitizedError("Lark OKR: failed to fetch periods", err), nil
 	}
 	if len(periods) == 0 {
 		return textResult("No OKR periods found."), nil
@@ -60,7 +60,7 @@ func (h *Handlers) LarkOKRPull(ctx context.Context, req mcp.CallToolRequest) (*m
 
 	objectives, err := h.OKR.ListUserOKRs(ctx, userID, periodID)
 	if err != nil {
-		return errorResult("Failed to fetch OKRs: " + err.Error()), nil
+		return sanitizedError("Lark OKR: failed to fetch user OKRs", err), nil
 	}
 	if len(objectives) == 0 {
 		return textResult("No OKRs found for this user/period."), nil
@@ -99,7 +99,7 @@ func (h *Handlers) LarkOKRSyncProgress(ctx context.Context, req mcp.CallToolRequ
 	}
 
 	if err := h.OKR.CreateProgressRecord(ctx, krID, content); err != nil {
-		return errorResult("Sync failed: " + err.Error()), nil
+		return sanitizedError("Lark OKR: failed to sync progress", err), nil
 	}
 	return textResult(fmt.Sprintf("Progress record pushed to Lark OKR KR %s.", krID)), nil
 }

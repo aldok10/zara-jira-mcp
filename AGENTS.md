@@ -26,10 +26,10 @@ Choose based on your context (BCG research: productivity peaks at 3 tools, degra
 
 | Profile | Tools | Best For | Enabled Modules |
 |---------|-------|----------|-----------------|
-| `chatgpt` | ~11 | ChatGPT Desktop (token-limited) | smart-router, pm-quick |
-| `lite` | ~24 | Solo PM, daily workflow | + jira |
-| `standard` | ~39 | Full PM team | + jira-ops, pm-memory, ai, notify-lark |
-| `full` | ~48 | Power user | + pm-analysis, stakeholder |
+| `chatgpt` | ~12 | ChatGPT Desktop (token-limited) | smart-router, pm-quick |
+| `lite` | ~25 | Solo PM, daily workflow | + help, jira |
+| `standard` | ~40 | Full PM team | + pm-memory, ai |
+| `full` | ~59 | Power user | + pm-analysis, notify-lark |
 | `all` | ~279 | Developer/debugging | all modules |
 
 Set via `PM_PROFILE=chatgpt` or `PM_ENABLED_MODULES=smart-router,jira,pm-memory`.
