@@ -1,4 +1,4 @@
-.PHONY: build install run test clean
+.PHONY: build install run test clean lint docker-build docker-run
 
 BINARY := zara-jira-mcp
 VERSION := 0.1.0
@@ -15,8 +15,17 @@ run:
 test:
 	go test ./...
 
+lint:
+	golangci-lint run ./...
+
 clean:
 	rm -rf bin/
 
 tidy:
 	go mod tidy
+
+docker-build:
+	docker build -t $(BINARY):$(VERSION) .
+
+docker-run:
+	docker compose up --build

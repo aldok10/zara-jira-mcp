@@ -8,13 +8,21 @@ import (
 
 // Config holds all application configuration parsed from environment variables.
 type Config struct {
-	Jira JiraConfig
-	AI   AIConfig
-	Lark LarkConfig
+	Jira   JiraConfig
+	AI     AIConfig
+	Lark   LarkConfig
+	Memory MemoryConfig
+}
+
+type MemoryConfig struct {
+	DBPath string // PM_MEMORY_DB_PATH (default: ~/.zara-jira-mcp/pm_memory.db)
 }
 
 type LarkConfig struct {
-	WebhookURL string // JIRA_LARK_WEBHOOK_URL
+	WebhookURL string // JIRA_LARK_WEBHOOK_URL (simple webhook, no app needed)
+	AppID      string // LARK_APP_ID (for full SDK access)
+	AppSecret  string // LARK_APP_SECRET
+	ChatID     string // LARK_CHAT_ID (target chat for SDK messages)
 }
 
 type JiraConfig struct {
@@ -43,6 +51,12 @@ func Load() (*Config, error) {
 		},
 		Lark: LarkConfig{
 			WebhookURL: os.Getenv("JIRA_LARK_WEBHOOK_URL"),
+			AppID:      os.Getenv("LARK_APP_ID"),
+			AppSecret:  os.Getenv("LARK_APP_SECRET"),
+			ChatID:     os.Getenv("LARK_CHAT_ID"),
+		},
+		Memory: MemoryConfig{
+			DBPath: os.Getenv("PM_MEMORY_DB_PATH"),
 		},
 	}
 

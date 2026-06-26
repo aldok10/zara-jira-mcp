@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"path/filepath"
 
 	"go.uber.org/fx"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/aldok10/zara-jira-mcp/internal/ai"
 	"github.com/aldok10/zara-jira-mcp/internal/jira"
 	"github.com/aldok10/zara-jira-mcp/internal/lark"
+	"github.com/aldok10/zara-jira-mcp/internal/memory"
 	"github.com/aldok10/zara-jira-mcp/transport"
 	mcpserver "github.com/mark3labs/mcp-go/server"
 )
@@ -22,16 +24,25 @@ var Module = fx.Module("bootstrap",
 		jira.NewRestClient,
 		ai.NewOpenAIClient,
 		lark.NewWebhookClient,
+		provideMemory,
 		provideHandlers,
 		transport.NewMCPServer,
 	),
 )
 
-func provideHandlers(j *jira.RestClient, a *ai.OpenAIClient, l *lark.WebhookClient) *tools.Handlers {
+func provideMemory() (*memory.SQLiteStore, error) {
+	home, _ := os.UserHomeDir()
+	dir := filepath.Join(home, ".zara-jira-mcp")
+	os.MkdirAll(dir, 0o755)
+	return memory.NewSQLiteStore(filepath.Join(dir, "pm.db"))
+}
+
+func provideHandlers(j *jira.RestClient, a *ai.OpenAIClient, l *lark.WebhookClient, m *memory.SQLiteStore) *tools.Handlers {
 	return &tools.Handlers{
-		Jira: j,
-		AI:   a,
-		Lark: l,
+		Jira:   j,
+		AI:     a,
+		Lark:   l,
+		Memory: m,
 	}
 }
 

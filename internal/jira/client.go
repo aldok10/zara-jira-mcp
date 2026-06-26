@@ -1,265 +1,242 @@
 package jira
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"time"
+
+	jira "github.com/felixgeelhaar/jirasdk"
+	"github.com/felixgeelhaar/jirasdk/core/agile"
+	"github.com/felixgeelhaar/jirasdk/core/issue"
+	"github.com/felixgeelhaar/jirasdk/core/search"
 
 	"github.com/aldok10/zara-jira-mcp/config"
 	domain "github.com/aldok10/zara-jira-mcp/domain/jira"
 )
 
-// RestClient implements domain.Client using Jira REST API v3.
+// RestClient wraps jirasdk.Client and implements domain.Client.
 type RestClient struct {
-	baseURL    string
-	httpClient *http.Client
-	email      string
-	token      string
+	sdk     *jira.Client
+	baseURL string
+	email   string
+	token   string
+	http    *http.Client
 }
 
-func NewRestClient(cfg *config.Config) *RestClient {
+func NewRestClient(cfg *config.Config) (*RestClient, error) {
+	client, err := jira.NewClient(
+		jira.WithBaseURL(cfg.Jira.BaseURL),
+		jira.WithAPIToken(cfg.Jira.Email, cfg.Jira.Token),
+		jira.WithTimeout(30*time.Second),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("create jira client: %w", err)
+	}
 	return &RestClient{
-		baseURL:    cfg.Jira.BaseURL,
-		email:      cfg.Jira.Email,
-		token:      cfg.Jira.Token,
-		httpClient: &http.Client{Timeout: 30 * time.Second},
-	}
-}
-
-func (c *RestClient) doRequest(ctx context.Context, method, path string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.SetBasicAuth(c.email, c.token)
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("jira API error %d: %s", resp.StatusCode, string(body))
-	}
-
-	return body, nil
+		sdk:     client,
+		baseURL: cfg.Jira.BaseURL,
+		email:   cfg.Jira.Email,
+		token:   cfg.Jira.Token,
+		http:    &http.Client{Timeout: 30 * time.Second},
+	}, nil
 }
 
 func (c *RestClient) SearchIssues(ctx context.Context, jql string, maxResults int) (*domain.SearchResult, error) {
 	if maxResults <= 0 {
 		maxResults = 50
 	}
-
-	path := fmt.Sprintf("/rest/api/3/search?jql=%s&maxResults=%d&fields=summary,description,status,priority,issuetype,assignee,reporter,labels,created,updated,sprint",
-		url.QueryEscape(jql), maxResults)
-
-	body, err := c.doRequest(ctx, http.MethodGet, path)
+	result, err := c.sdk.Search.SearchJQL(ctx, &search.SearchJQLOptions{
+		JQL:        jql,
+		Fields:     []string{"summary", "description", "status", "priority", "issuetype", "assignee", "reporter", "labels", "created", "updated", "sprint"},
+		MaxResults: maxResults,
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	var raw searchResponse
-	if err := json.Unmarshal(body, &raw); err != nil {
-		return nil, fmt.Errorf("parse search response: %w", err)
+	out := &domain.SearchResult{MaxResults: result.MaxResults}
+	for _, i := range result.Issues {
+		out.Issues = append(out.Issues, mapIssue(i))
 	}
-
-	result := &domain.SearchResult{
-		Total:      raw.Total,
-		MaxResults: raw.MaxResults,
-	}
-
-	for _, ri := range raw.Issues {
-		result.Issues = append(result.Issues, mapIssue(ri))
-	}
-
-	return result, nil
+	out.Total = len(out.Issues)
+	return out, nil
 }
 
 func (c *RestClient) GetIssue(ctx context.Context, key string) (*domain.Issue, error) {
-	path := fmt.Sprintf("/rest/api/3/issue/%s?fields=summary,description,status,priority,issuetype,assignee,reporter,labels,created,updated,sprint", key)
-
-	body, err := c.doRequest(ctx, http.MethodGet, path)
+	i, err := c.sdk.Issue.Get(ctx, key, nil)
 	if err != nil {
 		return nil, err
 	}
-
-	var raw rawIssue
-	if err := json.Unmarshal(body, &raw); err != nil {
-		return nil, fmt.Errorf("parse issue response: %w", err)
-	}
-
-	issue := mapIssue(raw)
-	return &issue, nil
+	mapped := mapIssue(i)
+	return &mapped, nil
 }
 
 func (c *RestClient) GetBoards(ctx context.Context) ([]domain.Board, error) {
-	body, err := c.doRequest(ctx, http.MethodGet, "/rest/agile/1.0/board")
+	boards, err := c.sdk.Agile.GetBoards(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
-
-	var raw struct {
-		Values []struct {
-			ID   int    `json:"id"`
-			Name string `json:"name"`
-			Type string `json:"type"`
-		} `json:"values"`
+	out := make([]domain.Board, len(boards))
+	for i, b := range boards {
+		out[i] = domain.Board{ID: int(b.ID), Name: b.Name, Type: b.Type}
 	}
-	if err := json.Unmarshal(body, &raw); err != nil {
-		return nil, err
-	}
-
-	boards := make([]domain.Board, len(raw.Values))
-	for i, v := range raw.Values {
-		boards[i] = domain.Board{ID: v.ID, Name: v.Name, Type: v.Type}
-	}
-	return boards, nil
+	return out, nil
 }
 
 func (c *RestClient) GetActiveSprints(ctx context.Context, boardID int) ([]domain.Sprint, error) {
-	path := fmt.Sprintf("/rest/agile/1.0/board/%d/sprint?state=active", boardID)
-	body, err := c.doRequest(ctx, http.MethodGet, path)
+	sprints, err := c.sdk.Agile.GetBoardSprints(ctx, int64(boardID), &agile.SprintsOptions{
+		State: "active",
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	var raw struct {
-		Values []struct {
-			ID    int    `json:"id"`
-			Name  string `json:"name"`
-			State string `json:"state"`
-			Goal  string `json:"goal"`
-		} `json:"values"`
+	out := make([]domain.Sprint, len(sprints))
+	for i, s := range sprints {
+		out[i] = domain.Sprint{ID: int(s.ID), Name: s.Name, State: s.State, Goal: s.Goal}
 	}
-	if err := json.Unmarshal(body, &raw); err != nil {
-		return nil, err
-	}
-
-	sprints := make([]domain.Sprint, len(raw.Values))
-	for i, v := range raw.Values {
-		sprints[i] = domain.Sprint{ID: v.ID, Name: v.Name, State: v.State, Goal: v.Goal}
-	}
-	return sprints, nil
+	return out, nil
 }
 
 func (c *RestClient) GetSprintIssues(ctx context.Context, sprintID int) ([]domain.Issue, error) {
-	path := fmt.Sprintf("/rest/agile/1.0/sprint/%d/issue?fields=summary,description,status,priority,issuetype,assignee,reporter,labels,created,updated", sprintID)
-	body, err := c.doRequest(ctx, http.MethodGet, path)
+	jql := fmt.Sprintf("sprint = %d ORDER BY status ASC", sprintID)
+	result, err := c.sdk.Search.SearchJQL(ctx, &search.SearchJQLOptions{
+		JQL:        jql,
+		Fields:     []string{"summary", "description", "status", "priority", "issuetype", "assignee", "reporter", "labels", "created", "updated"},
+		MaxResults: 100,
+	})
 	if err != nil {
 		return nil, err
 	}
+	out := make([]domain.Issue, 0, len(result.Issues))
+	for _, i := range result.Issues {
+		out = append(out, mapIssue(i))
+	}
+	return out, nil
+}
 
-	var raw searchResponse
-	if err := json.Unmarshal(body, &raw); err != nil {
+func (c *RestClient) CreateIssue(ctx context.Context, input *domain.CreateIssueInput) (*domain.Issue, error) {
+	fields := &issue.IssueFields{
+		Project:   &issue.Project{Key: input.Project},
+		Summary:   input.Summary,
+		IssueType: &issue.IssueType{Name: input.IssueType},
+		Labels:    input.Labels,
+	}
+	if input.Description != "" {
+		fields.SetDescriptionText(input.Description)
+	}
+	if input.Priority != "" {
+		fields.Priority = &issue.Priority{Name: input.Priority}
+	}
+	if input.Assignee != "" {
+		fields.Assignee = &issue.User{AccountID: input.Assignee}
+	}
+
+	created, err := c.sdk.Issue.Create(ctx, &issue.CreateInput{Fields: fields})
+	if err != nil {
+		return nil, err
+	}
+	mapped := mapIssue(created)
+	return &mapped, nil
+}
+
+func (c *RestClient) AddComment(ctx context.Context, issueKey, body string) error {
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s/comment", c.baseURL, issueKey)
+	payload := map[string]any{
+		"body": map[string]any{
+			"type":    "doc",
+			"version": 1,
+			"content": []map[string]any{
+				{"type": "paragraph", "content": []map[string]any{
+					{"type": "text", "text": body},
+				}},
+			},
+		},
+	}
+	data, _ := json.Marshal(payload)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("add comment failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
+}
+
+func (c *RestClient) TransitionIssue(ctx context.Context, issueKey, transitionID string) error {
+	return c.sdk.Issue.DoTransition(ctx, issueKey, &issue.TransitionInput{
+		Transition: &issue.Transition{ID: transitionID},
+	})
+}
+
+func (c *RestClient) GetTransitions(ctx context.Context, issueKey string) ([]domain.Transition, error) {
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s/transitions", c.baseURL, issueKey)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("get transitions failed %d: %s", resp.StatusCode, string(b))
+	}
+
+	var result struct {
+		Transitions []struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"transitions"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 
-	issues := make([]domain.Issue, len(raw.Issues))
-	for i, ri := range raw.Issues {
-		issues[i] = mapIssue(ri)
+	out := make([]domain.Transition, len(result.Transitions))
+	for i, t := range result.Transitions {
+		out[i] = domain.Transition{ID: t.ID, Name: t.Name}
 	}
-	return issues, nil
+	return out, nil
 }
 
-// JSON mapping types for Jira API responses.
-
-type searchResponse struct {
-	Total      int        `json:"total"`
-	MaxResults int        `json:"maxResults"`
-	Issues     []rawIssue `json:"issues"`
+func mapIssue(raw *issue.Issue) domain.Issue {
+	if raw == nil {
+		return domain.Issue{}
+	}
+	return domain.Issue{
+		Key:         raw.Key,
+		Summary:     raw.GetSummary(),
+		Description: raw.GetDescriptionText(),
+		Status:      raw.GetStatusName(),
+		Priority:    raw.GetPriorityName(),
+		Type:        raw.GetIssueTypeName(),
+		Assignee:    raw.GetAssigneeName(),
+		Reporter:    raw.GetReporterName(),
+		Labels:      raw.GetLabels(),
+		Created:     raw.GetCreatedTime(),
+		Updated:     raw.GetUpdatedTime(),
+	}
 }
 
-type rawIssue struct {
-	Key    string `json:"key"`
-	Fields struct {
-		Summary     string `json:"summary"`
-		Description *struct {
-			Content []struct {
-				Content []struct {
-					Text string `json:"text"`
-				} `json:"content"`
-			} `json:"content"`
-		} `json:"description"`
-		Status struct {
-			Name string `json:"name"`
-		} `json:"status"`
-		Priority *struct {
-			Name string `json:"name"`
-		} `json:"priority"`
-		IssueType struct {
-			Name string `json:"name"`
-		} `json:"issuetype"`
-		Assignee *struct {
-			DisplayName string `json:"displayName"`
-		} `json:"assignee"`
-		Reporter *struct {
-			DisplayName string `json:"displayName"`
-		} `json:"reporter"`
-		Labels  []string `json:"labels"`
-		Created string   `json:"created"`
-		Updated string   `json:"updated"`
-		Sprint  *struct {
-			Name string `json:"name"`
-		} `json:"sprint"`
-	} `json:"fields"`
-}
-
-func mapIssue(raw rawIssue) domain.Issue {
-	issue := domain.Issue{
-		Key:     raw.Key,
-		Summary: raw.Fields.Summary,
-		Status:  raw.Fields.Status.Name,
-		Type:    raw.Fields.IssueType.Name,
-		Labels:  raw.Fields.Labels,
-	}
-
-	if raw.Fields.Description != nil {
-		for _, block := range raw.Fields.Description.Content {
-			for _, inline := range block.Content {
-				if inline.Text != "" {
-					issue.Description += inline.Text + "\n"
-				}
-			}
-		}
-	}
-
-	if raw.Fields.Priority != nil {
-		issue.Priority = raw.Fields.Priority.Name
-	}
-	if raw.Fields.Assignee != nil {
-		issue.Assignee = raw.Fields.Assignee.DisplayName
-	}
-	if raw.Fields.Reporter != nil {
-		issue.Reporter = raw.Fields.Reporter.DisplayName
-	}
-	if raw.Fields.Sprint != nil {
-		issue.SprintName = raw.Fields.Sprint.Name
-	}
-
-	issue.Created, _ = parseJiraTime(raw.Fields.Created)
-	issue.Updated, _ = parseJiraTime(raw.Fields.Updated)
-
-	return issue
-}
-
-func parseJiraTime(s string) (time.Time, error) {
-	if s == "" {
-		return time.Time{}, nil
-	}
-	// Jira uses ISO 8601 with timezone offset
-	return time.Parse("2006-01-02T15:04:05.000-0700", s)
-}
-
-// Ensure RestClient implements the domain interface.
 var _ domain.Client = (*RestClient)(nil)

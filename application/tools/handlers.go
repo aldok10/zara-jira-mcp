@@ -6,17 +6,20 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aldok10/zara-jira-mcp/domain/memory"
 	"github.com/aldok10/zara-jira-mcp/internal/ai"
 	"github.com/aldok10/zara-jira-mcp/internal/jira"
 	"github.com/aldok10/zara-jira-mcp/internal/lark"
+	domain "github.com/aldok10/zara-jira-mcp/domain/jira"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // Handlers holds all MCP tool handler methods.
 type Handlers struct {
-	Jira *jira.RestClient
-	AI   *ai.OpenAIClient
-	Lark *lark.WebhookClient
+	Jira   *jira.RestClient
+	AI     *ai.OpenAIClient
+	Lark   *lark.WebhookClient
+	Memory memory.Store
 }
 
 // SearchIssues searches Jira using JQL.
@@ -25,7 +28,6 @@ func (h *Handlers) SearchIssues(ctx context.Context, req mcp.CallToolRequest) (*
 	if err != nil {
 		return errorResult("jql parameter is required"), nil
 	}
-
 	maxResults := req.GetInt("max_results", 20)
 
 	result, err := h.Jira.SearchIssues(ctx, jql, maxResults)
@@ -39,7 +41,6 @@ func (h *Handlers) SearchIssues(ctx context.Context, req mcp.CallToolRequest) (*
 		sb.WriteString(fmt.Sprintf("**%s** [%s] %s\n  Status: %s | Priority: %s | Assignee: %s\n\n",
 			issue.Key, issue.Type, issue.Summary, issue.Status, issue.Priority, issue.Assignee))
 	}
-
 	return textResult(sb.String()), nil
 }
 
@@ -49,12 +50,10 @@ func (h *Handlers) GetIssue(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	if err != nil {
 		return errorResult("key parameter is required"), nil
 	}
-
 	issue, err := h.Jira.GetIssue(ctx, key)
 	if err != nil {
 		return errorResult("Failed to get issue: " + err.Error()), nil
 	}
-
 	data, _ := json.MarshalIndent(issue, "", "  ")
 	return textResult(string(data)), nil
 }
@@ -65,7 +64,6 @@ func (h *Handlers) GetBoards(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	if err != nil {
 		return errorResult("Failed to get boards: " + err.Error()), nil
 	}
-
 	var sb strings.Builder
 	for _, b := range boards {
 		sb.WriteString(fmt.Sprintf("- [%d] %s (%s)\n", b.ID, b.Name, b.Type))
@@ -110,15 +108,175 @@ func (h *Handlers) GetSprintSummary(ctx context.Context, req mcp.CallToolRequest
 	for _, issue := range issues {
 		sb.WriteString(fmt.Sprintf("- %s [%s] %s (Assignee: %s)\n", issue.Key, issue.Status, issue.Summary, issue.Assignee))
 	}
-
 	return textResult(sb.String()), nil
 }
 
-// AIAnalyze uses AI to analyze Jira tickets and provide PM-relevant insights.
+// CreateIssue creates a new Jira issue.
+func (h *Handlers) CreateIssue(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	project, err := req.RequireString("project")
+	if err != nil {
+		return errorResult("project parameter is required"), nil
+	}
+	summary, err := req.RequireString("summary")
+	if err != nil {
+		return errorResult("summary parameter is required"), nil
+	}
+	issueType := req.GetString("issue_type", "Task")
+
+	input := &domain.CreateIssueInput{
+		Project:     project,
+		Summary:     summary,
+		IssueType:   issueType,
+		Description: req.GetString("description", ""),
+		Priority:    req.GetString("priority", ""),
+		Assignee:    req.GetString("assignee_id", ""),
+	}
+
+	labelsRaw := req.GetString("labels", "")
+	if labelsRaw != "" {
+		input.Labels = strings.Split(labelsRaw, ",")
+	}
+
+	created, err := h.Jira.CreateIssue(ctx, input)
+	if err != nil {
+		return errorResult("Failed to create issue: " + err.Error()), nil
+	}
+	return textResult(fmt.Sprintf("Created: %s - %s", created.Key, created.Summary)), nil
+}
+
+// AddComment adds a comment to a Jira issue.
+func (h *Handlers) AddComment(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	key, err := req.RequireString("key")
+	if err != nil {
+		return errorResult("key parameter is required"), nil
+	}
+	body, err := req.RequireString("body")
+	if err != nil {
+		return errorResult("body parameter is required"), nil
+	}
+
+	if err := h.Jira.AddComment(ctx, key, body); err != nil {
+		return errorResult("Failed to add comment: " + err.Error()), nil
+	}
+	return textResult(fmt.Sprintf("Comment added to %s", key)), nil
+}
+
+// TransitionIssue transitions an issue to a new status.
+func (h *Handlers) TransitionIssue(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	key, err := req.RequireString("key")
+	if err != nil {
+		return errorResult("key parameter is required"), nil
+	}
+	transitionID, err := req.RequireString("transition_id")
+	if err != nil {
+		return errorResult("transition_id parameter is required"), nil
+	}
+
+	if err := h.Jira.TransitionIssue(ctx, key, transitionID); err != nil {
+		return errorResult("Failed to transition issue: " + err.Error()), nil
+	}
+	return textResult(fmt.Sprintf("Issue %s transitioned successfully", key)), nil
+}
+
+// GetTransitions lists available transitions for an issue.
+func (h *Handlers) GetTransitions(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	key, err := req.RequireString("key")
+	if err != nil {
+		return errorResult("key parameter is required"), nil
+	}
+
+	transitions, err := h.Jira.GetTransitions(ctx, key)
+	if err != nil {
+		return errorResult("Failed to get transitions: " + err.Error()), nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Available transitions for %s:\n\n", key))
+	for _, t := range transitions {
+		sb.WriteString(fmt.Sprintf("- [%s] %s\n", t.ID, t.Name))
+	}
+	return textResult(sb.String()), nil
+}
+
+// MyIssues shows issues assigned to the current user.
+func (h *Handlers) MyIssues(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	status := req.GetString("status", "")
+	jql := "assignee = currentUser() AND resolution = Unresolved ORDER BY updated DESC"
+	if status != "" {
+		jql = fmt.Sprintf("assignee = currentUser() AND resolution = Unresolved AND status = \"%s\" ORDER BY updated DESC", status)
+	}
+
+	result, err := h.Jira.SearchIssues(ctx, jql, 30)
+	if err != nil {
+		return errorResult("Failed to get my issues: " + err.Error()), nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Your open issues (%d):\n\n", len(result.Issues)))
+	for _, issue := range result.Issues {
+		sb.WriteString(fmt.Sprintf("- **%s** [%s] %s | Priority: %s\n", issue.Key, issue.Status, issue.Summary, issue.Priority))
+	}
+	return textResult(sb.String()), nil
+}
+
+// Overdue shows issues that might be overdue or stale.
+func (h *Handlers) Overdue(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	days := req.GetInt("days", 14)
+	project := req.GetString("project", "")
+
+	jql := fmt.Sprintf("resolution = Unresolved AND updated <= -%dd ORDER BY updated ASC", days)
+	if project != "" {
+		jql = fmt.Sprintf("project = %s AND resolution = Unresolved AND updated <= -%dd ORDER BY updated ASC", project, days)
+	}
+
+	result, err := h.Jira.SearchIssues(ctx, jql, 30)
+	if err != nil {
+		return errorResult("Failed to get overdue issues: " + err.Error()), nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Stale issues (no update in %d+ days): %d\n\n", days, len(result.Issues)))
+	for _, issue := range result.Issues {
+		sb.WriteString(fmt.Sprintf("- **%s** [%s] %s | Assignee: %s | Last updated: %s\n",
+			issue.Key, issue.Status, issue.Summary, issue.Assignee, issue.Updated.Format("2006-01-02")))
+	}
+	return textResult(sb.String()), nil
+}
+
+// Workload shows workload distribution across team members.
+func (h *Handlers) Workload(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	project := req.GetString("project", "")
+
+	jql := "resolution = Unresolved AND assignee IS NOT EMPTY ORDER BY assignee ASC"
+	if project != "" {
+		jql = fmt.Sprintf("project = %s AND resolution = Unresolved AND assignee IS NOT EMPTY ORDER BY assignee ASC", project)
+	}
+
+	result, err := h.Jira.SearchIssues(ctx, jql, 200)
+	if err != nil {
+		return errorResult("Failed to get workload: " + err.Error()), nil
+	}
+
+	workload := map[string]int{}
+	for _, issue := range result.Issues {
+		if issue.Assignee != "" {
+			workload[issue.Assignee]++
+		}
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Workload distribution (%d open issues):\n\n", len(result.Issues)))
+	for person, count := range workload {
+		sb.WriteString(fmt.Sprintf("- %s: %d issues\n", person, count))
+	}
+	return textResult(sb.String()), nil
+}
+
+// AIAnalyze uses AI to analyze Jira tickets.
 func (h *Handlers) AIAnalyze(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	query, err := req.RequireString("query")
 	if err != nil {
-		return errorResult("query parameter is required (describe what you want to know)"), nil
+		return errorResult("query parameter is required"), nil
 	}
 
 	jql := req.GetString("jql", "resolution = Unresolved ORDER BY updated DESC")
@@ -129,7 +287,6 @@ func (h *Handlers) AIAnalyze(ctx context.Context, req mcp.CallToolRequest) (*mcp
 		return errorResult("Jira search failed: " + err.Error()), nil
 	}
 
-	// Build context for AI
 	var issueContext strings.Builder
 	for _, issue := range result.Issues {
 		issueContext.WriteString(fmt.Sprintf("[%s] %s | Type: %s | Status: %s | Priority: %s | Assignee: %s | Labels: %s\n",
@@ -159,11 +316,10 @@ Be concise and data-driven. Reference specific ticket keys when relevant.`
 	if err != nil {
 		return errorResult("AI analysis failed: " + err.Error()), nil
 	}
-
 	return textResult(analysis), nil
 }
 
-// NotifyLark sends a message to the configured Lark group.
+// NotifyLark sends a message to Lark.
 func (h *Handlers) NotifyLark(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	content, err := req.RequireString("content")
 	if err != nil {
@@ -174,17 +330,15 @@ func (h *Handlers) NotifyLark(ctx context.Context, req mcp.CallToolRequest) (*mc
 	if err := h.Lark.SendMarkdown(ctx, title, content); err != nil {
 		return errorResult("Failed to send to Lark: " + err.Error()), nil
 	}
-
 	return textResult("Message sent to Lark successfully."), nil
 }
 
-// AISprintReport generates a full AI sprint report and optionally sends to Lark.
+// AISprintReport generates an AI sprint report.
 func (h *Handlers) AISprintReport(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	boardID, err := req.RequireInt("board_id")
 	if err != nil {
 		return errorResult("board_id parameter is required"), nil
 	}
-
 	sendToLark := req.GetBool("send_to_lark", false)
 
 	sprints, err := h.Jira.GetActiveSprints(ctx, boardID)
@@ -207,7 +361,7 @@ func (h *Handlers) AISprintReport(ctx context.Context, req mcp.CallToolRequest) 
 			issue.Key, issue.Summary, issue.Status, issue.Priority, issue.Assignee))
 	}
 
-	systemPrompt := `You are a project management AI. Generate a concise sprint report for a PM.
+	systemPrompt := `You are a project management AI. Generate a concise sprint report.
 Include:
 1. Sprint health (on track / at risk / behind)
 2. Key blockers
@@ -215,7 +369,7 @@ Include:
 4. Progress summary by status
 5. Recommendations
 
-Format in markdown suitable for a Lark message card. Keep it under 500 words.`
+Format in markdown. Keep it under 500 words.`
 
 	userPrompt := fmt.Sprintf("Sprint: %s\nGoal: %s\nTotal issues: %d\n\n%s",
 		sprint.Name, sprint.Goal, len(issues), issueContext.String())
@@ -232,23 +386,18 @@ Format in markdown suitable for a Lark message card. Keep it under 500 words.`
 		}
 		return textResult(report + "\n\n(Sent to Lark successfully)"), nil
 	}
-
 	return textResult(report), nil
 }
 
 func textResult(text string) *mcp.CallToolResult {
 	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.TextContent{Type: "text", Text: text},
-		},
+		Content: []mcp.Content{mcp.TextContent{Type: "text", Text: text}},
 	}
 }
 
 func errorResult(msg string) *mcp.CallToolResult {
 	return &mcp.CallToolResult{
 		IsError: true,
-		Content: []mcp.Content{
-			mcp.TextContent{Type: "text", Text: msg},
-		},
+		Content: []mcp.Content{mcp.TextContent{Type: "text", Text: msg}},
 	}
 }
