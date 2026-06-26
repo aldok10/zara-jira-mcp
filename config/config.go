@@ -120,6 +120,7 @@ type MemoryConfig struct {
 type ServerConfig struct {
 	Transport        string // MCP_TRANSPORT: stdio (default), sse, http
 	Port             string // MCP_PORT (default: 8080)
+	Profile          string // PM_PROFILE: unified, lite, standard, full (default: all)
 	DashboardEnabled bool   // MCP_DASHBOARD: true to enable web dashboard
 	DashboardPort    string // MCP_DASHBOARD_PORT (default: 9090)
 }
