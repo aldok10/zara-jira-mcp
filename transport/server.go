@@ -85,9 +85,9 @@ func enabledModules() map[string]bool {
 		// Under Google's 16-tool threshold once factoring agent overhead.
 		return map[string]bool{"smart-router": true, "pm-quick": true, "help": true, "jira": true}
 	case "standard":
-		// ~39 tools: lite + pm-memory + Jira ops + AI + lark notify.
+		// ~40 tools: lite + jira-ops + pm-memory + AI.
 		// Under Microsoft Research's <40 guidance for PM teams.
-		return map[string]bool{"smart-router": true, "pm-quick": true, "jira": true, "jira-ops": true, "pm-memory": true, "ai": true, "notify-lark": true}
+		return map[string]bool{"smart-router": true, "pm-quick": true, "jira": true, "jira-ops": true, "pm-memory": true, "ai": true}
 	case "full":
 		// ~48 tools: standard + help + pm-analysis + basic stakeholder.
 		// Acceptable with good tool descriptions (research-backed: 40-60).

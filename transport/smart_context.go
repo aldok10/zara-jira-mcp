@@ -22,21 +22,26 @@ func registerSmartContextTools(s *server.MCPServer, h *tools.Handlers) {
 		mcp.WithNumber("board_id", mcp.Description("Board ID")),
 	), h.EarlyWarningSystem)
 
-	// Smart routing tools (NL interface)
+	// Smart routing tools (NL interface — primary entry points)
 	s.AddTool(mcp.NewTool("pm_smart",
-		mcp.WithDescription("Natural language PM assistant. Ask anything: 'who is blocked?', 'sprint health?', 'when will we finish?'. Routes to the right tool automatically."),
+		mcp.WithDescription("Natural language PM assistant. Ask anything: blockers, risks, health, forecast, velocity, sentiment, OKRs, standup, planning, coaching, and more. Routes to the right tool automatically."),
 		mcp.WithString("ask", mcp.Required(), mcp.Description("What you want to know (natural language)")),
 		mcp.WithNumber("board_id", mcp.Description("Board ID")),
 	), h.PMSmart)
 
 	s.AddTool(mcp.NewTool("pm_do",
-		mcp.WithDescription("Natural language action: 'create task X', 'record risk Y', 'record decision Z'. Routes to the right action."),
+		mcp.WithDescription("Natural language action: create issue, record risk, record decision, record blocker, log feedback, record retro, record sentiment, log KPI, record learning, record experiment."),
 		mcp.WithString("what", mcp.Required(), mcp.Description("What to do (natural language)")),
 	), h.PMDo)
 
 	s.AddTool(mcp.NewTool("pm_report",
-		mcp.WithDescription("Generate any report by type: status, executive, release_notes, weekly, health, velocity, scorecard."),
+		mcp.WithDescription("Generate any report by type: status, executive, release_notes, weekly, health, velocity, scorecard, sentiment, okr, kpi, coaching."),
 		mcp.WithString("type", mcp.Required(), mcp.Description("Report type")),
 		mcp.WithNumber("board_id", mcp.Description("Board ID")),
 	), h.PMReport)
+
+	s.AddTool(mcp.NewTool("pm_search",
+		mcp.WithDescription("Unified search across Jira issues, decisions, risks, blockers, action items, meetings, and knowledge base. Just say what you're looking for."),
+		mcp.WithString("query", mcp.Required(), mcp.Description("What to search for (natural language)")),
+	), h.PMSearch)
 }

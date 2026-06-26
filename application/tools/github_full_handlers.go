@@ -19,7 +19,7 @@ func (h *Handlers) GitHubPRs(ctx context.Context, req mcp.CallToolRequest) (*mcp
 
 	prs, err := h.GitHub.ListPRs(ctx, state, limit)
 	if err != nil {
-		return errorResult("GitHub API error: " + err.Error()), nil
+		return sanitizedError("GitHub: failed to list PRs", err), nil
 	}
 	if len(prs) == 0 {
 		return textResult("No PRs found."), nil
@@ -52,7 +52,7 @@ func (h *Handlers) GitHubPRMetrics(ctx context.Context, req mcp.CallToolRequest)
 
 	prs, err := h.GitHub.ListPRs(ctx, "open", 100)
 	if err != nil {
-		return errorResult("GitHub API error: " + err.Error()), nil
+		return sanitizedError("GitHub: failed to list PRs for metrics", err), nil
 	}
 
 	now := time.Now()
@@ -88,7 +88,7 @@ func (h *Handlers) GitHubReleases(ctx context.Context, req mcp.CallToolRequest) 
 
 	releases, err := h.GitHub.ListReleases(ctx, limit)
 	if err != nil {
-		return errorResult("GitHub API error: " + err.Error()), nil
+		return sanitizedError("GitHub: failed to list releases", err), nil
 	}
 	if len(releases) == 0 {
 		return textResult("No releases found."), nil
@@ -116,7 +116,7 @@ func (h *Handlers) GitHubActivity(ctx context.Context, req mcp.CallToolRequest) 
 
 	activity, err := h.GitHub.GetActivity(ctx, days)
 	if err != nil {
-		return errorResult("GitHub API error: " + err.Error()), nil
+		return sanitizedError("GitHub: failed to get activity", err), nil
 	}
 
 	var sb strings.Builder

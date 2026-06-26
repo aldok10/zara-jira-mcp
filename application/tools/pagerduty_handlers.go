@@ -17,7 +17,7 @@ func (h *Handlers) PagerDutyIncidents(ctx context.Context, req mcp.CallToolReque
 
 	incidents, err := h.PagerDuty.ListIncidents(ctx, status)
 	if err != nil {
-		return errorResult("PagerDuty API error: " + err.Error()), nil
+		return sanitizedError("PagerDuty: failed to list incidents", err), nil
 	}
 	if len(incidents) == 0 {
 		return textResult("No incidents found."), nil
@@ -39,7 +39,7 @@ func (h *Handlers) PagerDutyIncidentSummary(ctx context.Context, req mcp.CallToo
 
 	incidents, err := h.PagerDuty.ListIncidents(ctx, "")
 	if err != nil {
-		return errorResult("PagerDuty API error: " + err.Error()), nil
+		return sanitizedError("PagerDuty: failed to list incidents for summary", err), nil
 	}
 
 	triggered := 0
@@ -96,7 +96,7 @@ func (h *Handlers) PagerDutyOnCall(ctx context.Context, req mcp.CallToolRequest)
 
 	oncalls, err := h.PagerDuty.GetOnCalls(ctx)
 	if err != nil {
-		return errorResult("PagerDuty API error: " + err.Error()), nil
+		return sanitizedError("PagerDuty: failed to get on-call schedule", err), nil
 	}
 	if len(oncalls) == 0 {
 		return textResult("No on-call schedules found."), nil
