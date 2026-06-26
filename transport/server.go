@@ -1,6 +1,9 @@
 package transport
 
 import (
+	"os"
+	"strings"
+
 	"github.com/aldok10/zara-jira-mcp/application/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -10,56 +13,51 @@ type MCPServer struct {
 	s *server.MCPServer
 }
 
+type regFunc func(*server.MCPServer, *tools.Handlers)
+
 func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	s := server.NewMCPServer(
 		"zara-jira-mcp",
-		"0.3.0",
+		"0.4.0",
 		server.WithToolCapabilities(false),
 		server.WithRecovery(),
 	)
 
-	registerJiraTools(s, handlers)
-	registerIssueOpsTools(s, handlers)
-	registerPMTools(s, handlers)
-	registerAITools(s, handlers)
-	registerLarkTools(s, handlers)
-	registerSlackTools(s, handlers)
-	registerPlatformTools(s, handlers)
-	registerRoutingTools(s, handlers)
-	registerVersionTools(s, handlers)
-	registerTraceTools(s, handlers)
-	registerMemoryTools(s, handlers)
-	registerPMIntelTools(s, handlers)
-	registerAdvancedPMTools(s, handlers)
-	registerDeepPMTools(s, handlers)
-	registerEpicSprintTools(s, handlers)
-	registerBulkProjectTools(s, handlers)
-	registerLinkWorklogTools(s, handlers)
-	registerFlowTools(s, handlers)
-	registerForecastTools(s, handlers)
-	registerStakeholderTools(s, handlers)
-	registerProcessTools(s, handlers)
-	registerRecipeTools(s, handlers)
-	registerPortfolioTools(s, handlers)
-	registerGitHubTools(s, handlers)
-	registerGitHubFullTools(s, handlers)
-	registerGitIntegrationTools(s, handlers)
-	registerCalendarTools(s, handlers)
-	registerNotionTools(s, handlers)
-	registerTechDebtTools(s, handlers)
-	registerLinearTools(s, handlers)
-	registerPagerDutyTools(s, handlers)
-	registerClockifyTools(s, handlers)
-	registerSheetsTools(s, handlers)
-	registerHelpTools(s, handlers)
-	registerCoachingTools(s, handlers)
-	registerPMShortcuts(s, handlers)
-	registerLeverageTools(s, handlers)
-	registerCareTools(s, handlers)
-	registerOutcomeTools(s, handlers)
-	registerOutcomeTools(s, handlers)
+	enabled := enabledModules()
+
+	modules := map[string][]regFunc{
+		"jira": {registerJiraTools, registerIssueOpsTools, registerEpicSprintTools, registerBulkProjectTools, registerLinkWorklogTools, registerVersionTools, registerTraceTools},
+		"pm": {registerPMTools, registerMemoryTools, registerPMIntelTools, registerAdvancedPMTools, registerDeepPMTools, registerFlowTools, registerForecastTools, registerProcessTools, registerRecipeTools, registerCareTools, registerCoachingTools, registerOutcomeTools},
+		"ai": {registerAITools},
+		"notifications": {registerLarkTools, registerSlackTools, registerPlatformTools, registerRoutingTools},
+		"stakeholder": {registerStakeholderTools, registerTechDebtTools, registerLeverageTools},
+		"portfolio": {registerPortfolioTools},
+		"github": {registerGitHubTools, registerGitHubFullTools, registerGitIntegrationTools},
+		"integrations": {registerCalendarTools, registerNotionTools, registerLinearTools, registerPagerDutyTools, registerClockifyTools, registerSheetsTools},
+		"shortcuts": {registerPMShortcuts, registerHelpTools},
+	}
+
+	for mod, fns := range modules {
+		if enabled[mod] {
+			for _, fn := range fns {
+				fn(s, handlers)
+			}
+		}
+	}
 
 	return &MCPServer{s: s}
+}
+
+func enabledModules() map[string]bool {
+	env := os.Getenv("PM_ENABLED_MODULES")
+	if env == "" || env == "all" {
+		return map[string]bool{"jira": true, "pm": true, "ai": true, "notifications": true, "stakeholder": true, "portfolio": true, "github": true, "integrations": true, "shortcuts": true}
+	}
+	m := map[string]bool{}
+	for _, s := range strings.Split(env, ",") {
+		m[strings.TrimSpace(s)] = true
+	}
+	return m
 }
 
 func (m *MCPServer) Server() *server.MCPServer {
