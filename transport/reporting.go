@@ -13,12 +13,12 @@ func registerReportingTools(s *server.MCPServer, h *tools.Handlers) {
 	), h.ReportToPO)
 
 	s.AddTool(mcp.NewTool("report_escalation_brief",
-		mcp.WithDescription("Structured impediment escalation for management. Shows PROBLEM, IMPACT, ASK (decision needed), and DEADLINE per blocker."),
+		mcp.WithDescription("[DEPRECATED: use pm_escalation_draft or pm_escalation_report] Structured impediment escalation for management."),
 		mcp.WithNumber("board_id", mcp.Description("Board ID for sprint impact context")),
 	), h.EscalationBrief)
 
 	s.AddTool(mcp.NewTool("report_cross_team_deps",
-		mcp.WithDescription("Cross-team dependency status report. Shows what we're waiting on from others and what others wait on from us. For lateral communication."),
+		mcp.WithDescription("[DEPRECATED: use pm_dependencies] Cross-team dependency status report."),
 	), h.CrossTeamDependencyReport)
 
 	s.AddTool(mcp.NewTool("report_delivery_confidence",

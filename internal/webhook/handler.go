@@ -85,7 +85,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) verifySignature(r *http.Request, body []byte) bool {
-	sig := r.Header.Get("X-Hub-Signature")
+	// Jira Cloud/Server: check X-Atlassian-Webhook-Signature first, fall back to X-Hub-Signature
+	sig := r.Header.Get("X-Atlassian-Webhook-Signature")
+	if sig == "" {
+		sig = r.Header.Get("X-Hub-Signature")
+	}
 	if sig == "" {
 		return false
 	}

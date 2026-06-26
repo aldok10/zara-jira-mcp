@@ -8,7 +8,7 @@ import (
 
 func registerCommunicationTools(s *server.MCPServer, h *tools.Handlers) {
 	s.AddTool(mcp.NewTool("pm_status_draft",
-		mcp.WithDescription("Generate ready-to-send status update. Auto-pulls project data, formats for audience. BLUF format."),
+		mcp.WithDescription("[DEPRECATED: use pm_communicate] Generate ready-to-send status update. Auto-pulls project data, formats for audience. BLUF format."),
 		mcp.WithNumber("board_id", mcp.Description("Board ID")),
 		mcp.WithString("audience", mcp.Description("team, executive, stakeholder, po")),
 	), h.WriteUpdate)

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	memdom "github.com/aldok10/zara-jira-mcp/domain/memory"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -298,7 +299,7 @@ func (h *Handlers) PMSprintGoalTrack(ctx context.Context, req mcp.CallToolReques
 	}
 
 	// Store as a decision with sprint_goal_result tag
-	err = h.Memory.SaveDecision(ctx, &memoryDecision{
+	err = h.Memory.SaveDecision(ctx, &memdom.Decision{
 		Title:    fmt.Sprintf("Sprint Goal Result: %s", sprintName),
 		Decision: decision,
 		Context:  fmt.Sprintf("Sprint: %s, Hit: %v", sprintName, hit),
