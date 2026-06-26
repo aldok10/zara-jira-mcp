@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -105,6 +106,9 @@ type LifecycleParams struct {
 	Lifecycle  fx.Lifecycle
 	Shutdowner fx.Shutdowner
 	Server     *transport.MCPServer
+	LarkClient *lark.WebhookClient
+	AI         *ai.OpenAIClient
+	Memory     *memory.SQLiteStore
 	Config     *config.Config
 }
 
@@ -140,6 +144,17 @@ func Invoke(p LifecycleParams) {
 						logger.Info("server stopped", "reason", err.Error())
 					}
 					p.Shutdowner.Shutdown() //nolint:errcheck
+				}()
+			}
+			if p.Config.Lark.BotEnabled {
+				bot := lark.NewBotHandler(p.LarkClient, p.AI, p.Memory, p.Config.Lark.VerificationToken, logger)
+				mux := http.NewServeMux()
+				mux.Handle("/webhook/event", bot)
+				logger.Info("starting lark bot webhook", "port", p.Config.Lark.BotPort)
+				go func() {
+					if err := http.ListenAndServe(":"+p.Config.Lark.BotPort, mux); err != nil {
+						logger.Error("lark bot server error", "err", err)
+					}
 				}()
 			}
 			return nil

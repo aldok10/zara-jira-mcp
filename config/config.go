@@ -118,6 +118,10 @@ type ServerConfig struct {
 }
 
 type LarkConfig struct {
+	BotEnabled        bool   // LARK_BOT_ENABLED
+	BotPort           string // LARK_BOT_PORT (default: 9091)
+	VerificationToken string // LARK_VERIFICATION_TOKEN
+	EncryptKey        string // LARK_ENCRYPT_KEY
 	WebhookURL string // JIRA_LARK_WEBHOOK_URL (simple webhook, no app needed)
 	AppID      string // LARK_APP_ID (for full SDK access)
 	AppSecret  string // LARK_APP_SECRET
@@ -281,6 +285,10 @@ func Load() (*Config, error) {
 			AppID:      envOrFile(os.Getenv("LARK_APP_ID"), fLark.AppID),
 			AppSecret:  envOrFile(os.Getenv("LARK_APP_SECRET"), fLark.AppSecret),
 			ChatID:     envOrFile(os.Getenv("LARK_CHAT_ID"), fLark.ChatID),
+			BotEnabled:        os.Getenv("LARK_BOT_ENABLED") == "true",
+			BotPort:           os.Getenv("LARK_BOT_PORT"),
+			VerificationToken: os.Getenv("LARK_VERIFICATION_TOKEN"),
+			EncryptKey:        os.Getenv("LARK_ENCRYPT_KEY"),
 		},
 		Slack: SlackConfig{
 			BotToken:       envOrFile(os.Getenv("SLACK_BOT_TOKEN"), fSlack.BotToken),
@@ -370,6 +378,9 @@ func Load() (*Config, error) {
 	}
 	if cfg.Server.DashboardPort == "" {
 		cfg.Server.DashboardPort = "9090"
+	}
+	if cfg.Lark.BotPort == "" {
+		cfg.Lark.BotPort = "9091"
 	}
 
 	return cfg, nil
