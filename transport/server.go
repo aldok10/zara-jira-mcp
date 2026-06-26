@@ -33,6 +33,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerFlowTools(s, handlers)
 	registerForecastTools(s, handlers)
 	registerStakeholderTools(s, handlers)
+	registerProcessTools(s, handlers)
 	registerRecipeTools(s, handlers)
 
 	return &MCPServer{s: s}
@@ -770,5 +771,65 @@ func registerStakeholderTools(s *server.MCPServer, h *tools.Handlers) {
 			mcp.WithBoolean("send_to_lark", mcp.Description("Send digest to Lark")),
 		),
 		h.WeeklyDigest,
+	)
+}
+
+func registerProcessTools(s *server.MCPServer, h *tools.Handlers) {
+	s.AddTool(
+		mcp.NewTool("pm_dor",
+			mcp.WithDescription("Manage Definition of Ready (entry gate for sprint). Actions: list, add, remove."),
+			mcp.WithString("action", mcp.Description("list, add, remove (default: list)")),
+			mcp.WithString("item", mcp.Description("DoR item (for add)")),
+			mcp.WithString("project", mcp.Description("Project key (default: *)")),
+			mcp.WithString("category", mcp.Description("clarity, estimation, dependencies, design, size, support")),
+			mcp.WithNumber("item_id", mcp.Description("Item ID (for remove)")),
+		),
+		h.ManageDoR,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_check_ready",
+			mcp.WithDescription("AI evaluates if a Jira story meets Definition of Ready + INVEST criteria. Gives READY/NOT READY verdict."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Jira issue key to evaluate")),
+		),
+		h.CheckStoryReady,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_agreements",
+			mcp.WithDescription("Manage team working agreements. The rules the team commits to. Actions: list, add."),
+			mcp.WithString("action", mcp.Description("list, add (default: list)")),
+			mcp.WithString("agreement", mcp.Description("Agreement text (for add)")),
+			mcp.WithString("why", mcp.Description("Why this agreement exists")),
+		),
+		h.ManageAgreements,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_experiment",
+			mcp.WithDescription("Record an improvement experiment from retro. Track hypothesis, action, measurement, duration."),
+			mcp.WithString("hypothesis", mcp.Required(), mcp.Description("What we think will improve (e.g. 'reducing WIP will decrease cycle time')")),
+			mcp.WithString("action", mcp.Required(), mcp.Description("What we will try (e.g. 'limit WIP to 2 per person')")),
+			mcp.WithString("measure", mcp.Description("How we'll know it worked (default: observe)")),
+			mcp.WithString("duration", mcp.Description("How long to run (default: 1 sprint)")),
+			mcp.WithString("sprint_name", mcp.Description("Sprint context")),
+			mcp.WithString("context", mcp.Description("What prompted this experiment")),
+		),
+		h.RecordExperiment,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_experiments",
+			mcp.WithDescription("Show all improvement experiments and their status."),
+		),
+		h.ReviewExperiments,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_planning_prep",
+			mcp.WithDescription("Complete sprint planning preparation package: last sprint outcome, capacity, carryover, risks, dependencies, experiments, checklist."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.SprintPlanningSummary,
 	)
 }
