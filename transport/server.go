@@ -27,6 +27,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerPlatformTools(s, handlers)
 	registerRoutingTools(s, handlers)
 	registerVersionTools(s, handlers)
+	registerTraceTools(s, handlers)
 	registerMemoryTools(s, handlers)
 	registerPMIntelTools(s, handlers)
 	registerAdvancedPMTools(s, handlers)

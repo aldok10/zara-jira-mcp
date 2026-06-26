@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/aldok10/zara-jira-mcp/config"
@@ -37,11 +38,13 @@ type PullRequest struct {
 	Number    int
 	Title     string
 	State     string
+	Author    string
 	User      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Draft     bool
 	Reviewers []string
+	MergedTo  string
 }
 
 type Release struct {
@@ -207,6 +210,75 @@ func (c *Client) GetActivity(ctx context.Context, days int) (*RepoActivity, erro
 		PRsMerged:    merged,
 		IssuesClosed: closed,
 	}, nil
+}
+
+// SearchBranches finds branches matching a pattern (e.g. issue key).
+func (c *Client) SearchBranches(ctx context.Context, pattern string) ([]Branch, error) {
+	path := fmt.Sprintf("/repos/%s/%s/branches?per_page=100", c.owner, c.repo)
+	body, err := c.doGet(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+	var all []struct {
+		Name string `json:"name"`
+	}
+	if err := json.Unmarshal(body, &all); err != nil {
+		return nil, err
+	}
+	var matched []Branch
+	lowerPattern := strings.ToLower(pattern)
+	for _, b := range all {
+		if strings.Contains(strings.ToLower(b.Name), lowerPattern) {
+			matched = append(matched, Branch{Name: b.Name})
+		}
+	}
+	return matched, nil
+}
+
+// SearchPRsByBranch finds PRs (open/closed/merged) for a branch.
+func (c *Client) SearchPRsByBranch(ctx context.Context, branch string) ([]PullRequest, error) {
+	// Search all states
+	path := fmt.Sprintf("/repos/%s/%s/pulls?state=all&head=%s:%s&per_page=10",
+		c.owner, c.repo, c.owner, branch)
+	body, err := c.doGet(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+	var items []struct {
+		Number   int    `json:"number"`
+		Title    string `json:"title"`
+		State    string `json:"state"`
+		MergedAt string `json:"merged_at"`
+		Base     struct {
+			Ref string `json:"ref"`
+		} `json:"base"`
+		User struct {
+			Login string `json:"login"`
+		} `json:"user"`
+	}
+	if err := json.Unmarshal(body, &items); err != nil {
+		return nil, err
+	}
+	var prs []PullRequest
+	for _, item := range items {
+		pr := PullRequest{
+			Number: item.Number,
+			Title:  item.Title,
+			State:  item.State,
+			Author: item.User.Login,
+		}
+		if item.MergedAt != "" {
+			pr.State = "merged"
+			pr.MergedTo = item.Base.Ref
+		}
+		prs = append(prs, pr)
+	}
+	return prs, nil
+}
+
+// Branch represents a git branch.
+type Branch struct {
+	Name string
 }
 
 func (c *Client) doGet(ctx context.Context, path string) ([]byte, error) {

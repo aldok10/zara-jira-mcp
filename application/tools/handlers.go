@@ -9,6 +9,7 @@ import (
 	aiprovider "github.com/aldok10/zara-jira-mcp/domain/ai"
 	domain "github.com/aldok10/zara-jira-mcp/domain/jira"
 	larkdom "github.com/aldok10/zara-jira-mcp/domain/lark"
+	"github.com/aldok10/zara-jira-mcp/config"
 	"github.com/aldok10/zara-jira-mcp/domain/memory"
 	icalendar "github.com/aldok10/zara-jira-mcp/internal/calendar"
 	"github.com/aldok10/zara-jira-mcp/internal/clockify"
@@ -29,6 +30,7 @@ import (
 
 // Handlers holds all MCP tool handler methods.
 type Handlers struct {
+	Config     *config.Config
 	Jira       domain.Client
 	AI         aiprovider.Provider
 	Lark       larkdom.Notifier

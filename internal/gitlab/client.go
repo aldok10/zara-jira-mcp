@@ -59,12 +59,13 @@ type Milestone struct {
 }
 
 type MergeRequest struct {
-	IID       int
-	Title     string
-	State     string
-	Author    string
-	CreatedAt time.Time
-	Draft     bool
+	IID          int
+	Title        string
+	State        string
+	Author       string
+	TargetBranch string
+	CreatedAt    time.Time
+	Draft        bool
 }
 
 // CreateIssue creates a GitLab issue.
@@ -285,6 +286,62 @@ func (c *Client) ListFiles(ctx context.Context, dirPath, ref string) ([]string, 
 		files = append(files, item.Name+suffix)
 	}
 	return files, nil
+}
+
+// SearchBranches finds branches matching a pattern.
+func (c *Client) SearchBranches(ctx context.Context, pattern string) ([]Branch, error) {
+	path := fmt.Sprintf("/api/v4/projects/%s/repository/branches?search=%s", c.projectID, pattern)
+	body, err := c.doGet(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+	var items []struct {
+		Name   string `json:"name"`
+		Merged bool   `json:"merged"`
+	}
+	_ = json.Unmarshal(body, &items)
+	out := make([]Branch, len(items))
+	for i, item := range items {
+		out[i] = Branch{Name: item.Name, Merged: item.Merged}
+	}
+	return out, nil
+}
+
+// SearchMRsByBranch finds merge requests for a source branch.
+func (c *Client) SearchMRsByBranch(ctx context.Context, branch string) ([]MergeRequest, error) {
+	path := fmt.Sprintf("/api/v4/projects/%s/merge_requests?source_branch=%s&state=all&per_page=10", c.projectID, branch)
+	body, err := c.doGet(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+	var items []struct {
+		IID          int    `json:"iid"`
+		Title        string `json:"title"`
+		State        string `json:"state"`
+		TargetBranch string `json:"target_branch"`
+		Author       struct {
+			Username string `json:"username"`
+		} `json:"author"`
+		MergedAt string `json:"merged_at"`
+	}
+	_ = json.Unmarshal(body, &items)
+	var mrs []MergeRequest
+	for _, item := range items {
+		mrs = append(mrs, MergeRequest{
+			IID:          item.IID,
+			Title:        item.Title,
+			State:        item.State,
+			TargetBranch: item.TargetBranch,
+			Author:       item.Author.Username,
+		})
+	}
+	return mrs, nil
+}
+
+// Branch represents a git branch.
+type Branch struct {
+	Name   string
+	Merged bool
 }
 
 // HTTP helpers

@@ -69,6 +69,7 @@ func provideMemory() (*memory.SQLiteStore, error) {
 }
 
 func provideHandlers(
+	cfg *config.Config,
 	j *jira.RestClient, a *ai.OpenAIClient, l *lark.WebhookClient,
 	s *islack.Client, d *idiscord.Client, t *itelegram.Client,
 	te *iteams.Client, e *iemail.Client, c *confluence.Client,
@@ -77,6 +78,7 @@ func provideHandlers(
 	m *memory.SQLiteStore,
 ) *tools.Handlers {
 	return &tools.Handlers{
+		Config:     cfg,
 		Jira:       j,
 		AI:         a,
 		Lark:       l,
@@ -96,6 +98,9 @@ func provideHandlers(
 		Sheets:     sh,
 		Memory:     m,
 	}
+}
+
+	// Dashboard feature removed - was incomplete
 }
 
 type LifecycleParams struct {
