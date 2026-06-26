@@ -89,3 +89,19 @@ type Escalation struct {
 	Channel     string // lark, manual
 	Acknowledged bool
 }
+
+// OKRSignal maps a Key Result to Jira data via JQL + formula.
+type OKRSignal struct {
+	ID           int64
+	Objective    string
+	KeyResult    string
+	SignalType   string  // pct_done, count, avg_cycle_time, ratio, sum_points
+	JQL          string  // Jira JQL query to run
+	Formula      string  // how to calculate progress
+	TargetValue  float64 // what 100% looks like
+	CurrentValue float64 // last calculated value
+	ProgressPct  float64 // 0-100
+	LarkKRID     string  // for Lark OKR sync
+	LastSynced   *time.Time
+	CreatedAt    time.Time
+}

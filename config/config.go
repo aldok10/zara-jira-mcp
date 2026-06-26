@@ -30,12 +30,24 @@ type Config struct {
 	PagerDuty      PagerDutyConfig
 	GoogleSheets   GoogleSheetsConfig
 	Database       DatabaseConfig
+	Redis          RedisConfig
+	Webhook        WebhookConfig
 }
 
 type DatabaseConfig struct {
 	PostgresDSN string
 	MySQLDSN    string
 	MongoURI    string
+}
+
+type RedisConfig struct {
+	URL string // REDIS_URL (e.g. redis://localhost:6379)
+	TTL string // REDIS_TTL (default: 5m)
+}
+
+type WebhookConfig struct {
+	Enabled bool   // WEBHOOK_ENABLED
+	Secret  string // WEBHOOK_SECRET (for signature verification)
 }
 
 type GoogleCalendarConfig struct {
@@ -367,6 +379,14 @@ func Load() (*Config, error) {
 			PostgresDSN: os.Getenv("DATABASE_POSTGRES_DSN"),
 			MySQLDSN:    os.Getenv("DATABASE_MYSQL_DSN"),
 			MongoURI:    os.Getenv("DATABASE_MONGO_URI"),
+		},
+		Redis: RedisConfig{
+			URL: os.Getenv("REDIS_URL"),
+			TTL: os.Getenv("REDIS_TTL"),
+		},
+		Webhook: WebhookConfig{
+			Enabled: os.Getenv("WEBHOOK_ENABLED") == "true",
+			Secret:  os.Getenv("WEBHOOK_SECRET"),
 		},
 	}
 

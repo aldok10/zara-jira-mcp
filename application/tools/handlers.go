@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	aiprovider "github.com/aldok10/zara-jira-mcp/domain/ai"
 	domain "github.com/aldok10/zara-jira-mcp/domain/jira"
 	larkdom "github.com/aldok10/zara-jira-mcp/domain/lark"
 	"github.com/aldok10/zara-jira-mcp/config"
 	"github.com/aldok10/zara-jira-mcp/domain/memory"
+	"github.com/aldok10/zara-jira-mcp/internal/cache"
 	icalendar "github.com/aldok10/zara-jira-mcp/internal/calendar"
 	"github.com/aldok10/zara-jira-mcp/internal/clockify"
 	"github.com/aldok10/zara-jira-mcp/internal/confluence"
@@ -26,6 +28,7 @@ import (
 	islack "github.com/aldok10/zara-jira-mcp/internal/slack"
 	iteams "github.com/aldok10/zara-jira-mcp/internal/teams"
 	itelegram "github.com/aldok10/zara-jira-mcp/internal/telegram"
+	ilark "github.com/aldok10/zara-jira-mcp/internal/lark"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -42,9 +45,11 @@ type Handlers struct {
 	Email      *iemail.Client
 	Confluence *confluence.Client
 	Memory     memory.Store
+	Cache      *cache.Client
 	Calendar   *icalendar.Client
 	GitHub     *igithub.Client
 	GitLab     *igitlab.Client
+	OKR        *ilark.OKRClient
 	Notion     *inotion.Client
 	Linear     *linear.Client
 	PagerDuty  *pagerduty.Client
@@ -92,6 +97,13 @@ func (h *Handlers) GetIssue(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 
 // GetBoards lists all accessible Jira boards.
 func (h *Handlers) GetBoards(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	const cacheKey = "jira:boards"
+	if h.Cache.Available() {
+		if cached, err := h.Cache.Get(ctx, cacheKey); err == nil {
+			return textResult(cached), nil
+		}
+	}
+
 	boards, err := h.Jira.GetBoards(ctx)
 	if err != nil {
 		return errorResult("Failed to get boards: " + err.Error()), nil
@@ -100,7 +112,9 @@ func (h *Handlers) GetBoards(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	for _, b := range boards {
 		sb.WriteString(fmt.Sprintf("- [%d] %s (%s)\n", b.ID, b.Name, b.Type))
 	}
-	return textResult(sb.String()), nil
+	result := sb.String()
+	_ = h.Cache.Set(ctx, cacheKey, result, 10*time.Minute)
+	return textResult(result), nil
 }
 
 // GetSprintSummary gets active sprint issues and generates a summary.
@@ -108,6 +122,13 @@ func (h *Handlers) GetSprintSummary(ctx context.Context, req mcp.CallToolRequest
 	boardID, err := req.RequireInt("board_id")
 	if err != nil {
 		return errorResult("board_id parameter is required"), nil
+	}
+
+	cacheKey := fmt.Sprintf("jira:sprint_summary:%d", boardID)
+	if h.Cache.Available() {
+		if cached, err := h.Cache.Get(ctx, cacheKey); err == nil {
+			return textResult(cached), nil
+		}
 	}
 
 	sprints, err := h.Jira.GetActiveSprints(ctx, boardID)
@@ -140,7 +161,9 @@ func (h *Handlers) GetSprintSummary(ctx context.Context, req mcp.CallToolRequest
 	for _, issue := range issues {
 		sb.WriteString(fmt.Sprintf("- %s [%s] %s (Assignee: %s)\n", issue.Key, issue.Status, issue.Summary, issue.Assignee))
 	}
-	return textResult(sb.String()), nil
+	result := sb.String()
+	_ = h.Cache.Set(ctx, cacheKey, result, 2*time.Minute)
+	return textResult(result), nil
 }
 
 // CreateIssue creates a new Jira issue.
@@ -233,6 +256,14 @@ func (h *Handlers) GetTransitions(ctx context.Context, req mcp.CallToolRequest) 
 // MyIssues shows issues assigned to the current user.
 func (h *Handlers) MyIssues(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	status := req.GetString("status", "")
+
+	cacheKey := "jira:my_issues:" + status
+	if h.Cache.Available() {
+		if cached, err := h.Cache.Get(ctx, cacheKey); err == nil {
+			return textResult(cached), nil
+		}
+	}
+
 	jql := "assignee = currentUser() AND resolution = Unresolved ORDER BY updated DESC"
 	if status != "" {
 		jql = fmt.Sprintf("assignee = currentUser() AND resolution = Unresolved AND status = \"%s\" ORDER BY updated DESC", status)
@@ -248,7 +279,9 @@ func (h *Handlers) MyIssues(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	for _, issue := range result.Issues {
 		sb.WriteString(fmt.Sprintf("- **%s** [%s] %s | Priority: %s\n", issue.Key, issue.Status, issue.Summary, issue.Priority))
 	}
-	return textResult(sb.String()), nil
+	out := sb.String()
+	_ = h.Cache.Set(ctx, cacheKey, out, 1*time.Minute)
+	return textResult(out), nil
 }
 
 // Overdue shows issues that might be overdue or stale.
@@ -279,6 +312,13 @@ func (h *Handlers) Overdue(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 func (h *Handlers) Workload(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	project := req.GetString("project", "")
 
+	cacheKey := "jira:workload:" + project
+	if h.Cache.Available() {
+		if cached, err := h.Cache.Get(ctx, cacheKey); err == nil {
+			return textResult(cached), nil
+		}
+	}
+
 	jql := "resolution = Unresolved AND assignee IS NOT EMPTY ORDER BY assignee ASC"
 	if project != "" {
 		jql = fmt.Sprintf("project = %s AND resolution = Unresolved AND assignee IS NOT EMPTY ORDER BY assignee ASC", project)
@@ -301,7 +341,9 @@ func (h *Handlers) Workload(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	for person, count := range workload {
 		sb.WriteString(fmt.Sprintf("- %s: %d issues\n", person, count))
 	}
-	return textResult(sb.String()), nil
+	out := sb.String()
+	_ = h.Cache.Set(ctx, cacheKey, out, 3*time.Minute)
+	return textResult(out), nil
 }
 
 // AIAnalyze uses AI to analyze Jira tickets.

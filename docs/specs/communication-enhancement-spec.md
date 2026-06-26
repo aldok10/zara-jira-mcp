@@ -1,9 +1,15 @@
 # SPEC: Communication Framework Enhancement for AI-Era PM
 
-Status: Draft
+Status: Draft (see gap-analysis-addendum.md for full existing tool audit)
 Author: Zara (AI) + Aldo
 Date: 2026-06-26
 Priority: Medium-High
+
+> **NOTE:** Project has more communication tools than initially audited.
+> See `docs/specs/gap-analysis-addendum.md` Section 2 for complete list.
+> Additional existing: pm_communicate, pm_feedback_prep, pm_escalation_draft,
+> pm_decision_record, pm_safety_survey, pm_safety_trend, pm_team_aristotle
+> (registered in transport/safety.go). All 9 proposed tools remain genuinely new.
 
 ---
 

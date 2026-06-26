@@ -35,6 +35,9 @@ func NewSQLiteStore(dbPath string) (*SQLiteStore, error) {
 	if err := s.migrateCoaching(); err != nil {
 		return nil, fmt.Errorf("migrate coaching: %w", err)
 	}
+	if err := s.migrateOKR(); err != nil {
+		return nil, fmt.Errorf("migrate okr: %w", err)
+	}
 	return s, nil
 }
 

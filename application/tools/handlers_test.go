@@ -242,6 +242,7 @@ func (m *mockMemory) GetTeamRadarHistory(_ context.Context, _ int) ([]memdom.Tea
 	return nil, nil
 }
 func (m *mockMemory) DB() memdom.RawDB { return nil }
+func (m *mockMemory) DeleteOKRSignal(_ context.Context, _ int64) error { return nil }
 
 // --- Helpers ---
 

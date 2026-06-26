@@ -1,10 +1,15 @@
 # SPEC: OKR/KPI Bridge — Jira Data to Business Outcomes
 
-Status: Draft
+Status: Draft (see gap-analysis-addendum.md for corrections)
 Author: Zara (AI) + Aldo
 Date: 2026-06-26
 Priority: High
 Depends on: Lark SDK v3.9.7 (already in go.mod), existing pm_outcome_map
+
+> **IMPORTANT:** This spec was written before discovering existing OKR v1/v2 systems.
+> See `docs/specs/gap-analysis-addendum.md` for what already exists and revised scope.
+> Actual build scope: 7 tools (not 11). Existing: pm_okr_tree, pm_okr_sync, pm_okr_kpi,
+> pm_kpi_dashboard. Lark OKR read client exists at internal/lark/okr.go.
 
 ---
 

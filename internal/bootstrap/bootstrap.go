@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"go.uber.org/fx"
 
 	"github.com/aldok10/zara-jira-mcp/application/tools"
 	"github.com/aldok10/zara-jira-mcp/config"
 	"github.com/aldok10/zara-jira-mcp/internal/ai"
+	"github.com/aldok10/zara-jira-mcp/internal/cache"
 	icalendar "github.com/aldok10/zara-jira-mcp/internal/calendar"
 	"github.com/aldok10/zara-jira-mcp/internal/clockify"
 	"github.com/aldok10/zara-jira-mcp/internal/confluence"
@@ -31,6 +33,7 @@ import (
 	islack "github.com/aldok10/zara-jira-mcp/internal/slack"
 	iteams "github.com/aldok10/zara-jira-mcp/internal/teams"
 	itelegram "github.com/aldok10/zara-jira-mcp/internal/telegram"
+	"github.com/aldok10/zara-jira-mcp/internal/webhook"
 	"github.com/aldok10/zara-jira-mcp/transport"
 	mcpserver "github.com/mark3labs/mcp-go/server"
 )
@@ -56,6 +59,7 @@ var Module = fx.Module("bootstrap",
 		clockify.NewClient,
 		sheets.NewClient,
 		provideMemory,
+		provideCache,
 		provideHandlers,
 		transport.NewMCPServer,
 	),
@@ -70,14 +74,25 @@ func provideMemory() (*memory.SQLiteStore, error) {
 	return memory.NewSQLiteStore(filepath.Join(dir, "pm.db"))
 }
 
+func provideCache(cfg *config.Config) *cache.Client {
+	ttl := 5 * time.Minute
+	if cfg.Redis.TTL != "" {
+		if d, err := time.ParseDuration(cfg.Redis.TTL); err == nil {
+			ttl = d
+		}
+	}
+	return cache.NewClient(cfg.Redis.URL, ttl)
+}
+
 func provideHandlers(
 	cfg *config.Config,
 	j *jira.RestClient, a *ai.OpenAIClient, l *lark.WebhookClient,
+	okr *lark.OKRClient,
 	s *islack.Client, d *idiscord.Client, t *itelegram.Client,
 	te *iteams.Client, e *iemail.Client, c *confluence.Client,
 	cal *icalendar.Client, gh *igithub.Client, gl *igitlab.Client, n *inotion.Client,
 	lin *linear.Client, pd *pagerduty.Client, cl *clockify.Client, sh *sheets.Client,
-	m *memory.SQLiteStore,
+	m *memory.SQLiteStore, rc *cache.Client,
 ) *tools.Handlers {
 	return &tools.Handlers{
 		Config:     cfg,
@@ -99,6 +114,8 @@ func provideHandlers(
 		Clockify:   cl,
 		Sheets:     sh,
 		Memory:     m,
+		Cache:      rc,
+		OKR:        okr,
 	}
 }
 
@@ -155,6 +172,17 @@ func Invoke(p LifecycleParams) {
 				go func() {
 					if err := http.ListenAndServe(":"+p.Config.Lark.BotPort, mux); err != nil {
 						logger.Error("lark bot server error", "err", err)
+					}
+				}()
+			}
+			if p.Config.Webhook.Enabled && p.Config.Server.Transport != "stdio" {
+				wh := webhook.NewHandler(p.Config.Webhook.Secret, p.Memory, logger)
+				mux := http.NewServeMux()
+				mux.Handle("/webhook/jira", wh)
+				logger.Info("starting jira webhook receiver", "port", p.Config.Server.Port)
+				go func() {
+					if err := http.ListenAndServe(":"+p.Config.Server.Port, mux); err != nil {
+						logger.Error("webhook server error", "err", err)
 					}
 				}()
 			}

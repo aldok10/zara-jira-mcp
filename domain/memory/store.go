@@ -84,6 +84,12 @@ type Store interface {
 	SaveTeamRadar(ctx context.Context, r *TeamRadar) error
 	GetTeamRadarHistory(ctx context.Context, limit int) ([]TeamRadar, error)
 
+	// OKR Signals
+	SaveOKRSignal(ctx context.Context, sig *OKRSignal) error
+	UpdateOKRSignalProgress(ctx context.Context, id int64, currentValue, progressPct float64) error
+	GetOKRSignals(ctx context.Context) ([]OKRSignal, error)
+	DeleteOKRSignal(ctx context.Context, id int64) error
+
 	// Raw database access for ad-hoc queries
 	DB() RawDB
 }
