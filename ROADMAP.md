@@ -1,13 +1,13 @@
 # ROADMAP: zara-jira-mcp
 
-> AI-powered Scrum Master MCP — 196 tools. Persistent memory. Multi-platform.
+> AI-powered Scrum Master MCP — 224 tools. Persistent memory. 20 AI clients. Profile system.
 > The PM/SM's unfair advantage.
 
 ---
 
-## Current State (v0.3.0)
+## Current State (v0.4.0)
 
-**196 MCP tools** | 14 SQLite tables | 8 notification platforms | 43 commits
+**224 MCP tools** | 14 SQLite tables | 8 notification platforms | 20 AI client configs | 5 performance profiles
 
 ### What's Built
 
@@ -18,27 +18,44 @@
 | PM Memory | 22 | Sprints, risks, decisions, blockers, team, retros, deps, goals, DoD/DoR |
 | Notifications | 15 | Lark, Slack, Discord, Telegram, Teams, Email, Confluence, routing |
 | GitHub/GitLab | 13 | Issues, milestones, MRs, file reading, branch tracing |
-| Portfolio | 5 | Cross-project overview, risks, workload |
-| Shortcuts | 5 | pm, pm_create, pm_decide, pm_risk, pm_next |
-| Automation | 10 | Recipes, escalation, digest, planning prep, review prep |
-| Stakeholder | 5 | Exec report, scorecard, weekly digest, team KB, release notes |
+| Management Reporting | 10 | Exec report, management brief, escalation, dependency, resource util |
+| SM Leverage | 10 | Maturity, dysfunction, meeting ROI, commitment, impact, autonomy |
+| Portfolio | 5 | Cross-project overview, risks, workload, blockers, AI summary |
+| Shortcuts & Help | 8 | pm, pm_create, pm_decide, pm_risk, pm_next, pm_help, pm_quickstart, pm_workflow |
+| Stakeholder | 8 | Pulse, trend, outcome map, improvement velocity, scorecard, KB |
+| Integrations | 17 | Linear, PagerDuty, Clockify, Notion, Google Sheets, Calendar |
+| Database | 5 | Postgres, MySQL, MongoDB read queries |
+| Tech Skill | 5 | PM technical literacy tools |
 | Meta | 3 | Health check, MCP stats, NL-to-JQL |
+
+### What's New in v0.4.0
+
+- Performance profiles (PM_PROFILE: lite/pm/standard/full/all)
+- 20 AI client pre-built configs
+- Management reporting tools (brief, dependency, escalation, resource, commitment)
+- SM leverage tools (maturity, dysfunction, meeting ROI)
+- Engineering literacy documentation for PM/SM
+- CI pipeline (GitHub Actions)
+- llms.txt for AI discoverability
 
 ---
 
-## Phase 7: Production Hardening (Next)
+## Phase 7: Production Hardening (In Progress)
 
 **Goal:** Make this reliable for daily use by real PM teams.
 
 | Item | Effort | Impact | Status |
 |------|--------|--------|--------|
-| Fix all test mocks + reach 60% coverage | Medium | High | Pending |
-| Module-level enable/disable (env config) | Low | High | Pending |
-| Connection health checks (Jira, AI, Slack) | Low | Medium | Pending |
+| Module-level enable/disable (PM_PROFILE) | Low | High | Done |
+| Connection health checks (Jira, AI, Slack) | Low | Medium | Partial |
 | Rate limiting for Jira API calls | Low | Medium | Pending |
-| Graceful degradation when AI unavailable | Low | High | Partial |
+| Graceful degradation when AI unavailable | Low | High | Done |
 | SQLite backup command (pm_backup) | Low | Medium | Pending |
 | Error messages that suggest fix actions | Low | High | Pending |
+| Fix security findings (raw_request, db query, file perms) | Medium | Critical | Pending |
+| Input validation (issue keys, JQL params) | Low | High | Pending |
+| io.LimitReader on all HTTP responses | Low | Medium | Pending |
+| Test coverage to 60% | Medium | High | Pending |
 
 ---
 
@@ -59,7 +76,7 @@
 
 ## Phase 9: Developer Integration (Planned)
 
-**Goal:** Bridge the PM → Developer gap. Bidirectional visibility.
+**Goal:** Bridge the PM-Developer gap. Bidirectional visibility.
 
 | Item | Effort | Impact |
 |------|--------|--------|
@@ -106,15 +123,16 @@
 
 **Goal:** Become the standard PM MCP that works with any AI agent.
 
-| Item | Effort | Impact |
-|------|--------|--------|
-| MCP Marketplace listing | Low | High |
-| Docker Hub image (one-command deploy) | Low | Medium |
-| Helm chart for K8s | Medium | Low |
-| SSE/HTTP transport (remote MCP) | High | High |
-| OAuth2 for multi-user access | High | Medium |
-| Plugin system (custom tools per team) | High | Medium |
-| Open-source community (docs, contributing guide) | Medium | High |
+| Item | Effort | Impact | Status |
+|------|--------|--------|--------|
+| Pre-built configs for 20 AI clients | Low | High | Done |
+| Docker Hub image (one-command deploy) | Low | Medium | Pending |
+| Helm chart for K8s | Medium | Low | Pending |
+| SSE/HTTP transport (remote MCP) | High | High | Partial |
+| OAuth2 for multi-user access | High | Medium | Pending |
+| Plugin system (custom tools per team) | High | Medium | Pending |
+| Open-source community (docs, contributing guide) | Medium | High | Done |
+| MCP marketplace / registry listing | Low | High | Pending |
 
 ---
 
@@ -122,24 +140,26 @@
 
 | Metric | Current | Target v1.0 |
 |--------|---------|-------------|
-| Tools | 196 | 200+ (stable) |
+| Tools | 224 | 230+ (stable) |
 | Test coverage | ~27% | 70%+ |
+| AI client configs | 20 | 25+ |
 | Daily active use | 0 | 1 team |
 | Sprint snapshots captured | 0 | 10+ per board |
 | Decisions recorded | 0 | 50+ |
-| Forecast accuracy | unmeasured | ±20% at 85% confidence |
+| Forecast accuracy | unmeasured | within 20% at 85% confidence |
 | PM time saved | unmeasured | 5+ hours/week |
 
 ---
 
-## Principles for Roadmap Execution
+## Principles
 
-1. **Ship to learn** — Every phase ships to production. No "big bang" releases.
-2. **Data before features** — More sprint snapshots + team data = better AI. Prioritize data capture.
-3. **PM friction = bug** — If a PM has to think about which tool to use, we failed. Shortcuts first.
-4. **Automate the boring** — Snapshots, digests, escalations should be automatic, not manual.
+1. **Ship to learn** — Every phase ships. No "big bang" releases.
+2. **Data before features** — More sprint snapshots = better AI. Prioritize data capture.
+3. **PM friction = bug** — If a PM has to think about which tool to use, we failed.
+4. **Automate the boring** — Snapshots, digests, escalations should be automatic.
 5. **Measure value** — Track "PM time saved" not "tools added".
 6. **One team first** — Perfect for one team before scaling to many.
+7. **Security is non-negotiable** — Fix critical findings before adding features.
 
 ---
 
