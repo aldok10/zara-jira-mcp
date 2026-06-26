@@ -49,6 +49,21 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 }
 
 func enabledModules() map[string]bool {
+	// Profile presets for different PM needs
+	profile := os.Getenv("PM_PROFILE")
+	switch profile {
+	case "lite":
+		// ~25 tools: ChatGPT Desktop, slow clients. Only shortcuts + basic jira + basic memory
+		return map[string]bool{"shortcuts": true, "jira_core": true, "pm_core": true}
+	case "standard":
+		// ~80 tools: daily PM work + AI + notifications
+		return map[string]bool{"jira_core": true, "jira": true, "pm_core": true, "pm": true, "ai": true, "notifications": true, "shortcuts": true}
+	case "full":
+		// all modules
+		return map[string]bool{"jira_core": true, "jira": true, "pm_core": true, "pm": true, "ai": true, "notifications": true, "stakeholder": true, "portfolio": true, "github": true, "shortcuts": true}
+	}
+
+	// Custom module selection via PM_ENABLED_MODULES
 	env := os.Getenv("PM_ENABLED_MODULES")
 	if env == "" || env == "all" {
 		return map[string]bool{"jira": true, "pm": true, "ai": true, "notifications": true, "stakeholder": true, "portfolio": true, "github": true, "integrations": true, "shortcuts": true}

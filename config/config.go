@@ -29,6 +29,13 @@ type Config struct {
 	Linear         LinearConfig
 	PagerDuty      PagerDutyConfig
 	GoogleSheets   GoogleSheetsConfig
+	Database       DatabaseConfig
+}
+
+type DatabaseConfig struct {
+	PostgresDSN string
+	MySQLDSN    string
+	MongoURI    string
 }
 
 type GoogleCalendarConfig struct {
@@ -353,6 +360,11 @@ func Load() (*Config, error) {
 		GoogleSheets: GoogleSheetsConfig{
 			APIKey:        envOrFile(os.Getenv("GOOGLE_SHEETS_API_KEY"), fSheets.APIKey),
 			SpreadsheetID: envOrFile(os.Getenv("GOOGLE_SHEETS_SPREADSHEET_ID"), fSheets.SpreadsheetID),
+		},
+		Database: DatabaseConfig{
+			PostgresDSN: os.Getenv("DATABASE_POSTGRES_DSN"),
+			MySQLDSN:    os.Getenv("DATABASE_MYSQL_DSN"),
+			MongoURI:    os.Getenv("DATABASE_MONGO_URI"),
 		},
 	}
 
