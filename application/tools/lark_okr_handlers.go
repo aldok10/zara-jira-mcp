@@ -3,7 +3,6 @@ package tools
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"

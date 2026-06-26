@@ -1,6 +1,6 @@
 # Performance Profiles
 
-224 tools is powerful but heavy. Most AI clients load all tool definitions into their context window — that means slower responses and higher token usage. Profiles let you load only what you need.
+~279 tools is powerful but heavy. Most AI clients load all tool definitions into their context window — that means slower responses and higher token usage. Profiles let you load only what you need.
 
 ## Quick Setup
 
@@ -10,17 +10,17 @@ Add one env var to your config:
 PM_PROFILE=pm
 ```
 
-Done. Your AI loads 60 tools instead of 224. Responses are faster, context is cleaner.
+Done. Your AI loads ~60 tools instead of ~279. Responses are faster, context is cleaner.
 
 ## Profiles
 
 | Profile | Tools | Includes |
 |---------|-------|----------|
-| `lite` | ~30 | Jira CRUD + PM memory + shortcuts |
-| `pm` | ~60 | Jira + PM memory + AI intelligence + stakeholder reports + portfolio |
-| `standard` | ~100 | PM + notifications (Lark, Slack, Discord, Telegram, Teams, Email) |
-| `full` | ~150 | Standard + GitHub/GitLab visibility |
-| (default) | ~224 | Everything including Linear, PagerDuty, Clockify, Notion, Sheets |
+| `lite` | ~25 | Jira CRUD + PM memory + shortcuts |
+| `pm` | ~40 | Jira + PM memory + AI intelligence + stakeholder reports + portfolio |
+| `standard` | ~59 | PM + notifications (Lark, Slack, Discord, Telegram, Teams, Email) |
+| `full` | ~59 | Standard + GitHub/GitLab visibility |
+| (default) | ~279 | Everything including Linear, PagerDuty, Clockify, Notion, Sheets |
 
 ## Which Profile Should I Use?
 
