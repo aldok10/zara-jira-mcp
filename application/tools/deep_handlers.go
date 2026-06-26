@@ -188,6 +188,9 @@ func (h *Handlers) GetSprintGoals(ctx context.Context, req mcp.CallToolRequest) 
 	}
 
 	var sb strings.Builder
+
+	// BLUF: Report goal count and active status first
+	sb.WriteString(fmt.Sprintf("Found %d sprint goal(s)\n\n", len(goals)))
 	for _, g := range goals {
 		sb.WriteString(fmt.Sprintf("#%d [%s] %s\n  Goal: %s\n", g.ID, g.Status, g.SprintName, g.Goal))
 		if g.KeyResults != "" {
@@ -391,10 +394,14 @@ func (h *Handlers) GenerateReleaseNotes(ctx context.Context, req mcp.CallToolReq
 	}
 
 	var sb strings.Builder
+
+	// BLUF: Start with sprint name and goal
 	sb.WriteString(fmt.Sprintf("# Release Notes: %s\n\n", sprint.Name))
 	if sprint.Goal != "" {
 		sb.WriteString(fmt.Sprintf("**Goal:** %s\n\n", sprint.Goal))
 	}
+
+	// BLUF: List completed items by category
 	if len(features) > 0 {
 		sb.WriteString("## Features\n" + strings.Join(features, "\n") + "\n\n")
 	}

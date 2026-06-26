@@ -154,18 +154,19 @@ func (h *Handlers) GetSprintSummary(ctx context.Context, req mcp.CallToolRequest
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Sprint: %s (Goal: %s)\n\n", sprint.Name, sprint.Goal))
 
+	// BLUF: Report sprint status first
 	statusCount := map[string]int{}
 	for _, issue := range issues {
 		statusCount[issue.Status]++
 	}
+	sb.WriteString(fmt.Sprintf("Sprint: %s (Goal: %s)\n", sprint.Name, sprint.Goal))
+sb.WriteString(fmt.Sprintf("Status: %d issues total\n", len(issues)))
 	sb.WriteString("Status breakdown:\n")
 	for status, count := range statusCount {
 		sb.WriteString(fmt.Sprintf("  %s: %d\n", status, count))
 	}
-	sb.WriteString(fmt.Sprintf("\nTotal: %d issues\n\n", len(issues)))
-
+	sb.WriteString("\nIssues:\n")
 	for _, issue := range issues {
 		sb.WriteString(fmt.Sprintf("- %s [%s] %s (Assignee: %s)\n", issue.Key, issue.Status, issue.Summary, issue.Assignee))
 	}
