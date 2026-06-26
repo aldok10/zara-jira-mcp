@@ -11,7 +11,7 @@ import (
 
 func (h *Handlers) initOutcomeTables() {
 	db := h.Memory.DB()
-	db.Exec(`CREATE TABLE IF NOT EXISTS stakeholder_pulse (
+	_, _ = db.Exec(`CREATE TABLE IF NOT EXISTS stakeholder_pulse (
 		id INTEGER PRIMARY KEY,
 		stakeholder TEXT,
 		score INTEGER,
@@ -19,7 +19,7 @@ func (h *Handlers) initOutcomeTables() {
 		feedback TEXT,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	)`)
-	db.Exec(`CREATE TABLE IF NOT EXISTS outcome_map (
+	_, _ = db.Exec(`CREATE TABLE IF NOT EXISTS outcome_map (
 		id INTEGER PRIMARY KEY,
 		sprint_name TEXT,
 		objective TEXT,
