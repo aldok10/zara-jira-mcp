@@ -185,7 +185,7 @@ func (h *Handlers) BacklogHealthCheck(ctx context.Context, req mcp.CallToolReque
 		sb.WriteString(fmt.Sprintf("  %s [%s] %s (created %d days ago)\n", i.Key, i.Type, i.Summary, age))
 	}
 
-	sb.WriteString(fmt.Sprintf("\nRecommendation:\n"))
+	sb.WriteString("\nRecommendation:\n")
 	if len(result.Issues) > 20 {
 		sb.WriteString("  URGENT: >20 stale items. Schedule grooming session to archive/close.\n")
 	} else if len(result.Issues) > 10 {
