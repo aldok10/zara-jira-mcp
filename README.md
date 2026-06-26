@@ -222,6 +222,24 @@ Powered by your historical data + live Jira state:
 
 > Full guide: [docs/reporting-guide.md](docs/reporting-guide.md) — scenario-based guide for every type of stakeholder communication.
 
+### Engineering Literacy for PM/SM
+
+Tools that help Scrum Masters understand what engineers actually do, spot bottlenecks, and have better technical conversations:
+
+| Tool | What PM Learns |
+|------|---------------|
+| `pm_flow_metrics` | WIP, cycle time, throughput — is the team flowing or stuck? |
+| `pm_github_prs` | Open PRs with age — where's the review bottleneck? |
+| `pm_github_pr_metrics` | Avg PR age, stale count — is code review healthy? |
+| `pm_tech_debt` | What shortcuts are slowing the team down |
+| `pm_tech_debt_ratio` | Bugs/debt vs features. > 20% = quality alarm |
+| `pm_commitment_check` | Is the team overcommitting this sprint? |
+| `pm_resource_utilization` | Who is overloaded vs available |
+| `jira_trace_branch` | Is "done" actually deployed or just code-complete? |
+| `pm_incidents` | Production health — incidents, severity, resolution |
+
+> Full guide: [docs/engineering-literacy.md](docs/engineering-literacy.md) — concepts, vocabulary, metrics, and a learning path for PM/SM to develop technical intuition.
+
 ### Workflow Recipes (3 tools)
 
 One-click workflows:
