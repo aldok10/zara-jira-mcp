@@ -104,13 +104,13 @@ Tone: confident, concise, no jargon. Write for a VP who has 30 seconds.`
 
 	report, err := h.aiComplete(ctx, systemPrompt, contextData.String())
 	if err != nil {
-		return errorResult("AI failed: " + err.Error()), nil
+		return sanitizedError("ai analysis failed for stakeholder", err), nil
 	}
 
 	sendToLark := req.GetBool("send_to_lark", false)
 	if sendToLark {
 		if err := h.Lark.SendMarkdown(ctx, "Executive Update", report); err != nil {
-			return textResult(report + "\n\n(Lark send failed: " + err.Error() + ")"), nil
+			return textResult(report + "\n\n(Lark send failed - check server logs)"), nil
 		}
 		return textResult(report + "\n\n(Sent to Lark)"), nil
 	}
@@ -354,7 +354,7 @@ func (h *Handlers) RecordLearning(ctx context.Context, req mcp.CallToolRequest) 
 	}
 
 	if err := h.Memory.SaveDecision(ctx, d); err != nil {
-		return errorResult("Failed to save: " + err.Error()), nil
+		return sanitizedError("failed to save stakeholder data", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Learning recorded: %s\n%s", title, learning)), nil

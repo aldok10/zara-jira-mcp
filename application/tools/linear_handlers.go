@@ -17,7 +17,7 @@ func (h *Handlers) LinearIssues(ctx context.Context, req mcp.CallToolRequest) (*
 
 	issues, err := h.Linear.ListIssues(ctx, team, state)
 	if err != nil {
-		return errorResult("Linear API error: " + err.Error()), nil
+		return sanitizedError("linear api call failed", err), nil
 	}
 	if len(issues) == 0 {
 		return textResult("No issues found."), nil
@@ -39,7 +39,7 @@ func (h *Handlers) LinearCycles(ctx context.Context, req mcp.CallToolRequest) (*
 
 	cycles, err := h.Linear.ListCycles(ctx)
 	if err != nil {
-		return errorResult("Linear API error: " + err.Error()), nil
+		return sanitizedError("linear api call failed", err), nil
 	}
 	if len(cycles) == 0 {
 		return textResult("No cycles found."), nil
@@ -65,7 +65,7 @@ func (h *Handlers) LinearActivity(ctx context.Context, req mcp.CallToolRequest) 
 
 	activities, err := h.Linear.RecentActivity(ctx)
 	if err != nil {
-		return errorResult("Linear API error: " + err.Error()), nil
+		return sanitizedError("linear api call failed", err), nil
 	}
 	if len(activities) == 0 {
 		return textResult("No recent activity."), nil

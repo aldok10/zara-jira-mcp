@@ -118,7 +118,7 @@ func (h *Handlers) BulkLabel(ctx context.Context, req mcp.CallToolRequest) (*mcp
 func (h *Handlers) ListProjects(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	projects, err := h.Jira.GetProjects(ctx)
 	if err != nil {
-		return errorResult("Failed to get projects: " + err.Error()), nil
+		return sanitizedError("failed to list projects", err), nil
 	}
 
 	var sb strings.Builder
@@ -138,7 +138,7 @@ func (h *Handlers) ProjectDetail(ctx context.Context, req mcp.CallToolRequest) (
 
 	project, err := h.Jira.GetProject(ctx, key)
 	if err != nil {
-		return errorResult("Failed to get project: " + err.Error()), nil
+		return sanitizedError("failed to get project details", err), nil
 	}
 
 	data, _ := json.MarshalIndent(project, "", "  ")
@@ -169,7 +169,7 @@ func (h *Handlers) RawRequest(ctx context.Context, req mcp.CallToolRequest) (*mc
 
 	respBody, statusCode, err := h.Jira.RawRequest(ctx, method, path, body)
 	if err != nil {
-		return errorResult("Request failed: " + err.Error()), nil
+		return sanitizedError("raw jira request failed", err), nil
 	}
 
 	var sb strings.Builder

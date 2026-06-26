@@ -25,7 +25,7 @@ func (h *Handlers) FlowMetrics(ctx context.Context, req mcp.CallToolRequest) (*m
 	sprint := sprints[0]
 	issues, err := h.Jira.GetSprintIssues(ctx, sprint.ID)
 	if err != nil {
-		return errorResult("Failed to get issues: " + err.Error()), nil
+		return sanitizedError("failed to get flow issues", err), nil
 	}
 
 	now := time.Now()
@@ -262,7 +262,7 @@ Keep it engaging for stakeholders, not just devs. Under 150 words.`,
 
 	result, err := h.aiComplete(ctx, systemPrompt, userPrompt)
 	if err != nil {
-		return errorResult("AI failed: " + err.Error()), nil
+		return sanitizedError("ai analysis failed in flow", err), nil
 	}
 
 	return textResult(result), nil
@@ -291,7 +291,7 @@ func (h *Handlers) RecordConfidence(ctx context.Context, req mcp.CallToolRequest
 	}
 
 	if err := h.Memory.SaveTeamMetric(ctx, m); err != nil {
-		return errorResult("Failed to save: " + err.Error()), nil
+		return sanitizedError("failed to save flow data", err), nil
 	}
 
 	labels := []string{"", "very worried", "worried", "neutral", "confident", "very confident"}

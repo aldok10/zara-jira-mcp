@@ -181,7 +181,7 @@ func (h *Handlers) PMStakeholderTrend(ctx context.Context, req mcp.CallToolReque
 	db := h.Memory.DB()
 	rows, err := db.Query("SELECT stakeholder, score, sprint_name, created_at FROM stakeholder_pulse ORDER BY created_at DESC LIMIT 100")
 	if err != nil {
-		return errorResult("Query failed: " + err.Error()), nil
+		return sanitizedError("outcomes query failed", err), nil
 	}
 	defer rows.Close()
 
@@ -399,7 +399,7 @@ func (h *Handlers) PMOutcomeHistory(ctx context.Context, req mcp.CallToolRequest
 	db := h.Memory.DB()
 	rows, err := db.Query("SELECT sprint_name, objective, key_results, created_at FROM outcome_map ORDER BY created_at DESC LIMIT 50")
 	if err != nil {
-		return errorResult("Query failed: " + err.Error()), nil
+		return sanitizedError("outcomes query failed", err), nil
 	}
 	defer rows.Close()
 

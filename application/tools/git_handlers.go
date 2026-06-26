@@ -33,7 +33,7 @@ func (h *Handlers) GitHubCreateIssue(ctx context.Context, req mcp.CallToolReques
 
 	issue, err := h.GitHub.CreateIssue(ctx, title, body, labels, assignees, milestone)
 	if err != nil {
-		return errorResult("GitHub error: " + err.Error()), nil
+		return sanitizedError("github operation failed", err), nil
 	}
 
 	return textResult(fmt.Sprintf("GitHub issue created: #%d %s", issue.Number, issue.Title)), nil
@@ -51,7 +51,7 @@ func (h *Handlers) GitHubListIssues(ctx context.Context, req mcp.CallToolRequest
 
 	issues, err := h.GitHub.ListIssues(ctx, state, labels, limit)
 	if err != nil {
-		return errorResult("GitHub error: " + err.Error()), nil
+		return sanitizedError("github operation failed", err), nil
 	}
 
 	if len(issues) == 0 {
@@ -82,7 +82,7 @@ func (h *Handlers) GitHubCreateMilestone(ctx context.Context, req mcp.CallToolRe
 
 	m, err := h.GitHub.CreateMilestone(ctx, title, req.GetString("description", ""), req.GetString("due_date", ""))
 	if err != nil {
-		return errorResult("GitHub error: " + err.Error()), nil
+		return sanitizedError("github operation failed", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Milestone created: #%d %s", m.Number, m.Title)), nil
@@ -96,7 +96,7 @@ func (h *Handlers) GitHubListMilestones(ctx context.Context, req mcp.CallToolReq
 
 	milestones, err := h.GitHub.ListMilestones(ctx, req.GetString("state", "open"))
 	if err != nil {
-		return errorResult("GitHub error: " + err.Error()), nil
+		return sanitizedError("github operation failed", err), nil
 	}
 
 	if len(milestones) == 0 {
@@ -123,7 +123,7 @@ func (h *Handlers) GitHubReadFile(ctx context.Context, req mcp.CallToolRequest) 
 
 	content, err := h.GitHub.GetFileContent(ctx, path, req.GetString("ref", ""))
 	if err != nil {
-		return errorResult("GitHub error: " + err.Error()), nil
+		return sanitizedError("github operation failed", err), nil
 	}
 
 	return textResult(content), nil
@@ -137,7 +137,7 @@ func (h *Handlers) GitHubListFiles(ctx context.Context, req mcp.CallToolRequest)
 
 	files, err := h.GitHub.ListFiles(ctx, req.GetString("path", ""), req.GetString("ref", ""))
 	if err != nil {
-		return errorResult("GitHub error: " + err.Error()), nil
+		return sanitizedError("github operation failed", err), nil
 	}
 
 	return textResult(strings.Join(files, "\n")), nil
@@ -161,7 +161,7 @@ func (h *Handlers) GitLabCreateIssue(ctx context.Context, req mcp.CallToolReques
 	issue, err := h.GitLab.CreateIssue(ctx, title, req.GetString("description", ""), labels,
 		req.GetInt("assignee_id", 0), req.GetInt("milestone_id", 0))
 	if err != nil {
-		return errorResult("GitLab error: " + err.Error()), nil
+		return sanitizedError("gitlab operation failed", err), nil
 	}
 
 	return textResult(fmt.Sprintf("GitLab issue created: #%d %s\n%s", issue.IID, issue.Title, issue.WebURL)), nil
@@ -175,7 +175,7 @@ func (h *Handlers) GitLabListIssues(ctx context.Context, req mcp.CallToolRequest
 
 	issues, err := h.GitLab.ListIssues(ctx, req.GetString("state", "opened"), req.GetString("labels", ""), req.GetInt("limit", 20))
 	if err != nil {
-		return errorResult("GitLab error: " + err.Error()), nil
+		return sanitizedError("gitlab operation failed", err), nil
 	}
 
 	if len(issues) == 0 {
@@ -206,7 +206,7 @@ func (h *Handlers) GitLabCreateMilestone(ctx context.Context, req mcp.CallToolRe
 
 	m, err := h.GitLab.CreateMilestone(ctx, title, req.GetString("description", ""), req.GetString("due_date", ""))
 	if err != nil {
-		return errorResult("GitLab error: " + err.Error()), nil
+		return sanitizedError("gitlab operation failed", err), nil
 	}
 
 	return textResult(fmt.Sprintf("GitLab milestone created: #%d %s", m.IID, m.Title)), nil
@@ -220,7 +220,7 @@ func (h *Handlers) GitLabListMilestones(ctx context.Context, req mcp.CallToolReq
 
 	milestones, err := h.GitLab.ListMilestones(ctx, req.GetString("state", "active"))
 	if err != nil {
-		return errorResult("GitLab error: " + err.Error()), nil
+		return sanitizedError("gitlab operation failed", err), nil
 	}
 
 	if len(milestones) == 0 {
@@ -242,7 +242,7 @@ func (h *Handlers) GitLabListMRs(ctx context.Context, req mcp.CallToolRequest) (
 
 	mrs, err := h.GitLab.ListMRs(ctx, req.GetString("state", "opened"), req.GetInt("limit", 20))
 	if err != nil {
-		return errorResult("GitLab error: " + err.Error()), nil
+		return sanitizedError("gitlab operation failed", err), nil
 	}
 
 	if len(mrs) == 0 {
@@ -273,7 +273,7 @@ func (h *Handlers) GitLabReadFile(ctx context.Context, req mcp.CallToolRequest) 
 
 	content, err := h.GitLab.GetFileContent(ctx, path, req.GetString("ref", ""))
 	if err != nil {
-		return errorResult("GitLab error: " + err.Error()), nil
+		return sanitizedError("gitlab operation failed", err), nil
 	}
 
 	return textResult(content), nil
@@ -287,7 +287,7 @@ func (h *Handlers) GitLabListFiles(ctx context.Context, req mcp.CallToolRequest)
 
 	files, err := h.GitLab.ListFiles(ctx, req.GetString("path", ""), req.GetString("ref", ""))
 	if err != nil {
-		return errorResult("GitLab error: " + err.Error()), nil
+		return sanitizedError("gitlab operation failed", err), nil
 	}
 
 	return textResult(strings.Join(files, "\n")), nil

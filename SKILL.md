@@ -1,41 +1,65 @@
 # Skill: zara-jira-mcp
 
-239-tool MCP server: AI-powered Scrum Master with persistent memory, Jira Cloud integration, multi-channel notifications, and 16 platform integrations.
+~279-tool MCP server: AI-powered Scrum Master with persistent memory, Jira Cloud integration, multi-channel notifications, and 16 platform integrations.
 
 ## Connection
 
 Stdio MCP server. SQLite persistent memory at `~/.zara-jira-mcp/pm_memory.db`. Config file at `~/.zara-jira-mcp/config.json`.
 
-## Profile System
+## Profile System (Research-Backed Budgets)
 
 The server loads tools based on `PM_PROFILE` env var:
 
-| Profile | Tools | Modules |
-|---------|-------|---------|
-| `chatgpt` | ~14 | shortcuts only (smart routing) |
-| `lite` | ~30 | shortcuts + pm |
-| `standard` | ~80 | jira + pm + ai + notifications + shortcuts |
-| `full` | ~150 | standard + stakeholder + portfolio + github |
-| (none/all) | ~239 | everything |
+| Profile | Tools | Enabled Modules |
+|---------|-------|-----------------|
+| `chatgpt` | ~12 | smart-router, pm-quick |
+| `lite` | ~25 | + help, jira |
+| `standard` | ~40 | + pm-memory, ai |
+| `full` | ~59 | + pm-analysis, notify-lark |
+| `all` | ~279 | all modules |
 
-Custom: `PM_ENABLED_MODULES=jira,pm,ai,notifications` (comma-separated).
+Custom: `PM_ENABLED_MODULES=smart-router,jira,pm-memory` (comma-separated).
 
-Module names: `jira`, `pm`, `ai`, `notifications`, `stakeholder`, `portfolio`, `github`, `integrations`, `shortcuts`
+Available modules: `jira`, `jira-ops`, `jira-deep`, `pm-memory`, `pm-analysis`, `pm-planning`, `pm-intel`, `ai`, `notify-lark`, `notify-slack`, `notify-all`, `stakeholder`, `stakeholder-deep`, `portfolio`, `github`, `github-deep`, `integrations`, `smart-router`, `pm-quick`, `help`
 
 ## Critical Rules
 
 1. **Get board_id first** — call `jira_boards` before any PM tool.
 2. **Memory builds over time** — intelligence tools need historical data. Record snapshots, decisions, risks.
 3. **`pm_snapshot_sprint` at end of EVERY sprint** — forecasting/velocity require it.
-4. **Never `pm_dashboard` for executives** — use `pm_exec_report` instead.
-5. **Record immediately** — after any decision, risk, or blocker.
-6. **All AI tools gracefully degrade** — if AI provider is down, they return raw data.
+4. **Use `pm_smart` as primary entry point** — natural language routes to the right tool. Falls back to AI if no keyword matches.
+5. **Use `pm_search` for cross-source lookup** — searches Jira + decisions + risks + blockers + meetings + knowledge base.
+6. **Never `pm_dashboard` for executives** — use `pm_exec_report` instead (no jargon, business outcomes only).
+7. **Record immediately** — after any decision, risk, or blocker.
+8. **All AI tools gracefully degrade** — if AI provider is down, they return raw data.
 
 ---
 
-## TOOL REFERENCE (239 tools)
+## TOOL REFERENCE (~279 tools)
 
-### Jira Operations (~48 tools)
+### Smart Router (Primary Entry Points — 7 Meta-Tools)
+
+| Tool | What It Does | Best For |
+|------|-------------|----------|
+| `pm_smart` | NL query → routes to right tool | "who is blocked?", "sprint health?", "when will we finish?", "what's the mood?" |
+| `pm_do` | NL action → creates/records | "create task X", "record risk Y", "record decision Z", "log feedback" |
+| `pm_report` | Generate reports by type | status, executive, release_notes, weekly, health, velocity, scorecard, sentiment, okr, kpi, coaching |
+| `pm_search` | Unified cross-source search | Searches decisions, risks, blockers, actions, meetings, KB, overdue, Jira |
+| `pm_team` | Team-focused actions | workload, 1on1, pulse, radar, health |
+| `pm_plan` | Planning & preparation | planning_prep, capacity, forecast, ready_check, backlog, goals |
+| `pm_retro` | Retrospective & improvement | actions, experiments, anti_patterns, coaching, facilitate |
+
+Strategy: Start with `pm_smart` for any PM question. Smart router catches 90%+ of use cases via keyword routing + AI fallback.
+
+#### Predictive Tools (Smart Context — 3 tools)
+
+| Tool | What It Does |
+|------|-------------|
+| `pm_predict_blockers` | Predict who is likely to get blocked based on historical patterns |
+| `pm_sprint_similarity` | Compare current sprint to historical ones; warns if it matches a failing pattern |
+| `pm_early_warning` | Multi-signal early warning: chronic blockers, pace, risks, velocity, retro actions |
+
+### Jira Operations
 
 #### Search & Read
 | Tool | Params | Returns |
@@ -296,20 +320,23 @@ Module names: `jira`, `pm`, `ai`, `notifications`, `stakeholder`, `portfolio`, `
 
 ---
 
-### Shortcuts & Smart Context (~14 tools)
+### Quick Actions (pm-quick module — 5 tools)
 
 | Tool | Purpose |
 |------|---------|
 | `pm` | One-shot sprint status (alias for dashboard) |
+| `pm_create` | Quick issue/task create (simplified) |
+| `pm_decide` | Quick decision record (simplified) |
+| `pm_risk` | Quick risk record (simplified) |
 | `pm_next` | AI suggests next action |
+
+### Help & Discovery (help module — 3 tools)
+
+| Tool | Purpose |
+|------|---------|
 | `pm_help` | Topic-based tool discovery |
 | `pm_quickstart` | First-time setup guide |
 | `pm_workflow` | Step-by-step workflow sequences |
-| `pm_decide` | Quick decision record (simplified) |
-| `pm_risk` | Quick risk record (simplified) |
-| `pm_create` | Quick issue create (simplified) |
-| `pm_context` | Smart context for current sprint |
-| `pm_nl_to_jql` | Natural language to JQL |
 
 ---
 

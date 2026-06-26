@@ -135,7 +135,7 @@ func (h *Handlers) PMOKRList(ctx context.Context, req mcp.CallToolRequest) (*mcp
 
 	rows, err := db.Query("SELECT id, level, title, owner, cycle FROM okr WHERE status = ? ORDER BY level, created_at", status)
 	if err != nil {
-		return errorResult("Query failed: " + err.Error()), nil
+		return sanitizedError("okr query failed", err), nil
 	}
 	defer rows.Close()
 
@@ -224,7 +224,7 @@ func (h *Handlers) PMKRProgress(ctx context.Context, req mcp.CallToolRequest) (*
 	db := h.Memory.DB()
 	okrRows, err := db.Query("SELECT id, title, level FROM okr WHERE status = 'active' ORDER BY created_at DESC")
 	if err != nil {
-		return errorResult("Query failed: " + err.Error()), nil
+		return sanitizedError("okr query failed", err), nil
 	}
 	defer okrRows.Close()
 
@@ -455,7 +455,7 @@ func (h *Handlers) PMKPIDashboard(ctx context.Context, req mcp.CallToolRequest) 
 	db := h.Memory.DB()
 	rows, err := db.Query("SELECT id, name, unit, target_value, warning_threshold, danger_threshold FROM kpi_definition ORDER BY name")
 	if err != nil {
-		return errorResult("Query failed: " + err.Error()), nil
+		return sanitizedError("okr query failed", err), nil
 	}
 	defer rows.Close()
 
@@ -585,7 +585,7 @@ func (h *Handlers) PMOKRHealth(ctx context.Context, req mcp.CallToolRequest) (*m
 		WHERE o.status = 'active'
 		GROUP BY o.id`)
 	if err != nil {
-		return errorResult("Query failed: " + err.Error()), nil
+		return sanitizedError("okr query failed", err), nil
 	}
 	defer rows.Close()
 
@@ -650,7 +650,7 @@ func (h *Handlers) PMKPITrend(ctx context.Context, req mcp.CallToolRequest) (*mc
 
 	snapRows, err := db.Query("SELECT value, created_at FROM kpi_snapshot WHERE kpi_id = ? ORDER BY created_at DESC LIMIT 20", kpiID)
 	if err != nil {
-		return errorResult("query failed: " + err.Error()), nil
+		return sanitizedError("okr query failed", err), nil
 	}
 	defer snapRows.Close()
 
@@ -774,7 +774,7 @@ func (h *Handlers) PMKPIToOkr(ctx context.Context, req mcp.CallToolRequest) (*mc
 
 	rows, err := db.Query("SELECT d.name, COALESCE(d.unit,'%'), d.target_value, COALESCE(s.value,0) FROM kpi_definition d LEFT JOIN kpi_snapshot s ON s.kpi_id = d.id AND s.id = (SELECT id FROM kpi_snapshot WHERE kpi_id = d.id ORDER BY created_at DESC LIMIT 1) ORDER BY d.name")
 	if err != nil {
-		return errorResult("query failed: " + err.Error()), nil
+		return sanitizedError("okr query failed", err), nil
 	}
 	defer rows.Close()
 

@@ -21,7 +21,7 @@ func (h *Handlers) AssignIssue(ctx context.Context, req mcp.CallToolRequest) (*m
 	}
 
 	if err := h.Jira.AssignIssue(ctx, key, assigneeID); err != nil {
-		return errorResult("Failed to assign issue: " + err.Error()), nil
+		return sanitizedError("failed to assign issue", err), nil
 	}
 	return textResult(fmt.Sprintf("Issue %s assigned successfully", key)), nil
 }
@@ -34,7 +34,7 @@ func (h *Handlers) UnassignIssue(ctx context.Context, req mcp.CallToolRequest) (
 	}
 
 	if err := h.Jira.AssignIssue(ctx, key, ""); err != nil {
-		return errorResult("Failed to unassign issue: " + err.Error()), nil
+		return sanitizedError("failed to unassign issue", err), nil
 	}
 	return textResult(fmt.Sprintf("Issue %s unassigned successfully", key)), nil
 }
@@ -47,7 +47,7 @@ func (h *Handlers) DeleteIssue(ctx context.Context, req mcp.CallToolRequest) (*m
 	}
 
 	if err := h.Jira.DeleteIssue(ctx, key); err != nil {
-		return errorResult("Failed to delete issue: " + err.Error()), nil
+		return sanitizedError("failed to delete issue", err), nil
 	}
 	return textResult(fmt.Sprintf("Issue %s deleted successfully", key)), nil
 }
@@ -79,7 +79,7 @@ func (h *Handlers) CreateSubtask(ctx context.Context, req mcp.CallToolRequest) (
 
 	created, err := h.Jira.CreateSubtask(ctx, parentKey, input)
 	if err != nil {
-		return errorResult("Failed to create subtask: " + err.Error()), nil
+		return sanitizedError("failed to create subtask", err), nil
 	}
 	return textResult(fmt.Sprintf("Created subtask: %s - %s (parent: %s)", created.Key, created.Summary, parentKey)), nil
 }
@@ -93,7 +93,7 @@ func (h *Handlers) FindUser(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 
 	users, err := h.Jira.FindUser(ctx, query)
 	if err != nil {
-		return errorResult("User search failed: " + err.Error()), nil
+		return sanitizedError("user search failed", err), nil
 	}
 
 	if len(users) == 0 {

@@ -64,7 +64,7 @@ func (h *Handlers) IncidentImpact(ctx context.Context, req mcp.CallToolRequest) 
 
 	result, err := h.Jira.SearchIssues(ctx, jql, 30, 0)
 	if err != nil {
-		return errorResult("Jira error: " + err.Error()), nil
+		return sanitizedError("jira operation failed in leverage", err), nil
 	}
 
 	if len(result.Issues) == 0 {
@@ -168,7 +168,7 @@ func (h *Handlers) BacklogHealthCheck(ctx context.Context, req mcp.CallToolReque
 
 	result, err := h.Jira.SearchIssues(ctx, jql, 50, 0)
 	if err != nil {
-		return errorResult("Jira: " + err.Error()), nil
+		return sanitizedError("jira operation failed in leverage", err), nil
 	}
 
 	var sb strings.Builder

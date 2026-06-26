@@ -19,7 +19,7 @@ func (h *Handlers) EpicIssues(ctx context.Context, req mcp.CallToolRequest) (*mc
 	jql := fmt.Sprintf(`"Epic Link" = %s ORDER BY rank ASC`, epicKey)
 	result, err := h.Jira.SearchIssues(ctx, jql, maxResults, 0)
 	if err != nil {
-		return errorResult("Search failed: " + err.Error()), nil
+		return sanitizedError("epic search failed", err), nil
 	}
 
 	var sb strings.Builder
@@ -50,7 +50,7 @@ func (h *Handlers) EpicAdd(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 			continue
 		}
 		if err := h.Jira.SetEpicLink(ctx, k, epicKey); err != nil {
-			errors = append(errors, fmt.Sprintf("%s: %s", k, err.Error()))
+			errors = append(errors, fmt.Sprintf("%s: operation failed", k))
 		}
 	}
 
@@ -75,7 +75,7 @@ func (h *Handlers) EpicRemove(ctx context.Context, req mcp.CallToolRequest) (*mc
 			continue
 		}
 		if err := h.Jira.RemoveEpicLink(ctx, k); err != nil {
-			errors = append(errors, fmt.Sprintf("%s: %s", k, err.Error()))
+			errors = append(errors, fmt.Sprintf("%s: operation failed", k))
 		}
 	}
 
@@ -95,7 +95,7 @@ func (h *Handlers) ListSprints(ctx context.Context, req mcp.CallToolRequest) (*m
 
 	sprints, err := h.Jira.GetSprints(ctx, boardID, state)
 	if err != nil {
-		return errorResult("Failed to get sprints: " + err.Error()), nil
+		return sanitizedError("failed to get sprints", err), nil
 	}
 
 	if len(sprints) == 0 {
@@ -131,7 +131,7 @@ func (h *Handlers) CreateSprintTool(ctx context.Context, req mcp.CallToolRequest
 
 	sprint, err := h.Jira.CreateSprint(ctx, boardID, name, goal)
 	if err != nil {
-		return errorResult("Failed to create sprint: " + err.Error()), nil
+		return sanitizedError("failed to create sprint", err), nil
 	}
 	return textResult(fmt.Sprintf("Created sprint #%d: %s [%s]", sprint.ID, sprint.Name, sprint.State)), nil
 }
@@ -152,7 +152,7 @@ func (h *Handlers) StartSprintTool(ctx context.Context, req mcp.CallToolRequest)
 	}
 
 	if err := h.Jira.StartSprint(ctx, sprintID, startDate, endDate); err != nil {
-		return errorResult("Failed to start sprint: " + err.Error()), nil
+		return sanitizedError("failed to start sprint", err), nil
 	}
 	return textResult(fmt.Sprintf("Sprint %d started (%s to %s)", sprintID, startDate, endDate)), nil
 }
@@ -165,7 +165,7 @@ func (h *Handlers) CloseSprintTool(ctx context.Context, req mcp.CallToolRequest)
 	}
 
 	if err := h.Jira.CloseSprint(ctx, sprintID); err != nil {
-		return errorResult("Failed to close sprint: " + err.Error()), nil
+		return sanitizedError("failed to close sprint", err), nil
 	}
 	return textResult(fmt.Sprintf("Sprint %d closed", sprintID)), nil
 }
@@ -191,7 +191,7 @@ func (h *Handlers) MoveIssuesToSprintTool(ctx context.Context, req mcp.CallToolR
 	}
 
 	if err := h.Jira.MoveIssuesToSprint(ctx, sprintID, trimmed); err != nil {
-		return errorResult("Failed to move issues: " + err.Error()), nil
+		return sanitizedError("failed to move issues between sprints", err), nil
 	}
 	return textResult(fmt.Sprintf("Moved %d issue(s) to sprint %d", len(trimmed), sprintID)), nil
 }

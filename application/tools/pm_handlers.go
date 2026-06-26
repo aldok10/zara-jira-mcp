@@ -99,7 +99,7 @@ Rules:
 
 	analysis, err := h.aiComplete(ctx, systemPrompt, userPrompt)
 	if err != nil {
-		return errorResult("AI analysis failed: " + err.Error()), nil
+		return sanitizedError("ai analysis failed for pm handler", err), nil
 	}
 
 	return textResult(analysis), nil
@@ -114,7 +114,7 @@ func (h *Handlers) VelocityTrend(ctx context.Context, req mcp.CallToolRequest) (
 
 	snaps, err := h.Memory.GetSprintSnapshots(ctx, boardID, 10)
 	if err != nil {
-		return errorResult("Failed to get snapshots: " + err.Error()), nil
+		return sanitizedError("failed to get sprint snapshots", err), nil
 	}
 
 	if len(snaps) == 0 {
@@ -307,7 +307,7 @@ If previous retro action items keep appearing without resolution, call it out.`
 
 	analysis, err := h.aiComplete(ctx, systemPrompt, analysisContext.String())
 	if err != nil {
-		return errorResult("AI analysis failed: " + err.Error()), nil
+		return sanitizedError("ai analysis failed for pm handler", err), nil
 	}
 
 	return textResult(analysis), nil

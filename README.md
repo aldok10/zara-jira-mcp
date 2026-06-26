@@ -118,7 +118,7 @@ This isn't another "AI wrapper." Every feature is grounded in peer-reviewed rese
 
 ---
 
-## 285 Tools Across 17 Categories
+## 279 Tools Across 17 Categories
 
 <details>
 <summary>Full tool list (click to expand)</summary>
@@ -191,7 +191,7 @@ All optional. Works with just Jira + any AI provider.
 
 ## Performance Profiles
 
-285 tools can overwhelm slow clients. Use profiles:
+279 tools can overwhelm slow clients. Use profiles:
 
 | Profile | Tools | Best For |
 |---------|-------|----------|
@@ -199,7 +199,7 @@ All optional. Works with just Jira + any AI provider.
 | `lite` | ~30 | Basic PM, slow connections |
 | `standard` | ~80 | **Daily SM/PM work (recommended)** |
 | `full` | ~150 | Full PM + dev visibility |
-| (none) | ~285 | Everything, power users |
+| (none) | ~279 | Everything, power users |
 
 ```bash
 PM_PROFILE=standard  # in your .env or MCP config

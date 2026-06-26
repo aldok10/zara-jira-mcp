@@ -22,7 +22,7 @@ func (h *Handlers) CalendarListEvents(ctx context.Context, req mcp.CallToolReque
 
 	events, err := h.Calendar.ListEvents(ctx, from, to)
 	if err != nil {
-		return errorResult("Failed to list events: " + err.Error()), nil
+		return sanitizedError("failed to list calendar events", err), nil
 	}
 
 	if len(events) == 0 {
@@ -62,14 +62,14 @@ func (h *Handlers) CalendarCreateEvent(ctx context.Context, req mcp.CallToolRequ
 
 	start, err := parseFlexTime(startStr)
 	if err != nil {
-		return errorResult("Invalid start time: " + err.Error()), nil
+		return errorResult("invalid start time format"), nil
 	}
 
 	var end time.Time
 	if endStr != "" {
 		end, err = parseFlexTime(endStr)
 		if err != nil {
-			return errorResult("Invalid end time: " + err.Error()), nil
+			return errorResult("invalid end time format"), nil
 		}
 	} else {
 		end = start.Add(1 * time.Hour) // default 1 hour
@@ -84,7 +84,7 @@ func (h *Handlers) CalendarCreateEvent(ctx context.Context, req mcp.CallToolRequ
 
 	created, err := h.Calendar.CreateEvent(ctx, ev)
 	if err != nil {
-		return errorResult("Failed to create event: " + err.Error()), nil
+		return sanitizedError("failed to create calendar event", err), nil
 	}
 	return textResult(fmt.Sprintf("Event created: %s (ID: %s)", summary, created.ID)), nil
 }
@@ -106,7 +106,7 @@ func (h *Handlers) CalendarScheduleMeeting(ctx context.Context, req mcp.CallTool
 
 	start, err := parseFlexTime(startStr)
 	if err != nil {
-		return errorResult("Invalid start time: " + err.Error()), nil
+		return errorResult("invalid start time format"), nil
 	}
 
 	duration := req.GetInt("duration_minutes", 60)
@@ -124,7 +124,7 @@ func (h *Handlers) CalendarScheduleMeeting(ctx context.Context, req mcp.CallTool
 
 	meeting, err := h.Calendar.ScheduleMeeting(ctx, summary, description, start, end, attendees)
 	if err != nil {
-		return errorResult("Failed to schedule meeting: " + err.Error()), nil
+		return sanitizedError("failed to schedule meeting", err), nil
 	}
 
 	var sb strings.Builder

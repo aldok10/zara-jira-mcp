@@ -260,7 +260,7 @@ func (h *Handlers) PMSentiment(ctx context.Context, req mcp.CallToolRequest) (*m
 4. WHAT TO SAY (short warm message PM could send)
 Under 150 words.`, strings.Join(signals, "\n"))
 	if err != nil {
-		return errorResult("AI failed: " + err.Error()), nil
+		return sanitizedError("ai analysis failed for feedback comms", err), nil
 	}
 	return textResult("Team Sentiment\n\n" + result), nil
 }

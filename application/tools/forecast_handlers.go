@@ -289,7 +289,7 @@ Keep it under 200 words. Be direct.`, topic)
 
 	result, err := h.aiComplete(ctx, systemPrompt, contextData.String())
 	if err != nil {
-		return errorResult("AI failed: " + err.Error()), nil
+		return sanitizedError("ai analysis failed in forecast", err), nil
 	}
 
 	return textResult(result), nil
@@ -392,7 +392,7 @@ Examples:
 
 	result, err := h.aiComplete(ctx, systemPrompt, query)
 	if err != nil {
-		return errorResult("AI conversion failed: " + err.Error()), nil
+		return sanitizedError("ai jql conversion failed", err), nil
 	}
 	return textResult(result), nil
 }
@@ -451,7 +451,7 @@ func (h *Handlers) BacklogGroom(ctx context.Context, req mcp.CallToolRequest) (*
 
 	result, err := h.Jira.SearchIssues(ctx, jql, 50, 0)
 	if err != nil {
-		return errorResult("Search failed: " + err.Error()), nil
+		return sanitizedError("backlog search failed", err), nil
 	}
 
 	if len(result.Issues) == 0 {

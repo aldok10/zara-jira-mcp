@@ -31,7 +31,7 @@ func (h *Handlers) PMTeamPulse(ctx context.Context, req mcp.CallToolRequest) (*m
 	for member, score := range ratings {
 		p := &memdom.TeamPulse{SprintName: sprintName, Member: member, Score: score, Notes: notes}
 		if err := h.Memory.SaveTeamPulse(ctx, p); err != nil {
-			return errorResult("Failed to save pulse: " + err.Error()), nil
+			return sanitizedError("failed to save pulse", err), nil
 		}
 	}
 
@@ -76,7 +76,7 @@ func (h *Handlers) PMTeamPulse(ctx context.Context, req mcp.CallToolRequest) (*m
 func (h *Handlers) PMTeamPulseHistory(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	history, err := h.Memory.GetTeamPulseHistory(ctx, 100)
 	if err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("coaching operation failed", err), nil
 	}
 	if len(history) == 0 {
 		return textResult("No pulse data recorded yet. Use pm_team_pulse to record."), nil
@@ -193,7 +193,7 @@ func (h *Handlers) PMMeetingEffectiveness(ctx context.Context, req mcp.CallToolR
 		SprintName:      sprintName,
 	}
 	if err := h.Memory.SaveMeetingEffectiveness(ctx, m); err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("coaching operation failed", err), nil
 	}
 
 	// Get trend
@@ -223,7 +223,7 @@ func (h *Handlers) PMMeetingTrends(ctx context.Context, req mcp.CallToolRequest)
 
 	history, err := h.Memory.GetMeetingEffectivenessHistory(ctx, ceremony, 50)
 	if err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("coaching operation failed", err), nil
 	}
 	if len(history) == 0 {
 		return textResult("No meeting effectiveness data. Use pm_meeting_effectiveness to record."), nil
@@ -274,7 +274,7 @@ func (h *Handlers) PMTeamRadar(ctx context.Context, req mcp.CallToolRequest) (*m
 	for dim, score := range dimensions {
 		r := &memdom.TeamRadar{SprintName: sprintName, Dimension: dim, Score: score}
 		if err := h.Memory.SaveTeamRadar(ctx, r); err != nil {
-			return errorResult("Failed: " + err.Error()), nil
+			return sanitizedError("coaching operation failed", err), nil
 		}
 	}
 
@@ -312,7 +312,7 @@ func (h *Handlers) PMTeamRadar(ctx context.Context, req mcp.CallToolRequest) (*m
 func (h *Handlers) PMTeamRadarHistory(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	history, err := h.Memory.GetTeamRadarHistory(ctx, 200)
 	if err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("coaching operation failed", err), nil
 	}
 	if len(history) == 0 {
 		return textResult("No radar data. Use pm_team_radar to record."), nil
@@ -415,7 +415,7 @@ Be concise and data-driven. No fluff.`
 
 	result, err := h.aiComplete(ctx, systemPrompt, contextData.String())
 	if err != nil {
-		return errorResult("AI analysis failed: " + err.Error()), nil
+		return sanitizedError("ai analysis failed in coaching", err), nil
 	}
 
 	return textResult(result), nil

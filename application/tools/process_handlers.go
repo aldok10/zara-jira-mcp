@@ -30,7 +30,7 @@ func (h *Handlers) ManageDoR(ctx context.Context, req mcp.CallToolRequest) (*mcp
 			Active:   true,
 		}
 		if err := h.Memory.SaveDoDItem(ctx, d); err != nil {
-			return errorResult("Failed: " + err.Error()), nil
+			return sanitizedError("process operation failed", err), nil
 		}
 		return textResult(fmt.Sprintf("DoR item added: %s", item)), nil
 
@@ -40,14 +40,14 @@ func (h *Handlers) ManageDoR(ctx context.Context, req mcp.CallToolRequest) (*mcp
 			return errorResult("item_id required"), nil
 		}
 		if err := h.Memory.DeleteDoDItem(ctx, int64(id)); err != nil {
-			return errorResult("Failed: " + err.Error()), nil
+			return sanitizedError("process operation failed", err), nil
 		}
 		return textResult(fmt.Sprintf("DoR item #%d removed.", id)), nil
 
 	default:
 		items, err := h.Memory.GetDoD(ctx, project)
 		if err != nil {
-			return errorResult("Failed: " + err.Error()), nil
+			return sanitizedError("process operation failed", err), nil
 		}
 
 		// Filter DoR items (category starts with "dor:")
@@ -91,7 +91,7 @@ func (h *Handlers) CheckStoryReady(ctx context.Context, req mcp.CallToolRequest)
 
 	issue, err := h.Jira.GetIssue(ctx, key)
 	if err != nil {
-		return errorResult("Failed to get issue: " + err.Error()), nil
+		return sanitizedError("failed to get process issue", err), nil
 	}
 
 	// Get DoR items
@@ -124,7 +124,7 @@ Be practical — a story doesn't need perfection, just enough clarity to start w
 
 	analysis, err := h.aiComplete(ctx, systemPrompt, issueData)
 	if err != nil {
-		return errorResult("AI failed: " + err.Error()), nil
+		return sanitizedError("ai analysis failed", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Story Readiness Check: %s\n\n%s", key, analysis)), nil
@@ -150,7 +150,7 @@ func (h *Handlers) ManageAgreements(ctx context.Context, req mcp.CallToolRequest
 			Tags:      "agreement",
 		}
 		if err := h.Memory.SaveDecision(ctx, d); err != nil {
-			return errorResult("Failed: " + err.Error()), nil
+			return sanitizedError("process operation failed", err), nil
 		}
 		return textResult(fmt.Sprintf("Agreement added: %s", agreement)), nil
 
@@ -161,7 +161,7 @@ func (h *Handlers) ManageAgreements(ctx context.Context, req mcp.CallToolRequest
 	default:
 		decisions, err := h.Memory.SearchDecisions(ctx, "agreement")
 		if err != nil {
-			return errorResult("Failed: " + err.Error()), nil
+			return sanitizedError("process operation failed", err), nil
 		}
 
 		if len(decisions) == 0 {
@@ -211,7 +211,7 @@ func (h *Handlers) RecordExperiment(ctx context.Context, req mcp.CallToolRequest
 	}
 
 	if err := h.Memory.SaveDecision(ctx, d); err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("process operation failed", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Experiment recorded:\nHypothesis: %s\nAction: %s\nMeasure: %s\nDuration: %s",
@@ -222,7 +222,7 @@ func (h *Handlers) RecordExperiment(ctx context.Context, req mcp.CallToolRequest
 func (h *Handlers) ReviewExperiments(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	decisions, err := h.Memory.SearchDecisions(ctx, "experiment")
 	if err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("process operation failed", err), nil
 	}
 
 	if len(decisions) == 0 {

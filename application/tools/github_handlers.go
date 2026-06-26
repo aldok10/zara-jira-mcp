@@ -24,7 +24,7 @@ func (h *Handlers) LinkPR(ctx context.Context, req mcp.CallToolRequest) (*mcp.Ca
 	comment := fmt.Sprintf("PR linked: [%s](%s)", title, prURL)
 
 	if err := h.Jira.AddComment(ctx, key, comment); err != nil {
-		return errorResult("Failed to add PR link: " + err.Error()), nil
+		return sanitizedError("failed to add pr link to jira", err), nil
 	}
 	return textResult(fmt.Sprintf("Linked PR to %s: %s", key, prURL)), nil
 }
@@ -44,7 +44,7 @@ func (h *Handlers) IssueFromBranch(ctx context.Context, req mcp.CallToolRequest)
 
 	issue, err := h.Jira.GetIssue(ctx, match)
 	if err != nil {
-		return textResult(fmt.Sprintf("Found key %s in branch but failed to fetch: %s", match, err.Error())), nil
+		return textResult(fmt.Sprintf("Found key %s in branch but failed to fetch issue", match)), nil
 	}
 
 	return textResult(fmt.Sprintf("Issue: %s\nSummary: %s\nStatus: %s\nAssignee: %s",

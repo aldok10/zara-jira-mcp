@@ -56,7 +56,7 @@ Rules:
 
 	result, err := h.aiComplete(ctx, systemPrompt, userData.String())
 	if err != nil {
-		return errorResult("AI failed: " + err.Error()), nil
+		return sanitizedError("ai analysis failed for enhanced comms", err), nil
 	}
 	return textResult(fmt.Sprintf("[Minto Pyramid | %s]\n\n%s", audience, result)), nil
 }
@@ -103,7 +103,7 @@ Rules:
 
 	result, err := h.aiComplete(ctx, systemPrompt, userData.String())
 	if err != nil {
-		return errorResult("AI failed: " + err.Error()), nil
+		return sanitizedError("ai analysis failed for enhanced comms", err), nil
 	}
 	return textResult(fmt.Sprintf("[SBI Feedback - %s for %s]\n\n%s", fbType, member, result)), nil
 }
@@ -141,7 +141,7 @@ Be direct. No filler. Under 100 words total.`
 
 	result, err := h.aiComplete(ctx, systemPrompt, userData)
 	if err != nil {
-		return errorResult("AI failed: " + err.Error()), nil
+		return sanitizedError("ai analysis failed for enhanced comms", err), nil
 	}
 	return textResult(fmt.Sprintf("[Escalation - %s]\n\n%s", severity, result)), nil
 }

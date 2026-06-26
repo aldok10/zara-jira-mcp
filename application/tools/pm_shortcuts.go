@@ -104,7 +104,7 @@ func (h *Handlers) PMCreate(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 		}
 		iss, err := h.GitHub.CreateIssue(ctx, title, desc, ll, aa, 0)
 		if err != nil {
-			return errorResult(err.Error()), nil
+			return sanitizedError("pm quick action failed", err), nil
 		}
 		return textResult(fmt.Sprintf("GitHub #%d: %s", iss.Number, iss.Title)), nil
 
@@ -118,7 +118,7 @@ func (h *Handlers) PMCreate(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 		}
 		iss, err := h.GitLab.CreateIssue(ctx, title, desc, ll, 0, 0)
 		if err != nil {
-			return errorResult(err.Error()), nil
+			return sanitizedError("pm quick action failed", err), nil
 		}
 		return textResult(fmt.Sprintf("GitLab #%d: %s\n%s", iss.IID, iss.Title, iss.WebURL)), nil
 
@@ -137,7 +137,7 @@ func (h *Handlers) PMCreate(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 		}
 		created, err := h.Jira.CreateIssue(ctx, input)
 		if err != nil {
-			return errorResult(err.Error()), nil
+			return sanitizedError("pm quick action failed", err), nil
 		}
 		return textResult(fmt.Sprintf("Jira %s: %s", created.Key, created.Summary)), nil
 	}
@@ -154,7 +154,7 @@ func (h *Handlers) PMDecide(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 		MadeBy: req.GetString("who", "team"), MadeAt: time.Now(), Tags: "quick",
 	}
 	if err := h.Memory.SaveDecision(ctx, d); err != nil {
-		return errorResult(err.Error()), nil
+		return sanitizedError("pm quick action failed", err), nil
 	}
 	return textResult(fmt.Sprintf("Decision recorded: %s", what)), nil
 }
@@ -170,7 +170,7 @@ func (h *Handlers) PMRisk(ctx context.Context, req mcp.CallToolRequest) (*mcp.Ca
 		Status: "open", Owner: req.GetString("owner", ""), IdentifiedAt: time.Now(),
 	}
 	if err := h.Memory.SaveRisk(ctx, r); err != nil {
-		return errorResult(err.Error()), nil
+		return sanitizedError("pm quick action failed", err), nil
 	}
 	return textResult(fmt.Sprintf("Risk recorded: [%s] %s", r.Severity, what)), nil
 }

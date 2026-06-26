@@ -19,7 +19,7 @@ func (h *Handlers) SnapshotSprint(ctx context.Context, req mcp.CallToolRequest) 
 
 	sprints, err := h.Jira.GetActiveSprints(ctx, boardID)
 	if err != nil {
-		return errorResult("Failed to get sprints: " + err.Error()), nil
+		return sanitizedError("failed to get sprints", err), nil
 	}
 	if len(sprints) == 0 {
 		return textResult("No active sprint found."), nil
@@ -28,7 +28,7 @@ func (h *Handlers) SnapshotSprint(ctx context.Context, req mcp.CallToolRequest) 
 	sprint := sprints[0]
 	issues, err := h.Jira.GetSprintIssues(ctx, sprint.ID)
 	if err != nil {
-		return errorResult("Failed to get sprint issues: " + err.Error()), nil
+		return sanitizedError("failed to get sprint issues", err), nil
 	}
 
 	var done, inProgress, todo, blocked int
@@ -73,7 +73,7 @@ func (h *Handlers) SnapshotSprint(ctx context.Context, req mcp.CallToolRequest) 
 	}
 
 	if err := h.Memory.SaveSprintSnapshot(ctx, snap); err != nil {
-		return errorResult("Failed to save snapshot: " + err.Error()), nil
+		return sanitizedError("failed to save sprint snapshot", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Sprint snapshot saved: %s\nDone: %d | In Progress: %d | Todo: %d | Blocked: %d\nCompletion: %.0f%%",
@@ -99,7 +99,7 @@ func (h *Handlers) RecordRisk(ctx context.Context, req mcp.CallToolRequest) (*mc
 	}
 
 	if err := h.Memory.SaveRisk(ctx, r); err != nil {
-		return errorResult("Failed to save risk: " + err.Error()), nil
+		return sanitizedError("failed to save risk", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Risk recorded: [%s] %s\nOwner: %s | Mitigation: %s",
@@ -131,7 +131,7 @@ func (h *Handlers) UpdateRisk(ctx context.Context, req mcp.CallToolRequest) (*mc
 	r.Description = req.GetString("description", "")
 
 	if err := h.Memory.UpdateRisk(ctx, r); err != nil {
-		return errorResult("Failed to update risk: " + err.Error()), nil
+		return sanitizedError("failed to update risk", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Risk #%d updated to status: %s", id, status)), nil
@@ -141,7 +141,7 @@ func (h *Handlers) UpdateRisk(ctx context.Context, req mcp.CallToolRequest) (*mc
 func (h *Handlers) GetRiskDashboard(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	risks, err := h.Memory.GetOpenRisks(ctx)
 	if err != nil {
-		return errorResult("Failed to get risks: " + err.Error()), nil
+		return sanitizedError("failed to get risks", err), nil
 	}
 
 	if len(risks) == 0 {
@@ -181,7 +181,7 @@ func (h *Handlers) RecordDecision(ctx context.Context, req mcp.CallToolRequest) 
 	}
 
 	if err := h.Memory.SaveDecision(ctx, d); err != nil {
-		return errorResult("Failed to save decision: " + err.Error()), nil
+		return sanitizedError("failed to save decision", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Decision recorded: %s\nDecision: %s\nRationale: %s",
@@ -202,7 +202,7 @@ func (h *Handlers) SearchDecisions(ctx context.Context, req mcp.CallToolRequest)
 		decisions, err = h.Memory.GetDecisions(ctx, limit)
 	}
 	if err != nil {
-		return errorResult("Failed to get decisions: " + err.Error()), nil
+		return sanitizedError("failed to get decisions", err), nil
 	}
 
 	if len(decisions) == 0 {
@@ -234,7 +234,7 @@ func (h *Handlers) RecordBlocker(ctx context.Context, req mcp.CallToolRequest) (
 	}
 
 	if err := h.Memory.SaveBlocker(ctx, b); err != nil {
-		return errorResult("Failed to save blocker: " + err.Error()), nil
+		return sanitizedError("failed to save blocker", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Blocker recorded: %s\nIssue: %s | Owner: %s",
@@ -253,7 +253,7 @@ func (h *Handlers) ResolveBlocker(ctx context.Context, req mcp.CallToolRequest) 
 	}
 
 	if err := h.Memory.ResolveBlocker(ctx, int64(id), resolution); err != nil {
-		return errorResult("Failed to resolve blocker: " + err.Error()), nil
+		return sanitizedError("failed to resolve blocker", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Blocker #%d resolved: %s", id, resolution)), nil
@@ -272,7 +272,7 @@ func (h *Handlers) GetBlockers(ctx context.Context, req mcp.CallToolRequest) (*m
 		blockers, err = h.Memory.GetActiveBlockers(ctx)
 	}
 	if err != nil {
-		return errorResult("Failed to get blockers: " + err.Error()), nil
+		return sanitizedError("failed to get blockers", err), nil
 	}
 
 	if len(blockers) == 0 {
@@ -327,7 +327,7 @@ func (h *Handlers) RecordTeamMetric(ctx context.Context, req mcp.CallToolRequest
 	}
 
 	if err := h.Memory.SaveTeamMetric(ctx, m); err != nil {
-		return errorResult("Failed to save metric: " + err.Error()), nil
+		return sanitizedError("failed to save metric", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Metric saved for %s (Sprint: %s)\nAssigned: %d | Done: %d | Blockers: %d | Carryover: %d",
@@ -350,7 +350,7 @@ func (h *Handlers) GetTeamHealth(ctx context.Context, req mcp.CallToolRequest) (
 		return errorResult("Provide either sprint_name (for team overview) or member_name (for individual history)"), nil
 	}
 	if err != nil {
-		return errorResult("Failed to get metrics: " + err.Error()), nil
+		return sanitizedError("failed to get metrics", err), nil
 	}
 
 	if len(metrics) == 0 {
@@ -396,7 +396,7 @@ func (h *Handlers) RecordRetrospective(ctx context.Context, req mcp.CallToolRequ
 	}
 
 	if err := h.Memory.SaveRetrospective(ctx, r); err != nil {
-		return errorResult("Failed to save retro: " + err.Error()), nil
+		return sanitizedError("failed to save retro", err), nil
 	}
 
 	return textResult(fmt.Sprintf("Retrospective saved for sprint: %s\nWent Well: %s\nImprovements: %s\nAction Items: %s",
@@ -407,7 +407,7 @@ func (h *Handlers) RecordRetrospective(ctx context.Context, req mcp.CallToolRequ
 func (h *Handlers) GetActionItems(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	items, err := h.Memory.GetPendingActionItems(ctx)
 	if err != nil {
-		return errorResult("Failed to get action items: " + err.Error()), nil
+		return sanitizedError("failed to get action items", err), nil
 	}
 
 	if len(items) == 0 {

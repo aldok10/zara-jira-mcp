@@ -21,4 +21,10 @@ func registerCommunicationTools(s *server.MCPServer, h *tools.Handlers) {
 		mcp.WithString("stakeholders", mcp.Description("Key stakeholders involved")),
 		mcp.WithString("urgency", mcp.Description("normal, high, critical")),
 	), h.CommunicationPlan)
+
+	s.AddTool(mcp.NewTool("pm_raci",
+		mcp.WithDescription("Generate RACI matrix from Jira sprint assignments."),
+		mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		mcp.WithString("accountable", mcp.Description("Accountable person (default: reporter)")),
+	), h.PMRACI)
 }

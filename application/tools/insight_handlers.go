@@ -57,7 +57,7 @@ func (h *Handlers) PMToolUsage(ctx context.Context, req mcp.CallToolRequest) (*m
 		WHERE called_at > datetime('now', '-' || ? || ' days')
 		GROUP BY tool_name ORDER BY cnt DESC LIMIT 20`, days)
 	if err != nil {
-		return errorResult("query failed: " + err.Error()), nil
+		return sanitizedError("insight query failed", err), nil
 	}
 	defer rows.Close()
 

@@ -20,7 +20,7 @@ func (h *Handlers) ClockifyTimeReport(ctx context.Context, req mcp.CallToolReque
 
 	report, err := h.Clockify.GetSummaryReport(ctx, start, end)
 	if err != nil {
-		return errorResult("Clockify API error: " + err.Error()), nil
+		return sanitizedError("clockify api call failed", err), nil
 	}
 	if len(report) == 0 {
 		return textResult("No time tracked in this period."), nil
@@ -53,7 +53,7 @@ func (h *Handlers) ClockifyTimeEntries(ctx context.Context, req mcp.CallToolRequ
 
 	entries, err := h.Clockify.GetTimeEntries(ctx, start, end)
 	if err != nil {
-		return errorResult("Clockify API error: " + err.Error()), nil
+		return sanitizedError("clockify api call failed", err), nil
 	}
 	if len(entries) == 0 {
 		return textResult("No time entries in this period."), nil

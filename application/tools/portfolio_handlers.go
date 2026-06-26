@@ -13,7 +13,7 @@ import (
 func (h *Handlers) PortfolioOverview(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	projects, err := h.Jira.GetProjects(ctx)
 	if err != nil {
-		return errorResult("Failed to get projects: " + err.Error()), nil
+		return sanitizedError("failed to list portfolio projects", err), nil
 	}
 
 	var sb strings.Builder
@@ -68,7 +68,7 @@ func (h *Handlers) PortfolioWorkload(ctx context.Context, req mcp.CallToolReques
 	jql := "resolution = Unresolved AND assignee IS NOT EMPTY ORDER BY assignee ASC"
 	result, err := h.Jira.SearchIssues(ctx, jql, 200, 0)
 	if err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("portfolio operation failed", err), nil
 	}
 
 	type personLoad struct {
@@ -107,7 +107,7 @@ func (h *Handlers) PortfolioWorkload(ctx context.Context, req mcp.CallToolReques
 func (h *Handlers) PortfolioRisks(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	risks, err := h.Memory.GetOpenRisks(ctx)
 	if err != nil {
-		return errorResult("Failed: " + err.Error()), nil
+		return sanitizedError("portfolio operation failed", err), nil
 	}
 	if len(risks) == 0 {
 		return textResult("No open risks across portfolio."), nil

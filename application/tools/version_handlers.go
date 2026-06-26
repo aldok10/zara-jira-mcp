@@ -16,7 +16,7 @@ func (h *Handlers) GetAttachments(ctx context.Context, req mcp.CallToolRequest) 
 	}
 	attachments, err := h.Jira.GetAttachments(ctx, key)
 	if err != nil {
-		return errorResult("Failed to get attachments: " + err.Error()), nil
+		return sanitizedError("failed to get attachments", err), nil
 	}
 	if len(attachments) == 0 {
 		return textResult(fmt.Sprintf("No attachments on %s.", key)), nil
@@ -37,7 +37,7 @@ func (h *Handlers) GetVersions(ctx context.Context, req mcp.CallToolRequest) (*m
 	}
 	versions, err := h.Jira.GetVersions(ctx, project)
 	if err != nil {
-		return errorResult("Failed to get versions: " + err.Error()), nil
+		return sanitizedError("failed to get versions", err), nil
 	}
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Versions for %s (%d):\n\n", project, len(versions)))
@@ -65,7 +65,7 @@ func (h *Handlers) CreateVersion(ctx context.Context, req mcp.CallToolRequest) (
 
 	version, err := h.Jira.CreateVersion(ctx, project, name, desc)
 	if err != nil {
-		return errorResult("Failed to create version: " + err.Error()), nil
+		return sanitizedError("failed to create version", err), nil
 	}
 	return textResult(fmt.Sprintf("Created version: %s (ID: %s)", version.Name, version.ID)), nil
 }
@@ -77,7 +77,7 @@ func (h *Handlers) ReleaseVersion(ctx context.Context, req mcp.CallToolRequest) 
 		return errorResult("version_id parameter required"), nil
 	}
 	if err := h.Jira.ReleaseVersion(ctx, versionID); err != nil {
-		return errorResult("Failed to release version: " + err.Error()), nil
+		return sanitizedError("failed to release version", err), nil
 	}
 	return textResult(fmt.Sprintf("Version %s marked as released.", versionID)), nil
 }
@@ -90,7 +90,7 @@ func (h *Handlers) GetComponents(ctx context.Context, req mcp.CallToolRequest) (
 	}
 	components, err := h.Jira.GetComponents(ctx, project)
 	if err != nil {
-		return errorResult("Failed to get components: " + err.Error()), nil
+		return sanitizedError("failed to get components", err), nil
 	}
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Components for %s (%d):\n\n", project, len(components)))
@@ -110,7 +110,7 @@ func (h *Handlers) GetFields(ctx context.Context, req mcp.CallToolRequest) (*mcp
 
 	fields, err := h.Jira.GetFields(ctx)
 	if err != nil {
-		return errorResult("Failed to get fields: " + err.Error()), nil
+		return sanitizedError("failed to get fields", err), nil
 	}
 
 	var sb strings.Builder
@@ -144,11 +144,11 @@ func (h *Handlers) TechDebtRatio(ctx context.Context, req mcp.CallToolRequest) (
 
 	debtResult, err := h.Jira.SearchIssues(ctx, debtJQL, 1, 0)
 	if err != nil {
-		return errorResult("Failed to query debt: " + err.Error()), nil
+		return sanitizedError("failed to query tech debt ratio", err), nil
 	}
 	featureResult, err := h.Jira.SearchIssues(ctx, featureJQL, 1, 0)
 	if err != nil {
-		return errorResult("Failed to query features: " + err.Error()), nil
+		return sanitizedError("failed to query features count", err), nil
 	}
 
 	total := debtResult.Total + featureResult.Total
@@ -192,7 +192,7 @@ func (h *Handlers) PriorityChurn(ctx context.Context, req mcp.CallToolRequest) (
 
 	result, err := h.Jira.SearchIssues(ctx, jql, 50, 0)
 	if err != nil {
-		return errorResult("Failed to detect priority churn: " + err.Error()), nil
+		return sanitizedError("failed to detect priority churn", err), nil
 	}
 
 	var sb strings.Builder

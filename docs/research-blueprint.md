@@ -145,12 +145,20 @@ The empathy/sentiment/context tools (`pm_sentiment`, `pm_context_note`, `pm_comm
 | full | ~59 | 40-60 | ✅ |
 | all | ~279 | (dev) | N/A |
 
-### What Remains (Not Started)
+### What Was Done (Session 2)
 
-1. **Full-stack build verification** — `go build ./...` to confirm zero errors across all packages
-2. **Remaining BLUF audit** — apply pattern to lower-traffic tools (30+ remaining handlers)
-3. **SKILL.md documentation** — ensure it reflects new 17-module structure
-4. **Integration tests** — verify profile switching works end-to-end
+1. **pm_search meta-tool** — unified search (decisions, risks, blockers, actions, meetings, KB, overdue, Jira) + registered missing tool definition
+2. **pm_smart smarter fallback** — AI prompt lists available tool categories and suggests tool name
+3. **SKILL.md** — updated profile table, module names, critical rules, added Smart Router + Predictive sections, updated Shortcuts to Quick Actions
+4. **Fixed 5 pre-existing unused import errors** across handler files
+5. **Fixed pre-existing compile error** in `stakeholder_handlers.go` (multi-line string literal)
+6. **Full `go build ./...` passes clean** — zero compile errors across all packages
+
+### What Remains
+
+1. **Remaining BLUF audit** — apply pattern to lower-traffic tools (30+ remaining handlers)
+2. **Integration tests** — verify profile switching works end-to-end
+3. **Agent platform docs** — ensure `docs/agents/*.md` files are in sync
 
 ---
 

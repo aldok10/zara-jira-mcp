@@ -349,7 +349,7 @@ func (h *Handlers) BlockerAgingReport(ctx context.Context, req mcp.CallToolReque
 
 	blockers, err := h.Memory.GetActiveBlockers(ctx)
 	if err != nil {
-		return errorResult("Failed to get blockers: " + err.Error()), nil
+		return sanitizedError("failed to get blockers for management", err), nil
 	}
 
 	if len(blockers) == 0 {

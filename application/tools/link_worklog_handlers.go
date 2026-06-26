@@ -25,7 +25,7 @@ func (h *Handlers) LinkIssues(ctx context.Context, req mcp.CallToolRequest) (*mc
 	}
 
 	if err := h.Jira.LinkIssues(ctx, inwardKey, outwardKey, linkType); err != nil {
-		return errorResult("Failed to link issues: " + err.Error()), nil
+		return sanitizedError("failed to link issues", err), nil
 	}
 	return textResult(fmt.Sprintf("Linked %s -> %s (type: %s)", inwardKey, outwardKey, linkType)), nil
 }
@@ -34,7 +34,7 @@ func (h *Handlers) LinkIssues(ctx context.Context, req mcp.CallToolRequest) (*mc
 func (h *Handlers) LinkTypes(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	types, err := h.Jira.GetLinkTypes(ctx)
 	if err != nil {
-		return errorResult("Failed to get link types: " + err.Error()), nil
+		return sanitizedError("failed to get link types", err), nil
 	}
 	var sb strings.Builder
 	sb.WriteString("Available link types:\n\n")
@@ -57,7 +57,7 @@ func (h *Handlers) WorklogAdd(ctx context.Context, req mcp.CallToolRequest) (*mc
 	comment := req.GetString("comment", "")
 
 	if err := h.Jira.AddWorklog(ctx, key, timeSpent, comment); err != nil {
-		return errorResult("Failed to add worklog: " + err.Error()), nil
+		return sanitizedError("failed to add worklog", err), nil
 	}
 	return textResult(fmt.Sprintf("Logged %s on %s", timeSpent, key)), nil
 }
@@ -71,7 +71,7 @@ func (h *Handlers) WorklogList(ctx context.Context, req mcp.CallToolRequest) (*m
 
 	worklogs, err := h.Jira.GetWorklogs(ctx, key)
 	if err != nil {
-		return errorResult("Failed to get worklogs: " + err.Error()), nil
+		return sanitizedError("failed to get worklogs", err), nil
 	}
 	if len(worklogs) == 0 {
 		return textResult(fmt.Sprintf("No worklogs on %s", key)), nil
@@ -101,7 +101,7 @@ func (h *Handlers) Watch(ctx context.Context, req mcp.CallToolRequest) (*mcp.Cal
 	}
 
 	if err := h.Jira.AddWatcher(ctx, key, accountID); err != nil {
-		return errorResult("Failed to add watcher: " + err.Error()), nil
+		return sanitizedError("failed to add watcher", err), nil
 	}
 	return textResult(fmt.Sprintf("Added watcher to %s", key)), nil
 }
@@ -115,7 +115,7 @@ func (h *Handlers) Watchers(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 
 	watchers, err := h.Jira.GetWatchers(ctx, key)
 	if err != nil {
-		return errorResult("Failed to get watchers: " + err.Error()), nil
+		return sanitizedError("failed to get watchers", err), nil
 	}
 	if len(watchers) == 0 {
 		return textResult(fmt.Sprintf("No watchers on %s", key)), nil
@@ -147,7 +147,7 @@ func (h *Handlers) LabelsSet(ctx context.Context, req mcp.CallToolRequest) (*mcp
 
 	input := &domain.UpdateIssueInput{Key: key, Labels: labels}
 	if err := h.Jira.UpdateIssue(ctx, input); err != nil {
-		return errorResult("Failed to set labels: " + err.Error()), nil
+		return sanitizedError("failed to set labels", err), nil
 	}
 	return textResult(fmt.Sprintf("Labels set on %s: %s", key, strings.Join(labels, ", "))), nil
 }

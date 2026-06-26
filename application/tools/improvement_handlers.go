@@ -115,7 +115,7 @@ func (h *Handlers) PMBusFactor(ctx context.Context, req mcp.CallToolRequest) (*m
 
 	issues, err := h.Jira.GetSprintIssues(ctx, sprints[0].ID)
 	if err != nil {
-		return errorResult("Failed to get sprint issues: " + err.Error()), nil
+		return sanitizedError("failed to get sprint issues", err), nil
 	}
 
 	if len(issues) == 0 {
@@ -210,7 +210,7 @@ func (h *Handlers) PMAsyncStandup(ctx context.Context, req mcp.CallToolRequest) 
 
 	issues, err := h.Jira.GetSprintIssues(ctx, sprints[0].ID)
 	if err != nil {
-		return errorResult("Failed to get sprint issues: " + err.Error()), nil
+		return sanitizedError("failed to get sprint issues", err), nil
 	}
 
 	now := time.Now()
@@ -308,7 +308,7 @@ func (h *Handlers) PMSprintGoalTrack(ctx context.Context, req mcp.CallToolReques
 		Tags:     "sprint_goal_result",
 	})
 	if err != nil {
-		return errorResult("Failed to save: " + err.Error()), nil
+		return sanitizedError("failed to save improvement data", err), nil
 	}
 
 	// Show history

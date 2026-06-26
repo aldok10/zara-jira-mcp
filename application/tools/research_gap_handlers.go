@@ -55,7 +55,7 @@ func (h *Handlers) PMCollaborationSignal(ctx context.Context, req mcp.CallToolRe
 
 	issues, err := h.Jira.GetSprintIssues(ctx, sprints[0].ID)
 	if err != nil {
-		return errorResult("Failed to get sprint issues: " + err.Error()), nil
+		return sanitizedError("failed to get sprint issues for research gap", err), nil
 	}
 
 	if len(issues) == 0 {
@@ -417,7 +417,7 @@ func (h *Handlers) PMNotificationEffectiveness(ctx context.Context, req mcp.Call
 			sb.WriteString("  No notifications sent in the last 30 days.\n")
 		}
 	} else {
-		sb.WriteString("  Query failed: " + err.Error() + "\n")
+		sb.WriteString("  Query failed: see server logs for details\n")
 	}
 	sb.WriteString("\n")
 
@@ -437,7 +437,7 @@ func (h *Handlers) PMNotificationEffectiveness(ctx context.Context, req mcp.Call
 		}
 		rows2.Close()
 	} else {
-		sb.WriteString("  Query failed: " + err.Error() + "\n")
+		sb.WriteString("  Query failed: see server logs for details\n")
 	}
 	sb.WriteString("\n")
 
@@ -564,7 +564,7 @@ func (h *Handlers) PMNotificationRecordAction(ctx context.Context, req mcp.CallT
 	}
 
 	if err != nil {
-		return errorResult("Failed to record action: " + err.Error()), nil
+		return sanitizedError("failed to record action item", err), nil
 	}
 
 	_ = result // ignore exec result detail
