@@ -8,6 +8,7 @@ import (
 
 // Config holds all application configuration parsed from environment variables.
 type Config struct {
+	Server     ServerConfig
 	Jira       JiraConfig
 	AI         AIConfig
 	Lark       LarkConfig
@@ -59,6 +60,11 @@ type MemoryConfig struct {
 	DBPath string // PM_MEMORY_DB_PATH (default: ~/.zara-jira-mcp/pm_memory.db)
 }
 
+type ServerConfig struct {
+	Transport string // MCP_TRANSPORT: stdio (default), sse, http
+	Port      string // MCP_PORT (default: 8080)
+}
+
 type LarkConfig struct {
 	WebhookURL string // JIRA_LARK_WEBHOOK_URL (simple webhook, no app needed)
 	AppID      string // LARK_APP_ID (for full SDK access)
@@ -80,6 +86,10 @@ type AIConfig struct {
 
 func Load() (*Config, error) {
 	cfg := &Config{
+		Server: ServerConfig{
+			Transport: os.Getenv("MCP_TRANSPORT"),
+			Port:      os.Getenv("MCP_PORT"),
+		},
 		Jira: JiraConfig{
 			BaseURL: strings.TrimRight(os.Getenv("JIRA_BASE_URL"), "/"),
 			Email:   os.Getenv("JIRA_EMAIL"),
@@ -142,6 +152,13 @@ func Load() (*Config, error) {
 
 	if cfg.AI.Model == "" {
 		cfg.AI.Model = "gpt-4o-mini"
+	}
+
+	if cfg.Server.Transport == "" {
+		cfg.Server.Transport = "stdio"
+	}
+	if cfg.Server.Port == "" {
+		cfg.Server.Port = "8080"
 	}
 
 	return cfg, nil

@@ -77,6 +77,7 @@ type LifecycleParams struct {
 	Lifecycle  fx.Lifecycle
 	Shutdowner fx.Shutdowner
 	Server     *transport.MCPServer
+	Config     *config.Config
 }
 
 func Invoke(p LifecycleParams) {
@@ -84,14 +85,35 @@ func Invoke(p LifecycleParams) {
 
 	p.Lifecycle.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			logger.Info("starting zara-jira-mcp server via stdio")
-			go func() {
-				stdio := mcpserver.NewStdioServer(p.Server.Server())
-				if err := stdio.Listen(context.Background(), os.Stdin, os.Stdout); err != nil {
-					logger.Info("server stopped", "reason", err.Error())
-				}
-				p.Shutdowner.Shutdown() //nolint:errcheck // fire-and-forget shutdown
-			}()
+			switch p.Config.Server.Transport {
+			case "sse":
+				logger.Info("starting zara-jira-mcp via SSE", "port", p.Config.Server.Port)
+				go func() {
+					sseServer := mcpserver.NewSSEServer(p.Server.Server())
+					if err := sseServer.Start(":" + p.Config.Server.Port); err != nil {
+						logger.Error("SSE server error", "err", err)
+					}
+					p.Shutdowner.Shutdown() //nolint:errcheck
+				}()
+			case "http":
+				logger.Info("starting zara-jira-mcp via StreamableHTTP", "port", p.Config.Server.Port)
+				go func() {
+					httpServer := mcpserver.NewStreamableHTTPServer(p.Server.Server())
+					if err := httpServer.Start(":" + p.Config.Server.Port); err != nil {
+						logger.Error("StreamableHTTP server error", "err", err)
+					}
+					p.Shutdowner.Shutdown() //nolint:errcheck
+				}()
+			default:
+				logger.Info("starting zara-jira-mcp via stdio")
+				go func() {
+					stdio := mcpserver.NewStdioServer(p.Server.Server())
+					if err := stdio.Listen(context.Background(), os.Stdin, os.Stdout); err != nil {
+						logger.Info("server stopped", "reason", err.Error())
+					}
+					p.Shutdowner.Shutdown() //nolint:errcheck
+				}()
+			}
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {

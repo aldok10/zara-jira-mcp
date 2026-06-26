@@ -96,6 +96,20 @@ func (m *mockJira) AddWatcher(_ context.Context, _, _ string) error { return m.e
 func (m *mockJira) GetWatchers(_ context.Context, _ string) ([]jiradom.User, error) {
 	return nil, m.err
 }
+func (m *mockJira) CreateVersion(_ context.Context, _, _, _ string) (*jiradom.Version, error) {
+	return &jiradom.Version{ID: "1", Name: "v1.0"}, m.err
+}
+func (m *mockJira) GetAttachments(_ context.Context, _ string) ([]jiradom.Attachment, error) {
+	return nil, m.err
+}
+func (m *mockJira) GetComponents(_ context.Context, _ string) ([]jiradom.Component, error) {
+	return nil, m.err
+}
+func (m *mockJira) GetFields(_ context.Context) ([]jiradom.Field, error) { return nil, m.err }
+func (m *mockJira) GetVersions(_ context.Context, _ string) ([]jiradom.Version, error) {
+	return nil, m.err
+}
+func (m *mockJira) ReleaseVersion(_ context.Context, _ string) error { return m.err }
 
 type mockAI struct {
 	response string

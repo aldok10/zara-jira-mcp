@@ -101,6 +101,16 @@ type Client interface {
 	GetProjects(ctx context.Context) ([]Project, error)
 	GetProject(ctx context.Context, key string) (*ProjectDetail, error)
 	RawRequest(ctx context.Context, method, path string, body []byte) ([]byte, int, error)
+	// Attachments
+	GetAttachments(ctx context.Context, issueKey string) ([]Attachment, error)
+	// Versions
+	GetVersions(ctx context.Context, projectKey string) ([]Version, error)
+	CreateVersion(ctx context.Context, projectKey, name, description string) (*Version, error)
+	ReleaseVersion(ctx context.Context, versionID string) error
+	// Components
+	GetComponents(ctx context.Context, projectKey string) ([]Component, error)
+	// Fields
+	GetFields(ctx context.Context) ([]Field, error)
 }
 
 // Transition represents an available workflow transition.
