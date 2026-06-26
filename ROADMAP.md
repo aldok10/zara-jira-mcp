@@ -1,131 +1,154 @@
 # ROADMAP: zara-jira-mcp
 
-> AI-powered Scrum Master MCP server — 139 tools for Jira intelligence,
-> sprint management, team health tracking, and multi-platform notifications.
+> AI-powered Scrum Master MCP — 196 tools. Persistent memory. Multi-platform.
+> The PM/SM's unfair advantage.
 
 ---
 
-## Current State (v0.2.0)
+## Current State (v0.3.0)
 
-**139 MCP tools** across 10 categories. All roadmap phases 0-6 substantially complete.
+**196 MCP tools** | 14 SQLite tables | 8 notification platforms | 43 commits
 
-| Category | Tools | Status |
-|----------|-------|--------|
-| Jira Core CRUD | ~55 | Complete (exceeds go-jira parity) |
-| PM Intelligence | ~25 | Complete (flow, forecast, coaching, anti-patterns) |
-| PM Memory | ~20 | Complete (SQLite: sprints, risks, decisions, blockers, metrics, retros) |
-| Notifications | ~15 | Complete (8 platforms + routing + broadcast + digest) |
-| Portfolio | ~5 | Complete |
-| Automation/Recipes | ~8 | Complete (start_work, done, block, planning prep) |
-| Confluence | 3 | Complete |
-| Version/Release | 4 | Complete |
-| Meta/Health | ~4 | Complete |
+### What's Built
 
-### Platform Integrations
-
-| Platform | Status | Auth |
-|----------|--------|------|
-| Jira Cloud | Full | API Token via jirasdk |
-| Lark/Feishu | Full | oapi-sdk-go + webhook |
-| Slack | Full | Bot token + webhook |
-| Discord | Basic | Bot token |
-| Telegram | Basic | Bot token |
-| MS Teams | Basic | Incoming webhook |
-| Email | Basic | SMTP |
-| Confluence | Full | API Token |
-
-### Quality
-
-- Build: Clean (Go 1.26, golangci-lint)
-- Tests: 27.4% coverage (handler tests with mocks)
-- Lint: Zero violations
-- Docker: Multi-stage build ready
+| Domain | Tools | Coverage |
+|--------|-------|----------|
+| Jira Core | 55 | Full CRUD + epics + sprints + bulk ops + versions |
+| PM Intelligence | 30 | Flow metrics, Monte Carlo, coaching, anti-patterns, forecasting |
+| PM Memory | 22 | Sprints, risks, decisions, blockers, team, retros, deps, goals, DoD/DoR |
+| Notifications | 15 | Lark, Slack, Discord, Telegram, Teams, Email, Confluence, routing |
+| GitHub/GitLab | 13 | Issues, milestones, MRs, file reading, branch tracing |
+| Portfolio | 5 | Cross-project overview, risks, workload |
+| Shortcuts | 5 | pm, pm_create, pm_decide, pm_risk, pm_next |
+| Automation | 10 | Recipes, escalation, digest, planning prep, review prep |
+| Stakeholder | 5 | Exec report, scorecard, weekly digest, team KB, release notes |
+| Meta | 3 | Health check, MCP stats, NL-to-JQL |
 
 ---
 
-## Completed Phases
+## Phase 7: Production Hardening (Next)
 
-### Phase 0: Foundation
-Memory wired, structured errors, pagination, update tool, test infra, health tool.
+**Goal:** Make this reliable for daily use by real PM teams.
 
-### Phase 1: go-jira Parity (98%)
-All core operations: CRUD, subtasks, epics, links, worklogs, labels, watchers,
-projects, users, sprints (create/start/close/move), bulk ops, raw request,
-versions, components, fields, attachments.
-
-Missing only: clone_issue, createmeta (low value).
-
-### Phase 2: PM Intelligence
-Flow metrics, Monte Carlo forecast, velocity trend, capacity planning,
-burndown, scope creep, anti-patterns, coaching advice, ceremony facilitator,
-tech debt ratio, priority churn, NL-to-JQL, sprint comparison, confidence voting.
-
-### Phase 3: Memory & Learning
-SQLite persistence: sprint snapshots, risk register, decision log, blocker tracker,
-team metrics, retrospectives, action items, learning records, dependencies.
-
-### Phase 4: Automation
-Standup prep, release notes, backlog groom, daily digest, planning prep,
-sprint review prep, recipes (start_work, done, block), escalation.
-
-### Phase 5: Portfolio
-Overview, summary, blockers, risks, workload across projects.
-
-### Phase 6: Integration (Exceeded)
-8 platforms. Smart routing engine. Broadcast. Research-backed notification cadence.
+| Item | Effort | Impact | Status |
+|------|--------|--------|--------|
+| Fix all test mocks + reach 60% coverage | Medium | High | Pending |
+| Module-level enable/disable (env config) | Low | High | Pending |
+| Connection health checks (Jira, AI, Slack) | Low | Medium | Pending |
+| Rate limiting for Jira API calls | Low | Medium | Pending |
+| Graceful degradation when AI unavailable | Low | High | Partial |
+| SQLite backup command (pm_backup) | Low | Medium | Pending |
+| Error messages that suggest fix actions | Low | High | Pending |
 
 ---
 
-## Remaining Gaps (Nice-to-Have)
+## Phase 8: Smart Context (Planned)
 
-| Item | Effort | Value |
-|------|--------|-------|
-| Vector embeddings for pattern matching | High | Medium |
-| Calendar integration (Google/Outlook) | Medium | Medium |
-| CI/CD event ingestion | Medium | Low |
-| Webhook server (push notifications) | High | Medium |
-| jira_clone_issue | Low | Low |
-| jira_createmeta | Low | Low |
-| Multi-tenant support | High | Low |
+**Goal:** The MCP learns team patterns and proactively surfaces insights without being asked.
+
+| Item | Effort | Impact |
+|------|--------|--------|
+| Auto-snapshot sprint end (detect sprint close event) | Medium | High |
+| Pattern recognition: "this sprint looks like Sprint 7 which failed" | High | High |
+| Predictive blockers: "Alice usually gets blocked on external API tasks" | High | High |
+| Auto-generate retro data points from sprint history | Medium | Medium |
+| Meeting effectiveness scoring (decisions/actions ratio) | Low | Medium |
+| Confidence calibration (track prediction accuracy over time) | Medium | High |
+
+---
+
+## Phase 9: Developer Integration (Planned)
+
+**Goal:** Bridge the PM → Developer gap. Bidirectional visibility.
+
+| Item | Effort | Impact |
+|------|--------|--------|
+| GitHub Actions webhook → auto-update Jira status | Medium | High |
+| GitLab pipeline status → sprint health factor | Medium | High |
+| PR review time tracking → flow metrics | Medium | Medium |
+| Branch → Jira auto-link (on branch create) | Medium | Medium |
+| Deploy frequency tracking (DORA metric) | Medium | High |
+| Escaped defects detection (prod bugs from recent releases) | High | High |
+
+---
+
+## Phase 10: Team Autonomy (Vision)
+
+**Goal:** The team gradually needs the SM less. MCP coaches the team directly.
+
+| Item | Effort | Impact |
+|------|--------|--------|
+| Individual developer dashboards (my flow, my debt, my blockers) | Medium | Medium |
+| Self-service sprint health (team can run pm without SM) | Low | High |
+| Automated working agreement enforcement | High | Medium |
+| Sprint auto-scoring at close (no manual snapshot needed) | Medium | High |
+| Maturity model tracking (team progress toward self-organization) | High | Medium |
+| Onboarding guide generation from team KB | Medium | Medium |
+
+---
+
+## Phase 11: Multi-Team / Enterprise (Future)
+
+**Goal:** Scale from single team to program/portfolio level.
+
+| Item | Effort | Impact |
+|------|--------|--------|
+| Multi-board aggregation (Scrum of Scrums) | High | High |
+| Cross-team dependency visualization | High | High |
+| Program-level forecasting | High | Medium |
+| Normalized velocity across teams | Medium | Medium |
+| Enterprise risk rollup | Medium | High |
+| Multi-tenant SQLite (per team DB) | Medium | Medium |
+
+---
+
+## Phase 12: Ecosystem (Future)
+
+**Goal:** Become the standard PM MCP that works with any AI agent.
+
+| Item | Effort | Impact |
+|------|--------|--------|
+| MCP Marketplace listing | Low | High |
+| Docker Hub image (one-command deploy) | Low | Medium |
+| Helm chart for K8s | Medium | Low |
+| SSE/HTTP transport (remote MCP) | High | High |
+| OAuth2 for multi-user access | High | Medium |
+| Plugin system (custom tools per team) | High | Medium |
+| Open-source community (docs, contributing guide) | Medium | High |
+
+---
+
+## Key Metrics to Track
+
+| Metric | Current | Target v1.0 |
+|--------|---------|-------------|
+| Tools | 196 | 200+ (stable) |
+| Test coverage | ~27% | 70%+ |
+| Daily active use | 0 | 1 team |
+| Sprint snapshots captured | 0 | 10+ per board |
+| Decisions recorded | 0 | 50+ |
+| Forecast accuracy | unmeasured | ±20% at 85% confidence |
+| PM time saved | unmeasured | 5+ hours/week |
+
+---
+
+## Principles for Roadmap Execution
+
+1. **Ship to learn** — Every phase ships to production. No "big bang" releases.
+2. **Data before features** — More sprint snapshots + team data = better AI. Prioritize data capture.
+3. **PM friction = bug** — If a PM has to think about which tool to use, we failed. Shortcuts first.
+4. **Automate the boring** — Snapshots, digests, escalations should be automatic, not manual.
+5. **Measure value** — Track "PM time saved" not "tools added".
+6. **One team first** — Perfect for one team before scaling to many.
 
 ---
 
 ## Research Foundation
 
 - `research/scrum-master-papers.md` — 508 academic papers on SM effectiveness
-- `research/pm-integration-platforms.md` — Deep dive on notification routing, escalation patterns, anti-patterns
-
----
-
-## Architecture
-
-```
-cmd/server/              Entry point (uber-go/fx DI)
-config/                  Env-based config (all platforms optional)
-domain/                  Interfaces + domain models
-internal/jira/           felixgeelhaar/jirasdk adapter
-internal/ai/             OpenAI-compatible client
-internal/lark/           larksuite/oapi-sdk-go + webhook
-internal/slack/          slack-go/slack
-internal/discord/        bwmarrin/discordgo
-internal/telegram/       go-telegram-bot-api
-internal/teams/          MS Teams webhook
-internal/email/          net/smtp
-internal/confluence/     Confluence REST API
-internal/memory/         SQLite (WAL mode)
-internal/bootstrap/      DI wiring
-application/tools/       MCP tool handlers (~15 files)
-transport/               MCP server + tool registration (~10 files)
-research/                Academic papers + integration research
-```
-
-## Success Metrics
-
-| Metric | Target | Actual |
-|--------|--------|--------|
-| Tool count | 111 | **139** (125% of target) |
-| go-jira parity | 100% | 98% |
-| Platform integrations | 4 | **8** (200% of target) |
-| Research papers | — | 508 |
-| Test coverage | >70% | 27.4% (in progress) |
-| Lint violations | 0 | 0 |
+- `research/pm-integration-platforms.md` — Notification routing, escalation patterns
+- `research/pm-leverage-research.md` — DORA metrics, priority churn, tech debt frameworks
+- DORA 2025: PRs merged +98%, incidents +242% — velocity metrics lie without quality signals
+- Industry standard: 15-20% sprint capacity for tech debt (confirmed across 6 sources)
+- Sprint goal success rate: only 52% of teams achieve goals (Scrum Alliance)
+- Flow metrics > velocity for predicting delivery (cycle time, throughput, WIP)
