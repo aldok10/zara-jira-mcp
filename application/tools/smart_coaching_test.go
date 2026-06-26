@@ -128,7 +128,7 @@ func TestPMReport_Status(t *testing.T) {
 	h := pmHandlers()
 	result, _ := h.PMReport(context.Background(), makeReq(map[string]any{"type": "status", "board_id": float64(1)}))
 	text := resultText(result)
-	if !strings.Contains(text, "PM DASHBOARD") {
+	if !strings.Contains(text, "Overall:") {
 		t.Errorf("unexpected: %s", text)
 	}
 }

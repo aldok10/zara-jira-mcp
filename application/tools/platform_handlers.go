@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
@@ -27,11 +28,11 @@ func (h *Handlers) DiscordSend(ctx context.Context, req mcp.CallToolRequest) (*m
 
 	if title != "" {
 		if err := h.Discord.SendEmbed(ctx, channel, title, content, 0x3498DB); err != nil {
-			return errorResult("Discord send failed: " + err.Error()), nil
+			return sanitizedError("Discord send failed", err), nil
 		}
 	} else {
 		if err := h.Discord.SendMessage(ctx, channel, content); err != nil {
-			return errorResult("Discord send failed: " + err.Error()), nil
+			return sanitizedError("Discord send failed", err), nil
 		}
 	}
 	h.LogNotification("discord", "medium", title)
@@ -58,7 +59,7 @@ func (h *Handlers) TelegramSend(ctx context.Context, req mcp.CallToolRequest) (*
 	}
 
 	if err := h.Telegram.SendMessage(ctx, chatID, text); err != nil {
-		return errorResult("Telegram send failed: " + err.Error()), nil
+		return sanitizedError("Telegram send failed", err), nil
 	}
 	h.LogNotification("telegram", "medium", text[:min(len(text), 100)])
 	return textResult("Message sent to Telegram."), nil
@@ -81,11 +82,11 @@ func (h *Handlers) TeamsSend(ctx context.Context, req mcp.CallToolRequest) (*mcp
 
 	if title != "" {
 		if err := h.Teams.SendCard(ctx, title, content); err != nil {
-			return errorResult("Teams send failed: " + err.Error()), nil
+			return sanitizedError("Teams send failed", err), nil
 		}
 	} else {
 		if err := h.Teams.SendMessage(ctx, content); err != nil {
-			return errorResult("Teams send failed: " + err.Error()), nil
+			return sanitizedError("Teams send failed", err), nil
 		}
 	}
 	h.LogNotification("teams", "medium", title)
@@ -115,7 +116,7 @@ func (h *Handlers) EmailSend(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	}
 
 	if err := h.Email.Send(ctx, to, subject, body); err != nil {
-		return errorResult("Email send failed: " + err.Error()), nil
+		return sanitizedError("Email send failed", err), nil
 	}
 	h.LogNotification("email", "low", subject)
 	return textResult(fmt.Sprintf("Email sent to %s.", to)), nil
@@ -135,7 +136,7 @@ func (h *Handlers) ConfluenceSearch(ctx context.Context, req mcp.CallToolRequest
 
 	pages, err := h.Confluence.SearchPages(ctx, query, limit)
 	if err != nil {
-		return errorResult("Confluence search failed: " + err.Error()), nil
+		return sanitizedError("Confluence search failed", err), nil
 	}
 
 	var sb strings.Builder
@@ -157,7 +158,7 @@ func (h *Handlers) ConfluenceGetPage(ctx context.Context, req mcp.CallToolReques
 
 	page, err := h.Confluence.GetPage(ctx, pageID)
 	if err != nil {
-		return errorResult("Failed to get page: " + err.Error()), nil
+		return sanitizedError("Confluence get page failed", err), nil
 	}
 
 	body := page.Body
@@ -187,7 +188,7 @@ func (h *Handlers) ConfluenceCreatePage(ctx context.Context, req mcp.CallToolReq
 
 	page, err := h.Confluence.CreatePage(ctx, spaceKey, title, body, parentID)
 	if err != nil {
-		return errorResult("Failed to create page: " + err.Error()), nil
+		return sanitizedError("Confluence create page failed", err), nil
 	}
 	return textResult(fmt.Sprintf("Created: %s — %s", page.Title, page.WebURL)), nil
 }
@@ -209,21 +210,24 @@ func (h *Handlers) Broadcast(ctx context.Context, req mcp.CallToolRequest) (*mcp
 		if err := h.Lark.SendMarkdown(ctx, title, content); err == nil {
 			results = append(results, "Lark: sent")
 		} else {
-			results = append(results, "Lark: "+err.Error())
+			slog.Error("Broadcast Lark send failed", "detail", err.Error())
+			results = append(results, "Lark: failed")
 		}
 	}
 	if h.Slack != nil && h.Slack.Available() {
 		if err := h.Slack.SendRichMessage(ctx, "", title, content); err == nil {
 			results = append(results, "Slack: sent")
 		} else {
-			results = append(results, "Slack: "+err.Error())
+			slog.Error("Broadcast Slack send failed", "detail", err.Error())
+			results = append(results, "Slack: failed")
 		}
 	}
 	if h.Discord != nil && h.Discord.Available() {
 		if err := h.Discord.SendEmbed(ctx, "", title, content, 0x3498DB); err == nil {
 			results = append(results, "Discord: sent")
 		} else {
-			results = append(results, "Discord: "+err.Error())
+			slog.Error("Broadcast Discord send failed", "detail", err.Error())
+			results = append(results, "Discord: failed")
 		}
 	}
 	if h.Telegram != nil && h.Telegram.Available() {
@@ -231,14 +235,16 @@ func (h *Handlers) Broadcast(ctx context.Context, req mcp.CallToolRequest) (*mcp
 		if err := h.Telegram.SendMessage(ctx, 0, msg); err == nil {
 			results = append(results, "Telegram: sent")
 		} else {
-			results = append(results, "Telegram: "+err.Error())
+			slog.Error("Broadcast Telegram send failed", "detail", err.Error())
+			results = append(results, "Telegram: failed")
 		}
 	}
 	if h.Teams != nil && h.Teams.Available() {
 		if err := h.Teams.SendCard(ctx, title, content); err == nil {
 			results = append(results, "Teams: sent")
 		} else {
-			results = append(results, "Teams: "+err.Error())
+			slog.Error("Broadcast Teams send failed", "detail", err.Error())
+			results = append(results, "Teams: failed")
 		}
 	}
 

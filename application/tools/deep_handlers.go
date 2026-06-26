@@ -256,7 +256,23 @@ func (h *Handlers) PMDashboard(ctx context.Context, req mcp.CallToolRequest) (*m
 	boardID := req.GetInt("board_id", 0)
 
 	var sb strings.Builder
-	sb.WriteString("=== PM DASHBOARD ===\n\n")
+
+	// Compute overall status signal first (BLUF)
+	overallSignal := "On Track"
+	if boardID > 0 {
+		scores, _ := h.Memory.GetHealthScores(ctx, boardID, 1)
+		if len(scores) > 0 && scores[0].OverallScore < 70 {
+			overallSignal = "⚠ Watch"
+		}
+		if len(scores) > 0 && scores[0].OverallScore < 50 {
+			overallSignal = "🔴 At Risk"
+		}
+		blockers, _ := h.Memory.GetActiveBlockers(ctx)
+		if len(blockers) > 3 {
+			overallSignal = "🔴 At Risk"
+		}
+	}
+	sb.WriteString(fmt.Sprintf("Overall: %s\n\n", overallSignal))
 
 	if boardID > 0 {
 		sprints, _ := h.Jira.GetActiveSprints(ctx, boardID)
@@ -279,8 +295,8 @@ func (h *Handlers) PMDashboard(ctx context.Context, req mcp.CallToolRequest) (*m
 			if len(issues) > 0 {
 				completion = float64(done) / float64(len(issues)) * 100
 			}
-			sb.WriteString(fmt.Sprintf("SPRINT: %s (Goal: %s)\n", sprint.Name, sprint.Goal))
-			sb.WriteString(fmt.Sprintf("  Progress: %d/%d (%.0f%%) | InProgress: %d | Blocked: %d\n\n", done, len(issues), completion, inProg, blocked))
+			sb.WriteString(fmt.Sprintf("Sprint: %s (Goal: %s)\n", sprint.Name, sprint.Goal))
+			sb.WriteString(fmt.Sprintf("Progress: %d/%d (%.0f%%) | In Progress: %d | Blocked: %d\n\n", done, len(issues), completion, inProg, blocked))
 		}
 
 		scores, _ := h.Memory.GetHealthScores(ctx, boardID, 1)
@@ -292,7 +308,7 @@ func (h *Handlers) PMDashboard(ctx context.Context, req mcp.CallToolRequest) (*m
 			} else if s.OverallScore < 70 {
 				status = "WATCH"
 			}
-			sb.WriteString(fmt.Sprintf("HEALTH: %d/100 (%s)\n\n", s.OverallScore, status))
+			sb.WriteString(fmt.Sprintf("Health: %d/100 (%s)\n\n", s.OverallScore, status))
 		}
 	}
 

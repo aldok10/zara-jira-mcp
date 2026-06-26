@@ -25,11 +25,11 @@ func (h *Handlers) SlackSendMessage(ctx context.Context, req mcp.CallToolRequest
 
 	if title != "" {
 		if err := h.Slack.SendRichMessage(ctx, channel, title, text); err != nil {
-			return errorResult("Slack send failed: " + err.Error()), nil
+			return sanitizedError("Slack send failed", err), nil
 		}
 	} else {
 		if err := h.Slack.SendMessage(ctx, channel, text); err != nil {
-			return errorResult("Slack send failed: " + err.Error()), nil
+			return sanitizedError("Slack send failed", err), nil
 		}
 	}
 	h.LogNotification("slack", "medium", title)
@@ -43,7 +43,7 @@ func (h *Handlers) SlackListChannels(ctx context.Context, req mcp.CallToolReques
 	}
 	channels, err := h.Slack.ListChannels(ctx)
 	if err != nil {
-		return errorResult("Failed to list channels: " + err.Error()), nil
+		return sanitizedError("Failed to list channels", err), nil
 	}
 
 	var sb strings.Builder
@@ -71,7 +71,7 @@ func (h *Handlers) SlackChannelHistory(ctx context.Context, req mcp.CallToolRequ
 
 	messages, err := h.Slack.GetChannelHistory(ctx, channel, limit)
 	if err != nil {
-		return errorResult("Failed to get history: " + err.Error()), nil
+		return sanitizedError("Failed to get channel history", err), nil
 	}
 
 	var sb strings.Builder
@@ -102,7 +102,7 @@ func (h *Handlers) SlackNotifyTeam(ctx context.Context, req mcp.CallToolRequest)
 	channel := req.GetString("channel", "")
 
 	if err := h.Slack.SendRichMessage(ctx, channel, title, content); err != nil {
-		return errorResult("Slack notify failed: " + err.Error()), nil
+		return sanitizedError("Slack notify failed", err), nil
 	}
 	h.LogNotification("slack_team", "high", title)
 	return textResult("Team notified on Slack."), nil

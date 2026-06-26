@@ -92,8 +92,15 @@ func (h *Handlers) GetIssue(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	if err != nil {
 		return sanitizedError("Failed to get issue", err), nil
 	}
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("**%s** [%s] %s\n", issue.Key, issue.Type, issue.Summary))
+	sb.WriteString(fmt.Sprintf("Status: %s | Priority: %s | Assignee: %s\n", issue.Status, issue.Priority, issue.Assignee))
+	if issue.Description != "" {
+		sb.WriteString(fmt.Sprintf("\nDescription:\n%s\n", issue.Description))
+	}
 	data, _ := json.MarshalIndent(issue, "", "  ")
-	return textResult(string(data)), nil
+	sb.WriteString(fmt.Sprintf("\n--- Raw Data ---\n%s\n", string(data)))
+	return textResult(sb.String()), nil
 }
 
 // GetBoards lists all accessible Jira boards.
@@ -457,7 +464,8 @@ Format in markdown. Keep it under 500 words.`
 	if sendToLark {
 		title := fmt.Sprintf("Sprint Report: %s", sprint.Name)
 		if err := h.Lark.SendMarkdown(ctx, title, report); err != nil {
-			return textResult(report + "\n\n(Warning: failed to send to Lark: " + err.Error() + ")"), nil
+			slog.Warn("Sprint report Lark send failed", "detail", err.Error())
+			return textResult(report + "\n\n(Warning: failed to send to Lark — check server logs)"), nil
 		}
 		return textResult(report + "\n\n(Sent to Lark successfully)"), nil
 	}

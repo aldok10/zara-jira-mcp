@@ -24,15 +24,15 @@ Store the board_id. Almost every PM tool needs it.
 
 Choose based on your context (BCG research: productivity peaks at 3 tools, degrades at 4+):
 
-| Profile | Tools | Best For |
-|---------|-------|----------|
-| `chatgpt` | ~14 | ChatGPT Desktop (token-limited) |
-| `lite` | ~65 | Solo PM, daily workflow |
-| `standard` | ~120 | Full PM team + Jira |
-| `full` | ~200 | Power user + GitHub + portfolio |
-| `all` | ~285 | Developer/debugging (all modules) |
+| Profile | Tools | Best For | Enabled Modules |
+|---------|-------|----------|-----------------|
+| `chatgpt` | ~11 | ChatGPT Desktop (token-limited) | smart-router, pm-quick |
+| `lite` | ~24 | Solo PM, daily workflow | + jira |
+| `standard` | ~39 | Full PM team | + jira-ops, pm-memory, ai, notify-lark |
+| `full` | ~48 | Power user | + pm-analysis, stakeholder |
+| `all` | ~279 | Developer/debugging | all modules |
 
-Set via `PM_PROFILE=chatgpt` or `PM_ENABLED_MODULES=jira,pm,ai`.
+Set via `PM_PROFILE=chatgpt` or `PM_ENABLED_MODULES=smart-router,jira,pm-memory`.
 
 ## Tool Categories
 

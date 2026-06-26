@@ -195,7 +195,7 @@ func TestPMDashboard(t *testing.T) {
 		t.Fatal(resultText(result))
 	}
 	text := resultText(result)
-	if !strings.Contains(text, "PM DASHBOARD") {
+	if !strings.Contains(text, "Overall:") {
 		t.Errorf("expected dashboard header, got: %s", text)
 	}
 	if !strings.Contains(text, "Sprint 10") {

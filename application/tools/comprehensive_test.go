@@ -410,7 +410,7 @@ func TestCompPMDashboard(t *testing.T) {
 	h := richHandlers()
 	result, err := h.PMDashboard(context.Background(), makeReq(map[string]any{"board_id": float64(1)}))
 	text := assertOK(t, result, err)
-	if !strings.Contains(text, "PM DASHBOARD") {
+	if !strings.Contains(text, "Overall:") {
 		t.Errorf("expected dashboard header, got: %s", text)
 	}
 }

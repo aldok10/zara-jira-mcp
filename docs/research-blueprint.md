@@ -62,8 +62,8 @@
 
 | Axis | What It Means | Our Implementation |
 |------|---------------|-------------------|
-| **Cardinality** | Fewer tools = less token tax, less selection complexity | Profile system (chatgpt=14, lite=25, standard=40) |
-| **Timing** | Only load tools when needed (progressive disclosure) | Module system — only enabled modules register tools |
+| **Cardinality** | Fewer tools = less token tax, less selection complexity | Profile system (chatgpt=11, lite=24, standard=39, full=48) |
+| **Timing** | Only load tools when needed (progressive disclosure) | 17 sub-modules with selective enablement |
 | **Structure** | Shaped responses instead of raw dumps | BLUF outputs, structured formatting in handlers |
 
 > Source: infralovers.com/blog/2026-06-12-tool-surface-kompression-mcp-design-agenten/
@@ -110,9 +110,10 @@ The empathy/sentiment/context tools (`pm_sentiment`, `pm_context_note`, `pm_comm
 | Metric | Value |
 |--------|-------|
 | Total registered tools | ~279 |
-| chatgpt profile | ~14 tools |
-| lite profile | ~100 tools (OVER budget) |
-| standard profile | ~180 tools (OVER budget) |
+| chatgpt profile | ~11 tools |
+| lite profile | ~24 tools |
+| standard profile | ~39 tools |
+| full profile | ~48 tools |
 | Full build | passes cleanly |
 | Intelligence tools | registered and working |
 | Lark OKR integration | read + write operational |
@@ -127,13 +128,16 @@ The empathy/sentiment/context tools (`pm_sentiment`, `pm_context_note`, `pm_comm
 5. Fixed sanitizeJQL compile error
 6. Registered pm_okr_suggest + pm_kpi_to_okr
 7. All AI prompts confirmed English
+8. **Profile tightening:** Reorganized modules into 17 sub-modules (jira/jira-ops/jira-deep, pm-memory/pm-analysis/pm-planning/pm-intel, smart-router/pm-quick/help, notify-lark/notify-slack/notify-all, stakeholder/stakeholder-deep, github/github-deep). All profiles now within research-backed budgets.
+9. **pm_smart enhancement:** Added routing for sentiment, OKR suggestions, comms nudge, feedback logging, experiment recording, KPI snapshots, and learning recording.
+10. **BLUF audit:** Fixed jira_get_issue (was raw JSON dump) and PMDashboard (added status signal first). Fixed safety_handlers.go compile error (Rows interface mismatch) and platform_handlers.go unused import.
 
 ### What Remains (Prioritized)
 
-1. **Profile tightening** — reduce lite/standard/full tool counts to research-backed budgets
-2. **pm_smart enhancement** — add routing for new intelligence tools (sentiment, OKR, comms)
-3. **Structured response audit** — ensure BLUF principle across all tool outputs
-4. **Module reorganization** — group tools by user workflow, not by implementation file
+1. **pm_smart could be smarter** — AI interpretation layer for ambiguous queries (elastic routing)
+2. **Structured response audit** — continue BLUF pass on remaining lower-traffic tools
+3. **Add `pm_search` meta-tool** — full-text search across memory + Jira + knowledge base
+4. **Documentation updates** — ensure SKILL.md reflects current architecture
 
 ---
 

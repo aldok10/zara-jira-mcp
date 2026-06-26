@@ -35,7 +35,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 		"pm-memory":   {registerPMTools, registerMemoryTools},       // 16: my_issues, overdue, workload, snapshot, risks, decisions, blockers, retros
 		"pm-analysis": {registerPMIntelTools, registerForecastTools, registerFlowTools}, // 15: recommendations, velocity, standup, retro, forecast, anti-patterns, scope, flow
 		"pm-planning": {registerAdvancedPMTools, registerDeepPMTools, registerProcessTools, registerRecipeTools}, // 28: health, goals, DoD, capacity, deps, burndown, process, recipes
-		"pm-intel":    {registerOKRKPITools, registerCoachingTools, registerInsightTools, registerV6Tools, registerStoryPointsTools, registerImprovementTools}, // 35: OKR, KPI, coaching, experiments, metrics
+		"pm-intel":    {registerOKRKPITools, registerCoachingTools, registerInsightTools, registerV6Tools, registerSafetyTools, registerStoryPointsTools, registerImprovementTools}, // 38: OKR, KPI, coaching, experiments, safety, metrics
 
 		// AI
 		"ai": {registerAITools}, // 2: analyze, sprint_report

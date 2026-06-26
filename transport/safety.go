@@ -39,19 +39,28 @@ func registerSafetyTools(s *server.MCPServer, h *tools.Handlers) {
 		mcp.WithString("consequences", mcp.Description("Known consequences")),
 	), h.PMDecisionRecordEnhanced)
 
-	// Psychological Safety (P2)
+	// Psychological Safety (P2) — Edmondson 7-item Scale
 	s.AddTool(mcp.NewTool("pm_safety_survey",
-		mcp.WithDescription("Record psych safety survey (7 Aristotle questions). Returns avg score."),
-		mcp.WithString("sprint_name", mcp.Required(), mcp.Description("Sprint name")),
-		mcp.WithString("responses", mcp.Required(), mcp.Description("JSON: {\"member\": {\"q1\": 4, \"q2\": 3, \"q3\": 5, \"q4\": 4, \"q5\": 3, \"q6\": 4, \"q7\": 5}}")),
+		mcp.WithDescription("Record 7-item Edmondson Psychological Safety Scale for a member."),
+		mcp.WithString("member", mcp.Required(), mcp.Description("Team member name")),
+		mcp.WithString("sprint", mcp.Required(), mcp.Description("Sprint identifier")),
+		mcp.WithNumber("q1", mcp.Description("1-5: mistakes held against me (reverse)")),
+		mcp.WithNumber("q2", mcp.Description("1-5: bring up problems")),
+		mcp.WithNumber("q3", mcp.Description("1-5: rejection for being different (reverse)")),
+		mcp.WithNumber("q4", mcp.Description("1-5: safe to take risks")),
+		mcp.WithNumber("q5", mcp.Description("1-5: hard to ask for help (reverse)")),
+		mcp.WithNumber("q6", mcp.Description("1-5: no deliberate undermining")),
+		mcp.WithNumber("q7", mcp.Description("1-5: skills valued")),
+		mcp.WithString("notes", mcp.Description("Optional context")),
 	), h.PMSafetySurvey)
 
 	s.AddTool(mcp.NewTool("pm_safety_trend",
-		mcp.WithDescription("Show psychological safety scores over time, grouped by sprint."),
+		mcp.WithDescription("Psychological safety score trend across sprints."),
+		mcp.WithString("member", mcp.Description("Filter by member")),
 	), h.PMSafetyTrend)
 
 	s.AddTool(mcp.NewTool("pm_team_aristotle",
-		mcp.WithDescription("5-pillar Aristotle assessment: Safety, Dependability, Clarity, Meaning."),
+		mcp.WithDescription("Full 5-pillar assessment from Google Project Aristotle."),
 		mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 	), h.PMTeamAristotle)
 }

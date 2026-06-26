@@ -27,6 +27,9 @@ func (h *Handlers) PMSmart(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 	case containsAny(lower, "my issue", "assigned"): return h.MyIssues(ctx, req)
 	case containsAny(lower, "action item"): return h.GetActionItems(ctx, req)
 	case containsAny(lower, "workload"): return h.Workload(ctx, req)
+	case containsAny(lower, "sentiment", "mood", "morale", "team feel", "team happ"): return h.PMSentiment(ctx, req)
+	case containsAny(lower, "okr", "objective", "key result", "goal align"): return h.PMOKRSuggest(ctx, req)
+	case containsAny(lower, "nudge", "follow.?up", "ping", "remind"): return h.CommsNudge(ctx, req)
 	case containsAny(lower, "help"): return h.PMHelp(ctx, req)
 	default:
 		if h.AI != nil {
@@ -46,7 +49,13 @@ func (h *Handlers) PMDo(ctx context.Context, req mcp.CallToolRequest) (*mcp.Call
 	case containsAny(lower, "risk"): return h.RecordRisk(ctx, req)
 	case containsAny(lower, "decision"): return h.RecordDecision(ctx, req)
 	case containsAny(lower, "block"): return h.RecordBlocker(ctx, req)
-	default: return errorResult("Try: create issue, record risk, record decision, record blocker"), nil
+	case containsAny(lower, "sentiment", "mood", "context note"): return h.PMContextNote(ctx, req)
+	case containsAny(lower, "feedback", "gave feedback"): return h.FeedbackLog(ctx, req)
+	case containsAny(lower, "learning", "tribal"): return h.RecordLearning(ctx, req)
+	case containsAny(lower, "retro", "retrospective"): return h.RecordRetrospective(ctx, req)
+	case containsAny(lower, "hypothesis", "experiment"): return h.RecordExperiment(ctx, req)
+	case containsAny(lower, "kpi", "measurement"): return h.PMKPISnapshot(ctx, req)
+	default: return errorResult("Try: create issue, record risk, record decision, record blocker, record feedback, record retro, record learning"), nil
 	}
 }
 
@@ -56,11 +65,15 @@ func (h *Handlers) PMReport(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	case "status": return h.PMDashboard(ctx, req)
 	case "executive", "exec": return h.ExecutiveReport(ctx, req)
 	case "release_notes": return h.GenerateReleaseNotes(ctx, req)
-	case "weekly": return h.WeeklyDigest(ctx, req)
+	case "weekly", "digest": return h.WeeklyDigest(ctx, req)
 	case "health": return h.SprintHealthScore(ctx, req)
 	case "velocity": return h.VelocityTrend(ctx, req)
 	case "scorecard": return h.SprintScorecard(ctx, req)
-	default: return errorResult("type: status, executive, release_notes, weekly, health, velocity, scorecard"), nil
+	case "sentiment", "mood", "morale": return h.PMSentiment(ctx, req)
+	case "okr", "okr_health": return h.PMOKRHealth(ctx, req)
+	case "kpi", "kpi_dashboard": return h.PMKPIDashboard(ctx, req)
+	case "coaching": return h.CoachingAdvice(ctx, req)
+	default: return errorResult("type: status, executive, release_notes, weekly, health, velocity, scorecard, sentiment, okr, kpi, coaching"), nil
 	}
 }
 
