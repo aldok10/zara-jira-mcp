@@ -1,119 +1,218 @@
 # zara-jira-mcp
 
-AI-powered Scrum Master MCP server. 86 tools for Jira intelligence, sprint management, team health tracking, and Lark notifications. Designed as Zara's PM brain.
+AI-powered Scrum Master MCP server with persistent memory. **124 tools** for Jira operations, sprint intelligence, risk management, team health, forecasting, coaching, and multi-channel notifications.
+
+Not just a Jira wrapper — a complete PM/Scrum Master brain that **remembers**, **learns**, and **recommends**.
 
 ## Quick Start
 
 ```bash
 cp .env.example .env
-# Edit .env with your credentials
+# Edit .env with your Jira, AI, and notification credentials
 
 make build
 make install  # copies to ~/.local/bin/
 ```
 
-## Tools (86)
+### MCP Configuration
 
-### Jira Core
+```json
+{
+  "mcpServers": {
+    "jira-pm": {
+      "command": ["zara-jira-mcp"],
+      "env": {
+        "JIRA_BASE_URL": "https://company.atlassian.net",
+        "JIRA_EMAIL": "you@company.com",
+        "JIRA_API_TOKEN": "your-token",
+        "JIRA_AI_BASE_URL": "https://api.openai.com",
+        "JIRA_AI_API_KEY": "sk-...",
+        "JIRA_AI_MODEL": "gpt-4o-mini"
+      }
+    }
+  }
+}
+```
 
-| Tool | Description |
+## Tool Categories (124 tools)
+
+### Jira Operations (45 tools)
+
+Full Jira Cloud CRUD: search, issues, sprints, epics, bulk operations, worklogs, issue links, watchers, projects, transitions, subtasks, labels, raw API access.
+
+### PM Memory (20 tools)
+
+Persistent SQLite memory that survives sessions:
+
+| Area | Tools |
+|------|-------|
+| Sprint Tracking | `pm_snapshot_sprint`, `pm_track_daily`, `pm_burndown` |
+| Risks | `pm_record_risk`, `pm_update_risk`, `pm_risk_dashboard`, `pm_auto_detect_risks` |
+| Decisions | `pm_record_decision`, `pm_search_decisions`, `pm_record_learning` |
+| Blockers | `pm_record_blocker`, `pm_resolve_blocker`, `pm_blockers` |
+| Team | `pm_record_team_metric`, `pm_team_health`, `pm_confidence` |
+| Retros | `pm_record_retro`, `pm_action_items` |
+| Dependencies | `pm_record_dependency`, `pm_resolve_dependency`, `pm_dependencies` |
+
+### AI Intelligence (15 tools)
+
+All powered by historical memory + live Jira data:
+
+| Tool | What It Does |
 |------|-------------|
-| `jira_search` | Search issues with JQL |
-| `jira_get_issue` | Full issue details |
-| `jira_boards` | List boards |
-| `jira_sprint_summary` | Active sprint breakdown |
-| `jira_create_issue` | Create new issue |
-| `jira_update_issue` | Update issue fields |
-| `jira_add_comment` | Add comment |
-| `jira_transitions` | List available transitions |
-| `jira_transition` | Change issue status |
-| `jira_assign` / `jira_unassign` | Manage assignees |
-| `jira_find_user` | Search users by name/email |
-| `jira_my_issues` | Current user's issues |
-| `jira_overdue` | Stale issues (N days no update) |
-| `jira_workload` | Team workload distribution |
-| `jira_link_issues` | Create issue relationships |
-| `jira_worklog_add` / `jira_worklog_list` | Time tracking |
-| `jira_bulk_transition` / `jira_bulk_assign` | Batch operations |
+| `pm_recommendations` | AI recommendations from ALL historical context |
+| `pm_standup_prep` | Daily talking points (live + memory) |
+| `pm_forecast` | Monte Carlo "when will it be done?" (10,000 simulations) |
+| `pm_anti_patterns` | Detect: zombie sprints, hero culture, scope creep, dead retros |
+| `pm_coaching` | Data-driven coaching advice by topic |
+| `pm_facilitate` | Fresh ceremony facilitation (standup/retro/planning/grooming/review) |
+| `pm_retro_analysis` | Pattern detection across retrospectives |
+| `pm_goal_check` | AI evaluates sprint goal progress |
+| `pm_check_ready` | Story readiness (INVEST + DoR) |
+| `pm_exec_report` | Executive stakeholder report (no jargon) |
+| `pm_flow_metrics` | WIP, throughput, cycle time, lead time |
+| `pm_sprint_compare` | This sprint vs last |
+| `pm_weekly_digest` | AI weekly activity summary |
+| `pm_nl_to_jql` | Natural language to JQL conversion |
+| `jira_ai_analyze` | Ad-hoc AI analysis of any tickets |
 
-### PM Intelligence
+### Process & Health (18 tools)
 
-| Tool | Description |
+| Tool | What It Does |
 |------|-------------|
-| `pm_recommendations` | AI recommendations from historical memory |
-| `pm_standup_prep` | Daily standup brief |
-| `pm_velocity_trend` | Velocity over sprints |
-| `pm_burndown` | Sprint burndown status |
-| `pm_flow_metrics` | Cycle time, throughput, WIP |
-| `pm_sprint_comparison` | Current vs previous sprint |
-| `pm_ceremony_facilitator` | AI facilitation guide for ceremonies |
-| `pm_forecast` | Monte Carlo sprint forecast |
-| `pm_anti_patterns` | Detect Scrum anti-patterns |
-| `pm_coaching` | Context-aware coaching advice |
-| `pm_retro_analysis` | AI pattern analysis across retros |
-| `pm_dashboard` | Full PM overview |
+| `pm_sprint_health` | 0-100 health score (velocity + blockers + scope + team) |
+| `pm_health_history` | Health trend over time |
+| `pm_scorecard` | End-of-sprint grade (A-F) |
+| `pm_velocity_trend` | Velocity over sprints + trend detection |
+| `pm_capacity_plan` | Data-driven capacity recommendation |
+| `pm_sprint_goals` | Set/track/close sprint goals |
+| `pm_dod` / `pm_dor` | Definition of Done / Ready (entry + exit gates) |
+| `pm_agreements` | Team working agreements |
+| `pm_experiment` / `pm_experiments` | Improvement experiments from retros |
+| `pm_planning_prep` | Complete sprint planning preparation package |
+| `pm_dashboard` | One-shot full PM view |
+| `pm_scope_creep` | Mid-sprint scope change detection |
+| `pm_backlog_groom` | Find stale backlog items |
 
-### PM Memory (Persistent)
+### Escalation & Reporting (8 tools)
 
-| Tool | Description |
+| Tool | What It Does |
 |------|-------------|
-| `pm_snapshot_sprint` | Save sprint state for trend tracking |
-| `pm_record_risk` / `pm_update_risk` | Risk register |
-| `pm_risk_dashboard` | Open risks by severity |
-| `pm_record_decision` / `pm_search_decisions` | Decision log |
-| `pm_record_blocker` / `pm_resolve_blocker` | Blocker tracker |
-| `pm_record_team_metric` / `pm_team_health` | Team performance |
-| `pm_record_retro` / `pm_action_items` | Retrospective outcomes |
-| `pm_confidence_vote` | Team confidence tracking |
-| `pm_set_sprint_goal` / `pm_goal_check` | Sprint goal management |
+| `pm_escalate` | Auto-escalate critical items to notification channels |
+| `pm_escalations` | Escalation history |
+| `pm_release_notes` | Categorized release notes from done issues |
+| `pm_exec_report` | Executive summary (business outcomes, not story points) |
+| `pm_weekly_digest` | AI weekly team digest |
+| `pm_team_kb` | Onboarding knowledge base + AI Q&A |
+| `jira_ai_sprint_report` | AI sprint report |
+| `jira_notify_lark` | Send to Lark |
 
-### Lark / AI
+### Workflow Recipes (3 tools)
 
-| Tool | Description |
-|------|-------------|
-| `jira_notify_lark` | Send card message to Lark group |
-| `jira_ai_analyze` | AI-powered ticket analysis |
-| `jira_ai_sprint_report` | AI sprint report (optional Lark send) |
+One-click workflows:
+- `pm_recipe_start_work` — Assign + transition + suggest branch name
+- `pm_recipe_done` — Transition + log time + comment
+- `pm_recipe_block` — Record blocker + comment on issue
+
+### Notifications (9 tools)
+
+Multi-channel: Lark, Slack, Discord, Telegram, Teams, Email, Confluence, broadcast.
 
 ## Architecture
 
 ```
-cmd/server/         - Entry point (uber-go/fx DI)
-config/             - Env-based configuration
-domain/jira/        - Jira domain interfaces
-domain/memory/      - PM memory domain models
-internal/jira/      - felixgeelhaar/jirasdk adapter
-internal/ai/        - OpenAI-compatible client
-internal/lark/      - larksuite/oapi-sdk-go + webhook fallback
-internal/memory/    - SQLite store (WAL mode)
-internal/bootstrap/ - DI wiring
-application/tools/  - MCP tool handlers
-transport/          - MCP server + tool registration
-research/           - 508 academic papers on Scrum effectiveness
+cmd/server/          Entry point (uber-go/fx DI)
+config/              Env-based configuration
+domain/
+  jira/              Jira domain interfaces + models
+  memory/            PM memory domain (14 entities)
+  ai/                AI provider interface
+  lark/              Lark notifier interface
+internal/
+  jira/              jirasdk adapter (Jira Cloud REST)
+  ai/                OpenAI-compatible client
+  lark/              Lark SDK + webhook
+  memory/            SQLite store (WAL mode, 14 tables)
+  slack/             Slack API client
+  bootstrap/         DI wiring
+application/tools/   MCP tool handlers (12 files)
+transport/           MCP server + tool registration
+```
+
+### SQLite Memory (14 tables)
+
+```
+sprint_snapshots    — velocity, completion, carryover per sprint
+daily_progress      — burndown data points
+risks               — risk register with severity + mitigation
+decisions           — decision log with rationale + tags
+blockers            — impediments with resolution time
+team_metrics        — per-member per-sprint stats
+retrospectives      — went well / improve / actions
+action_items        — retro follow-ups
+dependencies        — cross-issue/team dependency map
+meeting_notes       — ceremony outcomes
+health_scores       — computed health over time
+sprint_goals        — goal + key results + outcome
+dod_items           — DoD + DoR checklists
+escalations         — escalation audit trail
 ```
 
 ## Stack
 
 - Go 1.26
-- [jirasdk](https://github.com/felixgeelhaar/jirasdk) — Jira Cloud SDK
+- [mcp-go](https://github.com/mark3labs/mcp-go) — MCP protocol implementation
+- [jirasdk](https://github.com/felixgeelhaar/jirasdk) — Jira Cloud REST SDK
 - [oapi-sdk-go/v3](https://github.com/larksuite/oapi-sdk-go) — Lark SDK
-- [mcp-go](https://github.com/mark3labs/mcp-go) — MCP protocol
 - [uber-go/fx](https://github.com/uber-go/fx) — Dependency injection
-- SQLite — PM memory persistence
+- [go-sqlite3](https://github.com/mattn/go-sqlite3) — SQLite with WAL mode
+- OpenAI-compatible API — AI analysis (any provider)
 
-## MCP Config (OpenCode/Zara)
+## Key Differentiators
 
-```json
-{
-  "Jira PM": {
-    "type": "local",
-    "command": ["/path/to/zara-jira-mcp-wrapper.sh"],
-    "timeout": 30000,
-    "enabled": true
-  }
-}
+1. **Persistent Memory** — Knows what happened last sprint. Tracks decisions, risks, blockers across sessions.
+2. **Monte Carlo Forecasting** — "When will it be done?" with probability ranges, not guesses.
+3. **Anti-Pattern Detection** — Automatically detects zombie sprints, hero culture, scope creep, dead retros.
+4. **AI Coaching** — Data-driven coaching suggestions, not generic textbook advice.
+5. **Multi-Audience Reporting** — Executive reports (business outcomes) vs team reports (sprint data).
+6. **Proactive Alerting** — Auto-escalate critical risks and chronic blockers.
+7. **Ceremony Facilitation** — Fresh retro formats, planning checklists, standup prompts.
+8. **Flow Over Velocity** — WIP, throughput, cycle time. Predicts bottlenecks better than velocity.
+9. **Process Maturity** — DoR, DoD, working agreements, improvement experiments.
+
+## Environment Variables
+
+```bash
+# Required
+JIRA_BASE_URL=https://company.atlassian.net
+JIRA_EMAIL=you@company.com
+JIRA_API_TOKEN=your-api-token
+
+# AI (required for intelligence tools)
+JIRA_AI_BASE_URL=https://api.openai.com
+JIRA_AI_API_KEY=sk-...
+JIRA_AI_MODEL=gpt-4o-mini
+
+# Lark (optional)
+JIRA_LARK_WEBHOOK_URL=https://open.larksuite.com/open-apis/bot/v2/hook/xxx
+
+# Slack (optional)
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_DEFAULT_CHANNEL=general
+
+# Memory (optional, default: ~/.zara-jira-mcp/pm_memory.db)
+PM_MEMORY_DB_PATH=/custom/path/pm_memory.db
 ```
 
-## Research
+## Development
 
-See `research/scrum-master-papers.md` — 508 papers on Scrum Master effectiveness, organized by 44 categories with key findings distilled.
+```bash
+make build      # Build binary
+make test       # Run tests
+make lint       # Run linter
+make install    # Install to ~/.local/bin/
+```
+
+## License
+
+MIT

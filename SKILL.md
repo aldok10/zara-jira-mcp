@@ -1,289 +1,143 @@
 # Skill: zara-pm-brain
 
-Use when managing IT projects, running sprints, tracking risks, making decisions, conducting retrospectives, preparing standups, or needing PM/Scrum Master recommendations.
+Use when managing IT projects, running sprints, tracking risks, making decisions, conducting retrospectives, preparing standups, forecasting delivery, coaching teams, or needing PM/Scrum Master recommendations.
 
 ## What This MCP Does
 
-`zara-jira-mcp` is an AI-powered PM/Scrum Master brain with persistent memory. It connects to Jira for live data, maintains historical context in SQLite, and uses AI to provide proactive recommendations. **52 tools** across 13 categories.
+`zara-jira-mcp` is an AI-powered PM/Scrum Master brain with persistent memory. 124 tools. Connects to Jira for live data, maintains historical context in SQLite, uses AI for proactive recommendations, sends alerts to Lark/Slack.
 
-## Tool Categories
+## Quick Reference: When to Use What
 
-### 1. Live Jira Data (10 tools)
-
-| Tool | Purpose |
-|------|---------|
-| `jira_search` | Search issues with JQL |
-| `jira_get_issue` | Get full issue details |
-| `jira_boards` | List boards |
-| `jira_sprint_summary` | Active sprint breakdown |
-| `jira_create_issue` | Create new issue |
-| `jira_add_comment` | Add comment to issue |
-| `jira_transitions` | List available status transitions |
-| `jira_transition` | Move issue to new status |
-| `jira_my_issues` | Current user's issues |
-| `jira_overdue` | Stale/overdue issues |
-| `jira_workload` | Team workload distribution |
-
-### 2. PM Memory — Sprint & Velocity (3 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_snapshot_sprint` | End of every sprint — captures state for velocity tracking |
-| `pm_velocity_trend` | Sprint planning — see trends, detect decline |
-| `pm_capacity_plan` | Sprint planning — recommended commitment based on history + availability |
-
-### 3. PM Memory — Risk Management (4 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_record_risk` | When risk identified |
-| `pm_update_risk` | When mitigated/resolved/accepted |
-| `pm_risk_dashboard` | Sprint planning, standup, weekly review |
-| `pm_auto_detect_risks` | Weekly — proactively scans Jira for risk signals |
-
-### 4. PM Memory — Blockers & Dependencies (6 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_record_blocker` | When team is blocked |
-| `pm_resolve_blocker` | When unblocked |
-| `pm_blockers` | Daily standup — view active/history |
-| `pm_record_dependency` | When cross-team/cross-issue dependency found |
-| `pm_resolve_dependency` | When dependency satisfied |
-| `pm_dependencies` | Sprint planning — dependency map |
-
-### 5. PM Memory — Decisions & Knowledge (2 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_record_decision` | After any significant technical/process decision |
-| `pm_search_decisions` | Before re-deciding — check institutional memory |
-
-### 6. PM Memory — Team Health (2 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_record_team_metric` | End of sprint — per-member stats |
-| `pm_team_health` | Sprint planning — workload overview, burnout signals |
-
-### 7. PM Memory — Retrospectives & Actions (3 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_record_retro` | After retro ceremony |
-| `pm_action_items` | Every standup — pending retro follow-ups |
-| `pm_retro_analysis` | Before retro — AI pattern analysis across retros |
-
-### 8. PM Memory — Meetings (2 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_record_meeting` | After any ceremony (standup, planning, grooming, adhoc) |
-| `pm_meetings` | Review meeting history, find past decisions |
-
-### 9. Sprint Health (2 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_sprint_health` | Anytime — computes 0-100 health score with breakdown |
-| `pm_health_history` | Trend tracking — is team getting healthier? |
-
-### 10. AI Intelligence (4 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_recommendations` | Weekly — AI recs from ALL historical memory |
-| `pm_standup_prep` | Before daily standup — auto-generated talking points |
-| `jira_ai_analyze` | Ad-hoc AI analysis of any tickets |
-| `jira_ai_sprint_report` | End of sprint — full report, optional Lark send |
-
-### 11. Notifications (1 tool)
-
-| Tool | Purpose |
-|------|---------|
-| `jira_notify_lark` | Send markdown to Lark group |
-
-### 12. Burndown & Daily Tracking (2 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_track_daily` | Daily — capture today's sprint progress for burndown |
-| `pm_burndown` | View burndown with burn rate + days-to-complete estimate |
-
-### 13. Sprint Goals (3 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_set_sprint_goal` | Sprint planning — define goal + key results |
-| `pm_close_sprint_goal` | End of sprint — record achieved/missed + outcome |
-| `pm_sprint_goals` | View active goals or achievement history |
-
-### 14. Definition of Done (1 tool)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_dod` | Manage DoD checklist (add/remove/list per project) |
-
-### 15. Escalation System (3 tools)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_escalate` | Auto-escalate critical risks/blockers to Lark |
-| `pm_escalations` | View escalation history |
-| `pm_dashboard` | One-shot full PM view (everything in one call) |
-
-### 16. Release (1 tool)
-
-| Tool | When to Use |
-|------|-------------|
-| `pm_release_notes` | Generate categorized release notes from done issues |
-
-## PM Workflow Patterns
+### Before Standup
 ```
-1. pm_standup_prep(board_id)           -> AI-generated talking points
-2. pm_blockers()                       -> what's stuck
-3. pm_action_items()                   -> retro follow-ups overdue
-4. pm_dependencies()                   -> blocking/blocked chains
+pm_standup_prep(board_id)
 ```
 
 ### Sprint Planning
 ```
-1. pm_capacity_plan(board_id, team_size, planned_leave_days)  -> recommended points
-2. pm_velocity_trend(board_id)         -> historical context
-3. pm_risk_dashboard()                 -> risks for next sprint
-4. pm_dependencies()                   -> unresolved dependencies
-5. pm_team_health(sprint_name: prev)   -> who's overloaded?
-6. pm_recommendations(focus:"velocity")-> AI capacity advice
+pm_planning_prep(board_id)       <- everything in one shot
+pm_forecast(board_id)            <- "when will it be done?"
+pm_capacity_plan(board_id, team_size, planned_leave_days)
+pm_check_ready(key:"PROJ-123")   <- is this story ready?
+pm_confidence(sprint_name, score:4)
 ```
 
-### Mid-Sprint Health Check
+### During Sprint
 ```
-1. pm_sprint_health(board_id)          -> health score 0-100
-2. pm_auto_detect_risks(board_id)      -> proactive risk scan
-3. pm_blockers()                       -> stuck items
+pm_dashboard(board_id)           <- one-shot full view
+pm_flow_metrics(board_id)        <- WIP, cycle time, throughput
+pm_track_daily(board_id)         <- burndown data point
+pm_goal_check(board_id)          <- on track?
+pm_auto_detect_risks(board_id)   <- proactive scan
+pm_scope_creep(board_id)         <- scope change?
 ```
 
 ### End of Sprint
 ```
-1. pm_snapshot_sprint(board_id, velocity:X, carryover:Y)  -> capture state
-2. pm_record_team_metric(...)          -> for each member
-3. pm_sprint_health(board_id)          -> final health score
-4. jira_ai_sprint_report(board_id, send_to_lark:true)     -> share report
+pm_snapshot_sprint(board_id, velocity:X)
+pm_scorecard(board_id)           <- A-F grade
+pm_sprint_compare(board_id)      <- vs last sprint
+pm_release_notes(board_id, send_to_lark:true)
+pm_close_sprint_goal(goal_id, status:"achieved")
 ```
 
 ### Retrospective
 ```
-1. pm_retro_analysis(board_id)         -> AI patterns from history
-2. pm_record_retro(sprint, well, improve, actions)
-3. pm_action_items()                   -> verify old items closed
-4. pm_record_meeting(type:"retro", decisions, action_items)
+pm_facilitate(ceremony:"retro")  <- fresh format each time
+pm_retro_analysis(board_id)      <- patterns from history
+pm_record_retro(sprint_name, went_well, improvements, action_items)
+pm_experiment(hypothesis, action, measure)
 ```
 
-### Risk Management (Ongoing)
+### Stakeholder Reporting
 ```
-1. pm_auto_detect_risks(board_id)      -> automated scan
-2. pm_record_risk(title, severity, owner, mitigation)
-3. pm_risk_dashboard()                 -> prioritized view
-4. pm_update_risk(id, status:"resolved")
-5. pm_recommendations(focus:"risks")   -> AI risk advice
+pm_exec_report(board_id)         <- VP-friendly, no jargon
+pm_weekly_digest(board_id, send_to_lark:true)
 ```
 
-### Decision Logging
+### Risk & Blocker Management
 ```
-1. pm_record_decision(title, decision, context, rationale, tags)
-2. pm_search_decisions("database")     -> before re-deciding
-```
-
-### After Any Meeting
-```
-1. pm_record_meeting(type, notes, decisions, action_items, attendees)
+pm_record_risk(title, severity, owner, mitigation)
+pm_risk_dashboard()
+pm_record_blocker(description, issue_key, owner)
+pm_escalate(board_id)            <- auto-alert critical items
 ```
 
-### Daily Burndown
+### Team Health
 ```
-1. pm_track_daily(board_id)            -> capture today's data point
-2. pm_burndown(board_id)              -> view chart + burn rate
-```
-
-### Sprint Goal Lifecycle
-```
-1. pm_set_sprint_goal(board_id, goal, key_results)      -> at planning
-2. pm_sprint_goals(board_id)                            -> check during sprint
-3. pm_close_sprint_goal(goal_id, status, outcome)       -> at sprint end
-4. pm_sprint_goals(board_id, show_history:true)         -> track over time
+pm_sprint_health(board_id)       <- 0-100 score
+pm_anti_patterns(board_id)       <- detect dysfunctions
+pm_coaching(topic:"team_dynamics", situation:"...")
+pm_team_kb(question:"how does this team work?")
 ```
 
-### Definition of Done Setup
+### Process Setup (One-Time)
 ```
-1. pm_dod(action:"add", item:"Unit tests pass", category:"testing")
-2. pm_dod(action:"add", item:"Code reviewed", category:"review")
-3. pm_dod(action:"add", item:"No critical bugs", category:"testing")
-4. pm_dod(project:"MYPROJ")           -> view project-specific DoD
-```
-
-### Escalation & Alerting
-```
-1. pm_escalate(board_id)              -> auto-check thresholds, send to Lark
-2. pm_escalations()                   -> review what was escalated
+pm_dod(action:"add", item:"Unit tests pass", category:"testing")
+pm_dor(action:"add", item:"Acceptance criteria defined", category:"clarity")
+pm_agreements(action:"add", agreement:"PRs reviewed within 24h")
 ```
 
-### Release Day
-```
-1. pm_release_notes(board_id, send_to_lark:true) -> generate + share
-```
+## Key Tools by Category
 
-### Full Status Check (One Command)
-```
-1. pm_dashboard(board_id)             -> everything in one view
-```
+| Category | Count | Key Tools |
+|----------|-------|-----------|
+| Jira Operations | 45 | search, create, update, transition, bulk ops, epics, sprints |
+| PM Memory | 20 | snapshot, risks, decisions, blockers, team, retros, deps |
+| AI Intelligence | 15 | forecast, coaching, facilitate, anti-patterns, recommendations |
+| Process & Health | 18 | health score, velocity, capacity, goals, DoD/DoR, experiments |
+| Reporting | 8 | exec report, weekly digest, scorecard, release notes |
+| Notifications | 9 | Lark, Slack, Discord, Telegram, Teams, Email, Confluence |
+| Recipes | 3 | start_work, done, block (one-click) |
 
-## Health Score Breakdown (pm_sprint_health)
+## Health Score Breakdown
 
 | Component | Max | Measures |
 |-----------|-----|----------|
-| Velocity | 25 | Completion rate (done / total) |
-| Blockers | 25 | Blocked ratio (fewer = higher) |
-| Scope | 25 | Scope change vs previous sprint |
-| Team | 25 | Workload distribution balance |
+| Velocity | 25 | Completion rate |
+| Blockers | 25 | Blocked ratio |
+| Scope | 25 | Change vs baseline |
+| Team | 25 | Workload balance |
 
-Overall: 0-49 = AT RISK, 50-69 = WATCH, 70-100 = HEALTHY
+0-49 = AT RISK, 50-69 = WATCH, 70-100 = HEALTHY
 
-## Auto Risk Detection (pm_auto_detect_risks)
+## Anti-Pattern Detection
 
-Automatically scans for:
-1. Stale tickets (7+ days no update in active sprint)
-2. Workload imbalance (someone has 2x average load)
-3. High blocked count (3+ issues blocked)
-4. Chronic blockers (5+ days unresolved)
-5. Overdue retro action items
+Detects from real data:
+- Zombie Sprint (>30% carryover consistently)
+- Hero Culture (one person does >50% of work)
+- Scope Creep (>20% growth mid-sprint)
+- Unpredictable (>40% velocity variance)
+- Dead Retros (>5 pending action items never done)
+- Rubber-Stamp DoD (>95% completion with zero blockers)
+- No Sprint Goals (no recorded goals)
 
-All findings auto-recorded to risk register.
+## Monte Carlo Forecasting
 
-## Auto Escalation (pm_escalate)
+`pm_forecast(board_id, remaining_items:30)`
 
-Thresholds that trigger Lark alerts:
-1. Critical/High risks open >3 days without resolution
-2. Blockers unresolved >3 days
-3. Sprint health score below 50
+Returns probability-based dates:
+- 50% confidence (coin flip)
+- 70% confidence
+- 85% confidence (recommended for stakeholder commitments)
+- 95% confidence (almost certain)
 
-Escalation history tracked — prevents duplicate alerts.
+Based on 10,000 simulations using historical throughput.
+
+## Data Persistence
+
+SQLite at `~/.zara-jira-mcp/pm_memory.db` (14 tables).
+Back up this file to preserve all PM memory.
 
 ## Principles
 
-1. **Record everything that matters** — Decisions, risks, blockers. Future you will thank present you.
-2. **Snapshot every sprint** — Without data, recommendations are guesses.
-3. **Track blockers with resolution** — Patterns emerge over time.
-4. **Never let retro actions die** — Check `pm_action_items` every standup.
-5. **Use AI after building history** — Recommendations improve with more data.
-6. **Team metrics are for support, not surveillance** — Detect overload early, not punish.
-7. **Dependencies are risks in disguise** — Track them before they block.
-8. **Decisions without rationale are forgotten** — Always record the "why".
-9. **Health scores are signals, not grades** — Use for conversation, not blame.
-10. **Automate detection, humanize response** — Let tools find problems, humans solve them.
-
-## Data Lives In
-
-SQLite at `~/.zara-jira-mcp/pm_memory.db` (configurable via `PM_MEMORY_DB_PATH`).
-Back up this file to preserve all PM memory across machines.
-
-Tables: `sprint_snapshots`, `risks`, `decisions`, `blockers`, `team_metrics`, `retrospectives`, `action_items`, `dependencies`, `meeting_notes`, `health_scores`, `daily_progress`, `sprint_goals`, `dod_items`, `escalations`
+1. Record everything that matters — future you will thank present you
+2. Snapshot every sprint — without data, recommendations are guesses
+3. Track blockers with resolution — patterns emerge over time
+4. Never let retro actions die — check every standup
+5. Flow over velocity — WIP and cycle time predict delivery better
+6. Team metrics are for support, not surveillance
+7. Automate detection, humanize response
+8. Decisions without rationale are forgotten
+9. Forecast with probability, not promises
+10. Process gates (DoR/DoD) prevent rework
