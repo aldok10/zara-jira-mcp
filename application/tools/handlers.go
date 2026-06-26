@@ -29,14 +29,15 @@ func (h *Handlers) SearchIssues(ctx context.Context, req mcp.CallToolRequest) (*
 		return errorResult("jql parameter is required"), nil
 	}
 	maxResults := req.GetInt("max_results", 20)
+	startAt := req.GetInt("start_at", 0)
 
-	result, err := h.Jira.SearchIssues(ctx, jql, maxResults)
+	result, err := h.Jira.SearchIssues(ctx, jql, maxResults, startAt)
 	if err != nil {
 		return errorResult("Jira search failed: " + err.Error()), nil
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d issues (showing %d):\n\n", result.Total, len(result.Issues)))
+	sb.WriteString(fmt.Sprintf("Found %d issues (showing %d, offset %d, hasMore: %v):\n\n", result.Total, len(result.Issues), result.StartAt, result.HasMore))
 	for _, issue := range result.Issues {
 		sb.WriteString(fmt.Sprintf("**%s** [%s] %s\n  Status: %s | Priority: %s | Assignee: %s\n\n",
 			issue.Key, issue.Type, issue.Summary, issue.Status, issue.Priority, issue.Assignee))
@@ -206,7 +207,7 @@ func (h *Handlers) MyIssues(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 		jql = fmt.Sprintf("assignee = currentUser() AND resolution = Unresolved AND status = \"%s\" ORDER BY updated DESC", status)
 	}
 
-	result, err := h.Jira.SearchIssues(ctx, jql, 30)
+	result, err := h.Jira.SearchIssues(ctx, jql, 30, 0)
 	if err != nil {
 		return errorResult("Failed to get my issues: " + err.Error()), nil
 	}
@@ -229,7 +230,7 @@ func (h *Handlers) Overdue(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 		jql = fmt.Sprintf("project = %s AND resolution = Unresolved AND updated <= -%dd ORDER BY updated ASC", project, days)
 	}
 
-	result, err := h.Jira.SearchIssues(ctx, jql, 30)
+	result, err := h.Jira.SearchIssues(ctx, jql, 30, 0)
 	if err != nil {
 		return errorResult("Failed to get overdue issues: " + err.Error()), nil
 	}
@@ -252,7 +253,7 @@ func (h *Handlers) Workload(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 		jql = fmt.Sprintf("project = %s AND resolution = Unresolved AND assignee IS NOT EMPTY ORDER BY assignee ASC", project)
 	}
 
-	result, err := h.Jira.SearchIssues(ctx, jql, 200)
+	result, err := h.Jira.SearchIssues(ctx, jql, 200, 0)
 	if err != nil {
 		return errorResult("Failed to get workload: " + err.Error()), nil
 	}
@@ -282,7 +283,7 @@ func (h *Handlers) AIAnalyze(ctx context.Context, req mcp.CallToolRequest) (*mcp
 	jql := req.GetString("jql", "resolution = Unresolved ORDER BY updated DESC")
 	maxResults := req.GetInt("max_results", 30)
 
-	result, err := h.Jira.SearchIssues(ctx, jql, maxResults)
+	result, err := h.Jira.SearchIssues(ctx, jql, maxResults, 0)
 	if err != nil {
 		return errorResult("Jira search failed: " + err.Error()), nil
 	}
@@ -387,6 +388,35 @@ Format in markdown. Keep it under 500 words.`
 		return textResult(report + "\n\n(Sent to Lark successfully)"), nil
 	}
 	return textResult(report), nil
+}
+
+// UpdateIssue updates an existing Jira issue.
+func (h *Handlers) UpdateIssue(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	key, err := req.RequireString("key")
+	if err != nil {
+		return errorResult("key parameter is required"), nil
+	}
+
+	input := &domain.UpdateIssueInput{Key: key}
+	input.Summary = req.GetString("summary", "")
+	input.Description = req.GetString("description", "")
+	input.Priority = req.GetString("priority", "")
+	input.Assignee = req.GetString("assignee_id", "")
+
+	labelsRaw := req.GetString("labels", "")
+	if labelsRaw != "" {
+		input.Labels = strings.Split(labelsRaw, ",")
+	}
+
+	if err := h.Jira.UpdateIssue(ctx, input); err != nil {
+		return errorResult("Failed to update issue: " + err.Error()), nil
+	}
+	return textResult(fmt.Sprintf("Issue %s updated successfully", key)), nil
+}
+
+// Health returns server version and status.
+func (h *Handlers) Health(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return textResult("zara-jira-mcp v0.2.0 | status: ok"), nil
 }
 
 func textResult(text string) *mcp.CallToolResult {

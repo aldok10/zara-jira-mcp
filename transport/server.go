@@ -24,6 +24,7 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerLarkTools(s, handlers)
 	registerMemoryTools(s, handlers)
 	registerPMIntelTools(s, handlers)
+	registerAdvancedPMTools(s, handlers)
 
 	return &MCPServer{s: s}
 }
@@ -38,6 +39,7 @@ func registerJiraTools(s *server.MCPServer, h *tools.Handlers) {
 			mcp.WithDescription("Search Jira issues using JQL. Returns key, summary, status, priority, assignee."),
 			mcp.WithString("jql", mcp.Required(), mcp.Description("JQL query string")),
 			mcp.WithNumber("max_results", mcp.Description("Maximum results (default 20, max 50)")),
+			mcp.WithNumber("start_at", mcp.Description("Pagination offset (default 0)")),
 		),
 		h.SearchIssues,
 	)
@@ -332,5 +334,91 @@ func registerPMIntelTools(s *server.MCPServer, h *tools.Handlers) {
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
 		),
 		h.SprintRetroAnalysis,
+	)
+}
+
+func registerAdvancedPMTools(s *server.MCPServer, h *tools.Handlers) {
+	s.AddTool(
+		mcp.NewTool("pm_sprint_health",
+			mcp.WithDescription("Compute sprint health score (0-100) with breakdown: velocity, blockers, scope creep, team balance. Saves to history for trend tracking."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.SprintHealthScore,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_health_history",
+			mcp.WithDescription("Show health score trends over time. See if the team is getting healthier or declining."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.HealthHistory,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_record_dependency",
+			mcp.WithDescription("Record a dependency between issues (blocks, blocked_by, external). Track cross-team dependencies."),
+			mcp.WithString("from_issue", mcp.Required(), mcp.Description("Issue that is blocked/dependent")),
+			mcp.WithString("to_issue", mcp.Required(), mcp.Description("Issue/team it depends on")),
+			mcp.WithString("type", mcp.Description("blocks, blocked_by, relates_to, external (default: blocks)")),
+			mcp.WithString("description", mcp.Description("Context about the dependency")),
+		),
+		h.RecordDependency,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_resolve_dependency",
+			mcp.WithDescription("Mark a dependency as resolved."),
+			mcp.WithNumber("dependency_id", mcp.Required(), mcp.Description("Dependency ID")),
+		),
+		h.ResolveDependency,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_dependencies",
+			mcp.WithDescription("Show dependency map — all open dependencies or for a specific issue."),
+			mcp.WithString("issue_key", mcp.Description("Filter by issue key (shows all if empty)")),
+		),
+		h.GetDependencies,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_record_meeting",
+			mcp.WithDescription("Record meeting notes: decisions made, action items, key discussion points."),
+			mcp.WithString("meeting_type", mcp.Required(), mcp.Description("standup, planning, retro, grooming, adhoc")),
+			mcp.WithString("notes", mcp.Description("Key discussion points")),
+			mcp.WithString("decisions", mcp.Description("Decisions made during meeting")),
+			mcp.WithString("action_items", mcp.Description("Follow-up actions")),
+			mcp.WithString("attendees", mcp.Description("Comma-separated attendee names")),
+			mcp.WithString("sprint_name", mcp.Description("Sprint context")),
+		),
+		h.RecordMeeting,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_meetings",
+			mcp.WithDescription("Show meeting notes history. Filter by type (standup, planning, retro, grooming)."),
+			mcp.WithString("meeting_type", mcp.Description("Filter by type")),
+			mcp.WithNumber("limit", mcp.Description("Max results (default 10)")),
+		),
+		h.GetMeetings,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_capacity_plan",
+			mcp.WithDescription("Capacity planning based on velocity history. Calculates recommended story points for next sprint based on team availability."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+			mcp.WithNumber("team_size", mcp.Description("Number of team members")),
+			mcp.WithNumber("sprint_days", mcp.Description("Sprint duration in days (default: 10)")),
+			mcp.WithNumber("planned_leave_days", mcp.Description("Total planned leave days across team")),
+		),
+		h.CapacityPlan,
+	)
+
+	s.AddTool(
+		mcp.NewTool("pm_auto_detect_risks",
+			mcp.WithDescription("Proactively scan for risk signals: stale tickets, overloaded members, chronic blockers, overdue actions. Auto-records findings to risk register."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.AutoDetectRisks,
 	)
 }

@@ -25,7 +25,9 @@ type Issue struct {
 type SearchResult struct {
 	Issues     []Issue
 	Total      int
+	StartAt    int
 	MaxResults int
+	HasMore    bool
 }
 
 // Board represents a Jira board.
@@ -54,14 +56,25 @@ type CreateIssueInput struct {
 	Labels      []string
 }
 
+// UpdateIssueInput holds parameters for updating an issue.
+type UpdateIssueInput struct {
+	Key         string
+	Summary     string
+	Description string
+	Priority    string
+	Assignee    string   // account ID, empty = no change
+	Labels      []string // nil = no change, empty slice = clear
+}
+
 // Client defines the interface for Jira API operations.
 type Client interface {
-	SearchIssues(ctx context.Context, jql string, maxResults int) (*SearchResult, error)
+	SearchIssues(ctx context.Context, jql string, maxResults int, startAt int) (*SearchResult, error)
 	GetIssue(ctx context.Context, key string) (*Issue, error)
 	GetBoards(ctx context.Context) ([]Board, error)
 	GetActiveSprints(ctx context.Context, boardID int) ([]Sprint, error)
 	GetSprintIssues(ctx context.Context, sprintID int) ([]Issue, error)
 	CreateIssue(ctx context.Context, input *CreateIssueInput) (*Issue, error)
+	UpdateIssue(ctx context.Context, input *UpdateIssueInput) error
 	AddComment(ctx context.Context, issueKey, body string) error
 	TransitionIssue(ctx context.Context, issueKey, transitionID string) error
 	GetTransitions(ctx context.Context, issueKey string) ([]Transition, error)

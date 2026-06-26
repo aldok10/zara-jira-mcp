@@ -45,7 +45,7 @@ func NewRestClient(cfg *config.Config) (*RestClient, error) {
 	}, nil
 }
 
-func (c *RestClient) SearchIssues(ctx context.Context, jql string, maxResults int) (*domain.SearchResult, error) {
+func (c *RestClient) SearchIssues(ctx context.Context, jql string, maxResults int, startAt int) (*domain.SearchResult, error) {
 	if maxResults <= 0 {
 		maxResults = 50
 	}
@@ -57,11 +57,15 @@ func (c *RestClient) SearchIssues(ctx context.Context, jql string, maxResults in
 	if err != nil {
 		return nil, err
 	}
-	out := &domain.SearchResult{MaxResults: result.MaxResults}
+	out := &domain.SearchResult{
+		MaxResults: result.MaxResults,
+		StartAt:    startAt,
+	}
 	for _, i := range result.Issues {
 		out.Issues = append(out.Issues, mapIssue(i))
 	}
 	out.Total = len(out.Issues)
+	out.HasMore = result.NextPageToken != ""
 	return out, nil
 }
 
@@ -140,6 +144,58 @@ func (c *RestClient) CreateIssue(ctx context.Context, input *domain.CreateIssueI
 	}
 	mapped := mapIssue(created)
 	return &mapped, nil
+}
+
+func (c *RestClient) UpdateIssue(ctx context.Context, input *domain.UpdateIssueInput) error {
+	fields := map[string]any{}
+	if input.Summary != "" {
+		fields["summary"] = input.Summary
+	}
+	if input.Description != "" {
+		fields["description"] = map[string]any{
+			"type": "doc", "version": 1,
+			"content": []map[string]any{
+				{"type": "paragraph", "content": []map[string]any{
+					{"type": "text", "text": input.Description},
+				}},
+			},
+		}
+	}
+	if input.Priority != "" {
+		fields["priority"] = map[string]any{"name": input.Priority}
+	}
+	if input.Assignee != "" {
+		fields["assignee"] = map[string]any{"accountId": input.Assignee}
+	}
+	if input.Labels != nil {
+		fields["labels"] = input.Labels
+	}
+	if len(fields) == 0 {
+		return nil
+	}
+
+	payload := map[string]any{"fields": fields}
+	data, _ := json.Marshal(payload)
+
+	path := fmt.Sprintf("%s/rest/api/3/issue/%s", c.baseURL, input.Key)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.email, c.token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("update issue failed %d: %s", resp.StatusCode, string(b))
+	}
+	return nil
 }
 
 func (c *RestClient) AddComment(ctx context.Context, issueKey, body string) error {
