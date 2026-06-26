@@ -2,12 +2,15 @@
 
 Your AI-powered Scrum Master that actually remembers what happened last sprint.
 
-**124 tools.** Jira operations, sprint intelligence, risk management, team health tracking, Monte Carlo forecasting, coaching, and multi-channel notifications. All in one MCP server.
+**224 tools.** Jira operations, sprint intelligence, risk management, team health tracking, Monte Carlo forecasting, coaching, and multi-channel notifications. All in one MCP server.
 
 Built as part of the [Zara Agent OPC](https://github.com/aldok10/zara-agent-opc) ecosystem by [Aldo Karendra](https://www.linkedin.com/in/aldok10/).
 
+[![CI](https://github.com/aldok10/zara-jira-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/aldok10/zara-jira-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MCP Compatible](https://img.shields.io/badge/MCP-compatible-blue)](https://modelcontextprotocol.io)
+[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://golang.org)
+[![GitHub stars](https://img.shields.io/github/stars/aldok10/zara-jira-mcp?style=social)](https://github.com/aldok10/zara-jira-mcp)
 [![Donate](https://img.shields.io/badge/Support-SociaBuzz-orange)](https://sociabuzz.com/aldok10)
 
 ---
