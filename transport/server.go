@@ -51,6 +51,10 @@ func NewMCPServer(handlers *tools.Handlers) *MCPServer {
 	registerPagerDutyTools(s, handlers)
 	registerClockifyTools(s, handlers)
 	registerSheetsTools(s, handlers)
+	registerHelpTools(s, handlers)
+	registerCoachingTools(s, handlers)
+	registerPMShortcuts(s, handlers)
+	registerLeverageTools(s, handlers)
 
 	return &MCPServer{s: s}
 }

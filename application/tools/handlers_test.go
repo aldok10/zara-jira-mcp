@@ -225,6 +225,22 @@ func (m *mockMemory) GetRecentEscalations(_ context.Context, _ int) ([]memdom.Es
 	return nil, nil
 }
 func (m *mockMemory) AcknowledgeEscalation(_ context.Context, _ int64) error { return nil }
+func (m *mockMemory) SaveTeamPulse(_ context.Context, _ *memdom.TeamPulse) error {
+	return nil
+}
+func (m *mockMemory) GetTeamPulseHistory(_ context.Context, _ int) ([]memdom.TeamPulse, error) {
+	return nil, nil
+}
+func (m *mockMemory) SaveMeetingEffectiveness(_ context.Context, _ *memdom.MeetingEffectiveness) error {
+	return nil
+}
+func (m *mockMemory) GetMeetingEffectivenessHistory(_ context.Context, _ string, _ int) ([]memdom.MeetingEffectiveness, error) {
+	return nil, nil
+}
+func (m *mockMemory) SaveTeamRadar(_ context.Context, _ *memdom.TeamRadar) error { return nil }
+func (m *mockMemory) GetTeamRadarHistory(_ context.Context, _ int) ([]memdom.TeamRadar, error) {
+	return nil, nil
+}
 
 // --- Helpers ---
 

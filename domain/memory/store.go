@@ -71,4 +71,16 @@ type Store interface {
 	SaveEscalation(ctx context.Context, e *Escalation) error
 	GetRecentEscalations(ctx context.Context, limit int) ([]Escalation, error)
 	AcknowledgeEscalation(ctx context.Context, id int64) error
+
+	// Team Pulse
+	SaveTeamPulse(ctx context.Context, p *TeamPulse) error
+	GetTeamPulseHistory(ctx context.Context, limit int) ([]TeamPulse, error)
+
+	// Meeting Effectiveness
+	SaveMeetingEffectiveness(ctx context.Context, m *MeetingEffectiveness) error
+	GetMeetingEffectivenessHistory(ctx context.Context, ceremony string, limit int) ([]MeetingEffectiveness, error)
+
+	// Team Radar
+	SaveTeamRadar(ctx context.Context, r *TeamRadar) error
+	GetTeamRadarHistory(ctx context.Context, limit int) ([]TeamRadar, error)
 }
