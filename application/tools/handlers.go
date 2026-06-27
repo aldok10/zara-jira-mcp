@@ -502,6 +502,14 @@ func (h *Handlers) Health(ctx context.Context, req mcp.CallToolRequest) (*mcp.Ca
 	return textResult("zara-jira-mcp v0.3.0 | status: ok | tools: 139"), nil
 }
 
+// aiComplete is a convenience wrapper around h.AI.Complete.
+func (h *Handlers) aiComplete(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+	if h.AI == nil {
+		return "", fmt.Errorf("AI provider not configured")
+	}
+	return h.AI.Complete(ctx, systemPrompt, userPrompt)
+}
+
 func textResult(text string) *mcp.CallToolResult {
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{mcp.TextContent{Type: "text", Text: text}},
