@@ -65,7 +65,7 @@ func TestGetSprintSummary(t *testing.T) {
 	if !strings.Contains(text, "Ship v2") {
 		t.Errorf("expected goal, got: %s", text)
 	}
-	if !strings.Contains(text, "Total: 2 issues") {
+	if !strings.Contains(text, "2 issues total") {
 		t.Errorf("expected total count, got: %s", text)
 	}
 }
