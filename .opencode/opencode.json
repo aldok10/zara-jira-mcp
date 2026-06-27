@@ -1,4 +1,5 @@
 {
+  "$schema": "https://opencode.ai/config.json",
   "mcp": {
     "jira-pm": {
       "type": "local",
@@ -12,7 +13,7 @@
         "JIRA_AI_MODEL": "gpt-4o-mini"
       },
       "timeout": 30000,
-      "enabled": true
+      "enabled": false
     }
   }
 }
