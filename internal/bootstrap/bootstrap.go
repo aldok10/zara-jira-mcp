@@ -38,13 +38,14 @@ import (
 	mcpserver "github.com/mark3labs/mcp-go/server"
 )
 
-var Module = fx.Module("bootstrap",
-	fx.Provide(
-		config.Load,
-		jira.NewRestClient,
-		ai.NewOpenAIClient,
-		lark.NewWebhookClient,
-		islack.NewClient,
+	var Module = fx.Module("bootstrap",
+		fx.Provide(
+			config.Load,
+			jira.NewRestClient,
+			ai.NewOpenAIClient,
+			lark.NewWebhookClient,
+			lark.NewOKRClient,
+			islack.NewClient,
 		idiscord.NewClient,
 		itelegram.NewClient,
 		iteams.NewClient,
