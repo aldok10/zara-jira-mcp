@@ -2,26 +2,77 @@
 package bootstrap
 
 import (
-	"context"
 	"log/slog"
 	"os"
+	"sync"
 
 	"github.com/mark3labs/mcp-go/server"
 
 	"github.com/aldok10/zara-jira-mcp/apps/api/internal/mcp"
 	jira_mcp "github.com/aldok10/zara-jira-mcp/modules/jira/interfaces/mcp"
-	"github.com/aldok10/zara-jira-mcp/modules/sprint/application/port"
-	sprint_mcp "github.com/aldok10/zara-jira-mcp/modules/sprint/interfaces/mcp"
+	"github.com/aldok10/zara-jira-mcp/modules/jira/application/service"
+	"github.com/aldok10/zara-jira-mcp/modules/jira/infrastructure/client"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
 )
 
-// Module is a placeholder for future DI.
-var Module = struct{}{}
+// simpleCache implements domain.Cache for Jira service.
+type simpleCache struct {
+	mu   sync.RWMutex
+	data map[string][]byte
+	ttl  int
+}
 
-// NewServer creates a fully-configured MCP server with all tools registered.
-func NewServer(
-	jira *jira_mcp.Handlers,
-	sprint *sprint_mcp.Handlers,
-) *server.MCPServer {
+func newSimpleCache(ttl int) *simpleCache {
+	return &simpleCache{
+		data: make(map[string][]byte),
+		ttl:  ttl,
+	}
+}
+
+func (c *simpleCache) Get(key string) ([]byte, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	v, ok := c.data[key]
+	return v, ok
+}
+
+func (c *simpleCache) Set(key string, data []byte) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.data[key] = data
+}
+
+func (c *simpleCache) TTL() int {
+	return c.ttl
+}
+
+// Run starts the MCP server with stdio transport.
+func Run() error {
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})))
+	slog.Info("starting zara-jira-mcp server")
+
+	// Load config from environment
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+
+	// Build Jira REST client
+	restClient, err := client.NewRestClient(cfg)
+	if err != nil {
+		return err
+	}
+
+	// Build cache
+	cache := newSimpleCache(60)
+
+	// Build Jira service
+	jiraSvc := service.NewJiraService(restClient, cache)
+
+	// Build Jira handler
+	jiraHandler := jira_mcp.NewHandlers(jiraSvc)
+
+	// Create MCP server with all tools
 	s := server.NewMCPServer(
 		"zara-jira-mcp",
 		"0.4.0",
@@ -29,54 +80,13 @@ func NewServer(
 		server.WithRecovery(),
 	)
 
-	// Register all tool groups
-	mcp.RegisterJiraTools(s, jira)
-	mcp.RegisterSprintTools(s, sprint)
-	// mcp.RegisterInfraTools(s, calHandler, ghHandler) // TODO: Wire in later when needed
+	// Register Jira tools
+	mcp.RegisterJiraTools(s, jiraHandler)
 
-	slog.Info("MCP server initialized with all tools",
+	slog.Info("server ready, waiting for MCP connections",
 		"version", "0.4.0",
 	)
 
-	return s
-}
-
-// placeholderSprintService provides a no-op sprint service for the initial setup.
-type placeholderSprintService struct{}
-
-func (p *placeholderSprintService) CalculateHealth(ctx context.Context, boardID int) (*port.HealthResult, error) {
-	return &port.HealthResult{Score: 100, Rating: "Healthy"}, nil
-}
-
-func (p *placeholderSprintService) Forecast(ctx context.Context, boardID int, remaining int) (*port.ForecastResult, error) {
-	return &port.ForecastResult{}, nil
-}
-
-func (p *placeholderSprintService) DetectAntiPatterns(ctx context.Context, boardID int) ([]port.AntiPattern, error) {
-	return nil, nil
-}
-
-func (p *placeholderSprintService) VelocityTrend(ctx context.Context, boardID int) (string, error) {
-	return "stabil", nil
-}
-
-// Run starts the MCP server with stdio transport.
-func Run() error {
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})))
-
-	// Build module-specific handlers with available dependencies.
-	// In production, use proper DI.
-	jiraHandler := jira_mcp.NewHandlers(nil)
-	sprintHandler := sprint_mcp.NewHandlers(
-		nil,                            // memory store
-		&placeholderSprintService{},   // sprint service
-		nil,                            // AI provider
-		nil,                            // config
-		nil,                            // cache
-	)
-
-	srv := NewServer(jiraHandler, sprintHandler)
-
 	// Use stdio transport for MCP
-	return server.ServeStdio(srv)
+	return server.ServeStdio(s)
 }
