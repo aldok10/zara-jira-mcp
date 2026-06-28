@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"net/url"
 	"time"
 
 	slackapi "github.com/slack-go/slack"
 
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/httpclient"
 )
 
 // Client wraps slack-go for sending messages and managing channels.
@@ -27,7 +27,7 @@ func NewClient(cfg *config.Config) *Client {
 	c := &Client{
 		defaultChannel: cfg.Slack.DefaultChannel,
 		webhookURL:     cfg.Slack.WebhookURL,
-		httpClient:     &http.Client{Timeout: 10 * time.Second},
+		httpClient:     httpclient.NewWithTimeout(10 * time.Second),
 	}
 	if cfg.Slack.BotToken != "" {
 		c.api = slackapi.New(cfg.Slack.BotToken)
@@ -136,21 +136,13 @@ func (c *Client) webhookPost(ctx context.Context, text, channel string) error {
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return sanitizeReqErr(err)
+		return httpclient.SanitizeError(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
+		// Drain body to prevent connection leak
+		_, _ = io.Copy(io.Discard, resp.Body)
 		return fmt.Errorf("slack webhook returned %d", resp.StatusCode)
 	}
 	return nil
-}
-
-// sanitizeReqErr strips the URL from HTTP client errors to prevent
-// credential leakage (webhook URLs contain tokens in the path).
-func sanitizeReqErr(err error) error {
-	var urlErr *url.Error
-	if errors.As(err, &urlErr) {
-		return urlErr.Err
-	}
-	return err
 }

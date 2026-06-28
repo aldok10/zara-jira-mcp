@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/httpclient"
 )
 
 // Client sends messages to Microsoft Teams via incoming webhook.
@@ -22,7 +22,7 @@ type Client struct {
 func NewClient(cfg *config.Config) *Client {
 	return &Client{
 		webhookURL: cfg.Teams.WebhookURL,
-		httpClient: &http.Client{Timeout: 10 * time.Second},
+		httpClient: httpclient.NewWithTimeout(10 * time.Second),
 	}
 }
 
@@ -70,21 +70,13 @@ func (c *Client) post(ctx context.Context, payload any) error {
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return sanitizeReqErr(err)
+		return httpclient.SanitizeError(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
+		// Don't leak full error body to prevent information leakage
+		_, _ = io.Copy(io.Discard, resp.Body)
 		return fmt.Errorf("teams webhook returned %d", resp.StatusCode)
 	}
 	return nil
-}
-
-// sanitizeReqErr strips the URL from HTTP client errors to prevent
-// credential leakage (webhook URLs contain tokens in the path).
-func sanitizeReqErr(err error) error {
-	var urlErr *url.Error
-	if errors.As(err, &urlErr) {
-		return urlErr.Err
-	}
-	return err
 }

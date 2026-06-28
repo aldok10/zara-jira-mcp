@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
-	domain "github.com/aldok10/zara-jira-mcp/shared/kernel"
+	"github.com/aldok10/zara-jira-mcp/config"
+	domain "github.com/aldok10/zara-jira-mcp/shared/domain/ai"
 )
 
 // OpenAIClient supports OpenAI-compatible, Anthropic, and Google Gemini APIs.

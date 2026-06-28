@@ -18,7 +18,10 @@ import (
 	"unicode"
 )
 
-var issueKeyRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*-\d+$`)
+var (
+	issueKeyRE    = regexp.MustCompile(`^[A-Z][A-Z0-9_]*-\d+$`)
+	internalIPRE  = regexp.MustCompile(`(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|169\.254\.\d{1,3}\.\d{1,3})`)
+)
 
 // common Jira field error messages.
 const (
@@ -142,6 +145,20 @@ func URL(s string) error {
 	}
 	if len(s) < 10 {
 		return fmt.Errorf("URL is too short")
+	}
+	return nil
+}
+
+// JiraBaseURL validates a Jira instance URL with security checks.
+func JiraBaseURL(s string) error {
+	if err := Required("Jira base URL", s); err != nil {
+		return err
+	}
+	if !strings.HasPrefix(s, "http://") && !strings.HasPrefix(s, "https://") {
+		return fmt.Errorf("Jira URL must start with http:// or https://")
+	}
+	if strings.HasPrefix(s, "http://") {
+		return fmt.Errorf("Jira URL must use https:// (http is insecure)")
 	}
 	return nil
 }

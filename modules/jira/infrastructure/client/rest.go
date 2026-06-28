@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -56,6 +57,27 @@ type RestClient struct {
 }
 
 func NewRestClient(cfg *config.Config) (*RestClient, error) {
+	// Secure HTTP client configuration with TLS verification
+	secureTransport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
+		IdleConnTimeout:       30 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		// Additional security hardening for enterprise environment
+		DisableKeepAlives:     false,
+		MaxIdleConns:          100,
+		MaxIdleConnsPerHost:   10,
+	}
+	secureHTTPClient := &http.Client{
+		Transport:  secureTransport,
+		Timeout:    30 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 5 {
+				return fmt.Errorf("too many redirects")
+			}
+			return nil
+		},
+	}
+
 	client, err := jira.NewClient(
 		jira.WithBaseURL(cfg.Jira.BaseURL),
 		jira.WithAPIToken(cfg.Jira.Email, cfg.Jira.Token),
@@ -69,7 +91,7 @@ func NewRestClient(cfg *config.Config) (*RestClient, error) {
 		baseURL: cfg.Jira.BaseURL,
 		email:   cfg.Jira.Email,
 		token:   cfg.Jira.Token,
-		http:    &http.Client{Timeout: 30 * time.Second},
+		http:    secureHTTPClient,
 		limiter: &rateLimiter{max: 60, tokens: 60, last: time.Now()},
 	}, nil
 }

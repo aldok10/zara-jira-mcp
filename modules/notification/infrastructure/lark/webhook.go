@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"net/url"
 	"time"
 
 	lark "github.com/larksuite/oapi-sdk-go/v3"
@@ -15,6 +14,7 @@ import (
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/httpclient"
 )
 
 // WebhookClient sends messages to Lark via SDK or webhook fallback.
@@ -29,7 +29,7 @@ func NewWebhookClient(cfg *config.Config) *WebhookClient {
 	c := &WebhookClient{
 		webhookURL: cfg.Lark.WebhookURL,
 		chatID:     cfg.Lark.ChatID,
-		httpClient: &http.Client{Timeout: 10 * time.Second},
+		httpClient: httpclient.NewWithTimeout(10 * time.Second),
 	}
 
 	if cfg.Lark.AppID != "" && cfg.Lark.AppSecret != "" {
@@ -141,23 +141,15 @@ func (c *WebhookClient) webhookPost(ctx context.Context, payload any) error {
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return sanitizeReqErr(err)
+		return httpclient.SanitizeError(err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
+		// Drain body to avoid connection leak, but don't log sensitive content
+		_, _ = io.Copy(io.Discard, resp.Body)
 		return fmt.Errorf("lark webhook returned %d", resp.StatusCode)
 	}
 
 	return nil
-}
-
-// sanitizeReqErr strips the URL from HTTP client errors to prevent
-// credential leakage (webhook URLs contain tokens in the path).
-func sanitizeReqErr(err error) error {
-	var urlErr *url.Error
-	if errors.As(err, &urlErr) {
-		return urlErr.Err
-	}
-	return err
 }
