@@ -1,0 +1,45 @@
+---
+description: PM/Scrum Master MCP with persistent memory and AI intelligence
+globs: ["**/*"]
+alwaysApply: false
+---
+
+# Jira PM Brain (zara-jira-mcp)
+
+124-tool MCP server for project management with AI intelligence and persistent memory.
+
+## When to Use
+
+Activate these tools when user asks about:
+- Sprint status, Jira issues, team workload
+- Risks, blockers, decisions, dependencies
+- Retrospectives, planning, forecasting
+- Team health, velocity, capacity
+- Stakeholder reporting
+
+## First Call
+
+`jira_boards` — get board_id. Store it.
+
+## Quick Reference
+
+| Task | Tool |
+|------|------|
+| Standup prep | `pm_standup_prep(board_id)` |
+| Sprint planning | `pm_planning_prep(board_id)` |
+| Health check | `pm_sprint_health(board_id)` |
+| Forecast | `pm_forecast(board_id, remaining_items:N)` |
+| Record risk | `pm_record_risk(title, severity, owner, mitigation)` |
+| Record decision | `pm_record_decision(title, decision, rationale)` |
+| Record blocker | `pm_record_blocker(description, issue_key, owner)` |
+| Exec report | `pm_exec_report(board_id)` |
+| End sprint | `pm_snapshot_sprint(board_id, velocity:N)` |
+| Anti-patterns | `pm_anti_patterns(board_id)` |
+
+## Rules
+
+1. NEVER `pm_dashboard` for executives — use `pm_exec_report`
+2. Record decisions/risks/blockers immediately
+3. `pm_snapshot_sprint` at end of every sprint
+4. `pm_auto_detect_risks` weekly
+5. Full docs: see SKILL.md

@@ -1,0 +1,52 @@
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    # Bugs
+    - govet
+    - staticcheck
+    - gosec
+    - bodyclose
+    - noctx
+    - sqlclosecheck
+    - rowserrcheck
+    # Style
+    - revive
+    - gofumpt
+    - misspell
+    - unconvert
+    # Performance
+    - prealloc
+    - gocritic
+    # Correctness
+    - errcheck
+    - ineffassign
+    - unparam
+    - unused
+
+linters-settings:
+  revive:
+    rules:
+      - name: exported
+        arguments: [checkPrivateReceivers]
+      - name: var-naming
+      - name: blank-imports
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - performance
+    disabled-checks: []
+  gosec:
+    excludes:
+      - G104
+
+issues:
+  max-issues-per-linter: 50
+  max-same-issues: 10
+  exclude-rules:
+    # MCP handler signature requires mcp.CallToolRequest by value (framework constraint)
+    - path: application/tools/
+      text: "hugeParam: req is heavy"
+      linters:
+        - gocritic

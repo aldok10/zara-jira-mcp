@@ -1,0 +1,63 @@
+# zara-jira-mcp
+
+> AI-powered Scrum Master MCP server with persistent memory
+
+## What This Is
+
+A Model Context Protocol (MCP) server that gives AI assistants full Scrum Master capabilities: Jira operations, sprint intelligence, Monte Carlo forecasting, risk management, anti-pattern detection, team health monitoring, and multi-channel notifications.
+
+224 tools. Persistent SQLite memory across sessions. Works with any MCP-compatible AI client.
+
+## Key Capabilities
+
+- Jira Cloud CRUD (issues, sprints, epics, bulk operations)
+- Sprint health scoring (0-100) with velocity, blockers, scope, team balance
+- Monte Carlo forecasting (10,000 simulations, probability-based dates)
+- Anti-pattern detection (hero culture, zombie sprints, scope creep, dead retros)
+- Risk/blocker/decision memory that persists across sessions
+- Executive reports (business language, no jargon)
+- Multi-channel notifications (Lark, Slack, Discord, Telegram, Teams, Email)
+- Portfolio overview across multiple projects
+- AI coaching and ceremony facilitation
+
+## Integration
+
+Transport: stdio (local MCP server)
+Protocol: Model Context Protocol (MCP) / JSON-RPC 2.0
+Language: Go
+
+## Configuration
+
+Set PM_PROFILE env var to control tool count:
+- lite: ~30 tools (fastest)
+- pm: ~60 tools (recommended for PM/Scrum Master)
+- standard: ~100 tools (PM + notifications)
+- full: ~150 tools (PM + GitHub visibility)
+- (none): all 224 tools
+
+## Quick Start for AI Agents
+
+1. Call `jira_boards` to get board_id
+2. Call `pm_standup_prep(board_id)` for daily prep
+3. Call `pm_sprint_health(board_id)` for health check
+4. Call `pm_forecast(board_id, remaining_items:N)` for delivery forecast
+5. Call `pm_exec_report(board_id)` for stakeholder report
+
+## Documentation
+
+- AGENTS.md: AI agent integration guide
+- SKILL.md: Complete tool reference (224 tools with parameters)
+- docs/agents/: Setup guides for 20 AI clients
+- docs/profiles.md: Performance profile guide
+- docs/reporting-guide.md: Management reporting scenarios
+- docs/engineering-literacy.md: Engineering concepts for PM/SM
+
+## Author
+
+Aldo Karendra (https://github.com/aldok10, https://linkedin.com/in/aldok10)
+
+## Links
+
+- Repository: https://github.com/aldok10/zara-jira-mcp
+- Parent project: https://github.com/aldok10/zara-agent-opc
+- Support: https://sociabuzz.com/aldok10

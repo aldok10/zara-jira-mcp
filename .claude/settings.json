@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "jira-pm": {
+      "command": "zara-jira-mcp",
+      "env": {
+        "JIRA_BASE_URL": "https://company.atlassian.net",
+        "JIRA_EMAIL": "you@company.com",
+        "JIRA_API_TOKEN": "your-token",
+        "JIRA_AI_BASE_URL": "https://api.openai.com",
+        "JIRA_AI_API_KEY": "sk-...",
+        "JIRA_AI_MODEL": "gpt-4o-mini"
+      }
+    }
+  }
+}
