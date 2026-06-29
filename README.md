@@ -87,7 +87,7 @@ Then add to your MCP client config:
 }
 ```
 
-Works with **Claude Desktop, ChatGPT, Cursor, VS Code Copilot, Windsurf, Zed, OpenCode, Kiro, Cline, Gemini CLI, Goose**, and 10+ more. [Full setup guides](docs/agents/).
+Works with **Claude Desktop, ChatGPT, Cursor, VS Code Copilot, Windsurf, Zed, OpenCode, Kiro, Cline, Gemini CLI, Goose**, and 10+ more.
 
 ---
 
@@ -118,32 +118,62 @@ This isn't another "AI wrapper." Every feature is grounded in peer-reviewed rese
 
 ---
 
-## 279 Tools Across 17 Categories
+## Architecture
 
-<details>
-<summary>Full tool list (click to expand)</summary>
+Single Go binary. No runtime dependencies. SQLite for memory (WAL mode). Starts in <1 second.
 
-| Category | Count | Highlights |
-|----------|-------|-----------|
-| Jira Core | 55 | CRUD, search, sprints, epics, bulk ops, worklogs, links, versions |
-| PM Memory | 22 | Snapshots, risks, decisions, blockers, retros, goals, DoD |
-| AI Intelligence | 18 | Forecast, coaching, anti-patterns, NL-to-JQL, sentiment analysis |
-| Process & Health | 18 | Sprint health score, velocity, capacity, flow metrics |
-| Reporting | 18 | Exec report, PO briefing, escalation, delivery confidence |
-| Communication | 12 | Cadence check, conversation prep, nudge, effectiveness, SCARF, SBI |
-| Feedback & Team Care | 14 | Feedback log/due/close, burnout risk, safety signals, reality check |
-| OKR/KPI | 12 | OKR define/link/progress/health, KPI trend/snapshot, OKR suggest |
-| Lark OKR | 3 | Bi-directional OKR period, pull, progress sync |
-| Notifications | 15 | 8 platforms, smart routing, budget, digest |
-| GitHub/GitLab | 13 | PR linking, smart commits, activity tracking |
-| Integrations | 17 | Calendar, Notion, Linear, PagerDuty, Clockify, Sheets, Lark |
-| Shortcuts & Help | 14 | Natural language, context-aware, quickstart, help |
-| Coaching | 9 | Team dynamics, skill gaps, wellbeing, 5 dysfunctions |
-| Stakeholder & Portfolio | 16 | Impediment aging, SM impact, stakeholder pulse, portfolio, maturity |
-| SM Leverage | 10 | Maturity assessment, dysfunction detection, meeting ROI, improvement velocity |
-| Tech Skills | 5 | PM technical literacy, engineering vocabulary |
+The project uses a **modular hexagonal architecture** with portability and testability as first-class concerns:
 
-</details>
+```
+apps/api/                  # Application entry & wiring
+├── cmd/server/main.go     # Entry point
+├── internal/
+│   ├── bootstrap/         # Manual DI wiring
+│   └── mcp/               # MCP tool registration
+
+modules/                   # Domain modules (hexagonal)
+├── jira/                  # Jira Cloud operations
+├── sprint/                # Sprint PM intelligence
+└── notification/          # Multi-channel notifications
+
+shared/                    # Shared kernel
+├── domain/                # Core domain types & interfaces
+├── infrastructure/        # External service clients
+└── usecase/               # Shared business logic
+
+agents/                    # Agent Architecture layer
+└── agent.go               # Dispatcher, Planner, Coordinator
+```
+
+**Stack**: Go 1.26.4 | `mark3labs/mcp-go` v0.55.1 | SQLite WAL | Manual DI
+
+### Core Modules (Hexagonal)
+
+| Module | Domain | Infrastructure | Status |
+|--------|--------|---------------|--------|
+| **jira** | Issue, Board, Project, User, Sprint | REST client, search, CRUD | ✅ 4 tools |
+| **sprint** | Velocity, Score, Predictability, Planning, Memory (16 tables) | SQLite persistence, snapshot adapter | ✅ 5 tools |
+| **notification** | Notifier contract, Lark entities | Slack, Discord, Telegram, Teams, Email, Lark | ⚠️ stubs |
+
+---
+
+## Migration Status
+
+This project is in **active migration** from a monolithic ~279-tool server to a modular, maintainable architecture.
+
+| Status | Area |
+|--------|------|
+| ✅ | Hexagonal module structure (3 modules) |
+| ✅ | SQLite persistence with 16+ tables |
+| ✅ | Multi-channel notification infrastructure |
+| ✅ | 16+ shared service clients (AI, GitHub, GitLab, Notion, Linear, etc.) |
+| ✅ | Agent architecture pattern (Dispatcher → Planner → Coordinator) |
+| ⚠️ | **9+2 tools registered** in modular code (vs ~279 in installed binary) |
+| ⚠️ | Infrastructure clients not yet wired into modular handlers |
+| ⚠️ | Agent layer not yet wired into bootstrap |
+| ⏳ | Tool registration: wire `shared/infrastructure/` into module interfaces |
+
+The **installed binary** (`~/.local/bin/zara-jira-mcp`) still runs the full monolithic toolset. The **source code** has been restructured and is being rebuilt tool by tool.
 
 ---
 
@@ -189,41 +219,12 @@ All optional. Works with just Jira + any AI provider.
 
 ---
 
-## Performance Profiles
-
-279 tools can overwhelm slow clients. Use profiles:
-
-| Profile | Tools | Best For |
-|---------|-------|----------|
-| `chatgpt` | ~14 | ChatGPT Desktop (smart routing) |
-| `lite` | ~30 | Basic PM, slow connections |
-| `standard` | ~80 | **Daily SM/PM work (recommended)** |
-| `full` | ~150 | Full PM + dev visibility |
-| (none) | ~279 | Everything, power users |
-
-```bash
-PM_PROFILE=standard  # in your .env or MCP config
-```
-
----
-
-## Architecture
-
-Single Go binary. No runtime dependencies. SQLite for memory (WAL mode). Starts in <1 second.
-
-```
-13MB binary | Go 1.26 | uber-go/fx DI | MCP stdio/sse/http
-SQLite WAL (persistent memory) | 16+ domain entities | 25+ service integrations
-```
-
----
-
 ## Contributing
 
 PRs welcome. See [AGENTS.md](AGENTS.md) for architecture decisions and coding guidelines.
 
 ```bash
-make build      # Build
+make build      # Build modular version → bin/zara-jira-mcp
 make test       # Run tests
 make lint       # golangci-lint
 make install    # Install to ~/.local/bin/
@@ -238,7 +239,6 @@ make install    # Install to ~/.local/bin/
 | [Communication Frameworks](docs/communication-frameworks.md) | Pyramid Principle, SCARF, SBI, Radical Candor, DACI, async protocols |
 | [Reporting to Management](docs/reporting-guide.md) | Who needs what report, when, and which tool to use |
 | [Understanding Engineering](docs/engineering-literacy.md) | WIP, cycle time, tech debt, QA vocabulary, PR review |
-| [Performance Profiles](docs/profiles.md) | Keep your AI client fast — which profile to use |
 
 ---
 

@@ -4,204 +4,223 @@ Instructions for AI agents working with this project.
 
 ## What This Is
 
-`zara-jira-mcp` is a ~285-tool MCP server that acts as an AI-powered Scrum Master with persistent memory, empathy, and learning capability. It connects to Jira Cloud, runs Monte Carlo forecasts, detects anti-patterns, reads team sentiment, manages feedback lifecycles, tracks OKR/KPI progress, and sends notifications across Lark/Slack/Discord/Telegram/Teams/Email.
+`zara-jira-mcp` is an **MCP server in active migration** from a monolithic ~279-tool server to a **modular hexagonal architecture** with clean domain separation.
 
-Built with Go 1.26. SQLite for persistent memory (16+ tables). OpenAI-compatible API for AI intelligence. Lark OKR bi-directional sync.
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | AI-powered Scrum Master with persistent memory, Jira Cloud integration, multi-channel notifications |
+| **Stack** | Go 1.26.4, `github.com/mark3labs/mcp-go` v0.55.1, SQLite (WAL) via `mattn/go-sqlite3` |
+| **Modules** | `jira`, `sprint`, `notification` — hexagonal (ports & adapters) |
+| **Binary** | Single binary, starts in <1 second. Current installed binary (~18MB) still has the monolithic ~279 tools |
+| **Version** | v0.4.0 (modular), v0.4.0 (monolithic binary) |
+| **Transport** | MCP stdio |
+| **Module path** | `github.com/aldok10/zara-jira-mcp` |
 
-**Design principle:** Tool-surface compression (BCG 2026, Microsoft Research). Use profiles to control tool count. For most use cases, start with `pm_smart`.
+> **Migration status**: The source code has been restructured to a modular architecture. The installed binary at `~/.local/bin/zara-jira-mcp` still runs the older monolithic tools (~279). The new modular code in `apps/api/` currently registers **9 core tools** with all domain logic ready for expansion.
 
-## First Things First
-
-Before using any PM/sprint tools, get the board ID:
-
-```
-jira_boards -> returns board IDs
-```
-
-Store the board_id. Almost every PM tool needs it.
-
-## Profiles (Tool-Surface Compression)
-
-Choose based on your context (BCG research: productivity peaks at 3 tools, degrades at 4+):
-
-| Profile | Tools | Best For | Enabled Modules |
-|---------|-------|----------|-----------------|
-| `chatgpt` | ~12 | ChatGPT Desktop (token-limited) | smart-router, pm-quick |
-| `lite` | ~25 | Solo PM, daily workflow | + help, jira |
-| `standard` | ~40 | Full PM team | + pm-memory, ai |
-| `full` | ~59 | Power user | + pm-analysis, notify-lark |
-| `all` | ~279 | Developer/debugging | all modules |
-
-Set via `PM_PROFILE=chatgpt` or `PM_ENABLED_MODULES=smart-router,jira,pm-memory`.
-
-## Tool Categories
-
-| Category | Key Tools | Use When |
-|----------|-----------|----------|
-| Smart Router | `pm_smart`, `pm_do`, `pm_report`, `pm_search`, `pm_team`, `pm_plan`, `pm_retro` | Don't know which tool — just ask |
-| Jira Operations | `jira_search`, `jira_get_issue`, `jira_create_issue` | CRUD on issues, sprints, epics |
-| PM Memory | `pm_record_decision`, `pm_record_risk`, `pm_record_blocker` | Record events immediately |
-| Intelligence | `pm_sentiment`, `pm_coaching`, `pm_anti_patterns` | Understand team state |
-| Communication | `pm_comms_nudge`, `pm_conversation_prep`, `pm_feedback_log` | Human-centered PM work |
-| OKR/KPI | `pm_okr_health`, `pm_okr_suggest`, `pm_kpi_trend` | Goal alignment |
-| Reporting | `pm_exec_report`, `pm_daily_digest`, `pm_forecast` | Stakeholder updates |
-| Notifications | `notify_routed`, `lark_send`, `slack_send` | Multi-channel messaging |
-| Lark OKR | `lark_okr_pull`, `lark_okr_sync` | Bi-directional OKR sync |
-
-## Critical Rules
-
-1. **Memory builds over time.** Intelligence tools need historical data. Encourage snapshot recording at sprint boundaries.
-2. **`pm_snapshot_sprint` at end of EVERY sprint.** Without it, forecasting/velocity/capacity tools return nothing useful.
-3. **Record immediately.** After any decision, risk, or blocker: record it. Don't wait.
-4. **Never use `pm_dashboard` for executives.** Use `pm_exec_report` instead (no jargon, business outcomes only).
-5. **Run `pm_auto_detect_risks` weekly.** Proactive scanning catches problems early.
-6. **Use `pm_context_note` for human stories.** Record WHY someone is stuck, not just THAT they're stuck.
-7. **Close the feedback loop.** `pm_feedback_log` -> `pm_feedback_due` -> `pm_feedback_close`.
-
-## Common Workflows
-
-### Daily Standup
-```
-pm_standup_prep(board_id) -> talking points, blockers, risks, action items
-```
-
-### Sprint Planning
-```
-pm_planning_prep(board_id) -> capacity, carryover, risks, deps, experiments
-```
-
-### "When Will It Be Done?"
-```
-pm_forecast(board_id, remaining_items:N) -> 50%/70%/85%/95% confidence dates
-```
-
-### End of Sprint
-```
-pm_snapshot_sprint(board_id, velocity:N, carryover:N)
-pm_scorecard(board_id)
-pm_release_notes(board_id)
-pm_close_sprint_goal(goal_id, status)
-```
-
-### Executive Update
-```
-pm_exec_report(board_id) -> business outcomes, no story points
-```
-
-### Report to PO / Product Owner
-```
-pm_goal_check(board_id) -> is sprint goal on track?
-pm_scope_creep(board_id) -> what changed mid-sprint without approval?
-pm_forecast(board_id, remaining_items:N) -> realistic delivery date
-```
-
-### Escalation to Management
-```
-pm_impediment_aging -> all blockers with age, chronic flags
-pm_escalate(board_id) -> auto-alert if risk/blocker > 3 days or health < 50
-pm_stakeholder_pulse(stakeholder, score:1-5, feedback) -> track satisfaction
-```
-
-### Cross-Team Dependencies
-```
-pm_dependency_report -> who blocks whom, across teams
-portfolio_blockers -> all blockers across all projects
-portfolio_summary -> AI exec summary for steering committee
-```
-
-### Prove SM Value
-```
-pm_sm_impact(sprint_name) -> blockers resolved, resolution time, risks mitigated
-pm_maturity_assessment(board_id) -> team stage with evidence
-```
-
-### Team Seems Off
-```
-pm_sentiment(board_id) -> read team mood from data signals + AI coaching
-pm_anti_patterns(board_id) -> zombie sprints, hero culture, scope creep
-pm_lencioni(board_id) -> 5 Dysfunctions diagnosis with coaching
-pm_coaching(topic:"team_dynamics", situation:"...")
-```
-
-### Report to PO / Product Owner
-```
-pm_goal_check(board_id) -> is sprint goal on track?
-pm_scope_creep(board_id) -> what changed mid-sprint without approval?
-pm_forecast(board_id, remaining_items:N) -> realistic delivery date
-```
-
-### Escalation to Management
-```
-pm_impediment_aging -> all blockers with age, chronic flags
-pm_escalate(board_id) -> auto-alert if risk/blocker > 3 days or health < 50
-pm_stakeholder_pulse(stakeholder, score:1-5, feedback) -> track satisfaction
-```
-
-### Difficult Conversation
-```
-pm_conversation_prep(type:"performance", context:"...", person:"...") -> framework-based prep
-pm_hard_conversation(situation:"...", person:"...") -> STATE + SBI + SCARF
-pm_nvc_reframe(message:"...") -> rewrite using Nonviolent Communication
-```
-
-### OKR Alignment
-```
-pm_okr_suggest(board_id) -> AI: which sprint items serve which OKRs?
-pm_okr_health -> progress vs time elapsed, flags at-risk objectives
-pm_kpi_trend(name:"cycle_time") -> single KPI trend over time
-pm_kpi_to_okr -> AI: suggest Key Results from current metrics
-```
-
-### Feedback Loop
-```
-pm_feedback_log(person, topic, type) -> record feedback given
-pm_feedback_due -> show overdue follow-ups
-pm_feedback_close(id, outcome) -> close the loop
-```
-
-## Reporting Guide
-
-See `docs/reporting-guide.md` for scenario-based guide: who needs what report, when, and which tool to use.
-
-## Architecture (for code contributions)
+## Architecture
 
 ```
-cmd/server/          Entry point (uber-go/fx DI)
-config/              Env configuration
-domain/              Interfaces + models (jira, memory, ai, lark)
-internal/            Implementations (jirasdk, sqlite, openai, slack, lark)
-application/tools/   MCP tool handlers
-transport/           MCP server + tool registration
+apps/api/                    # Application entry points
+├── cmd/server/main.go       # Modular server entry (new)
+├── internal/
+│   ├── bootstrap/           # DI wiring (manual, no framework)
+│   └── mcp/                 # MCP tool registration (jira.go, sprint.go)
+
+modules/                     # Domain modules (hexagonal)
+├── jira/                    # Jira Cloud operations
+│   ├── domain/              # Entities: Issue, Board, Project, User, Sprint
+│   ├── application/         # Use cases + ports
+│   ├── infrastructure/      # REST client (client/, rest_*.go)
+│   └── interfaces/          # MCP handlers
+├── sprint/                  # Sprint PM intelligence
+│   ├── domain/              # Velocity, Score, Predictability, Memory, Planning
+│   ├── application/         # Services: Sprint, Analysis, OKR, People, Jira
+│   ├── infrastructure/      # SQLite persistence, sprint store
+│   └── interfaces/          # MCP handlers
+└── notification/            # Multi-channel notifications
+    ├── domain/              # Notifier interface, Lark config
+    ├── infrastructure/      # Slack, Discord, Telegram, Teams, Email, Lark
+    └── interfaces/          # MCP handlers
+
+shared/                      # Shared kernel across modules
+├── domain/                  # Agent/*, AI, Event, Jira, Lark, Memory, Planning, Sprint, Team
+├── infrastructure/          # Adapters, AI, Bus, Calendar, Clockify, Config, Confluence,
+│                            # GitHub, GitLab, HTTP client, Lark, Linear, Logger, MCP util,
+│                            # Notion, Observability, PagerDuty, Sheets, Validate
+└── usecase/                 # Analysis, OKR, People, Sprint services
+
+agents/                      # AI Agent Architecture layer
+├── agent.go                 # Agent interface, Dispatcher, Planner, Coordinator, Executor
 ```
 
-## Setup Guides
+### Core Modules
 
-See `docs/agents/` for platform-specific setup:
-- `docs/agents/opencode.md` — OpenCode
-- `docs/agents/claude-code.md` — Claude Code
-- `docs/agents/cursor.md` — Cursor
-- `docs/agents/copilot.md` — GitHub Copilot (VS Code)
-- `docs/agents/vscode-copilot.md` — VS Code + Copilot (mcp.json)
-- `docs/agents/windsurf.md` — Windsurf
-- `docs/agents/kiro.md` — Kiro
-- `docs/agents/chatgpt.md` — ChatGPT Desktop
-- `docs/agents/codex.md` — Codex CLI
-- `docs/agents/gemini-cli.md` — Gemini CLI
-- `docs/agents/zed.md` — Zed Editor
-- `docs/agents/goose.md` — Goose (Block)
-- `docs/agents/cline.md` — Cline / Roo Code
+| Module | Domain | Infrastructure | Tools Registered |
+|--------|--------|----------------|------------------|
+| **`jira`** | Issue, Board, Project, User, Sprint, Commands, Types | REST client (search, issue, sprint, admin, misc) | `jira_search`, `jira_get_issue`, `jira_boards`, `jira_sprint_summary` |
+| **`sprint`** | Velocity, Score, Predictability, Planning, Memory (16 tables), Team/Workload | SQLite persistence, Snapshot adapter | `pm`, `pm_create`, `pm_decide`, `pm_risk`, `pm_next` |
+| **`notification`** | Notifier contract, Lark entities | Slack, Discord, Telegram, Teams, Email, Lark (bot + webhook) | `jira_notify_lark`, `notify_routed` (stubs) |
 
-Pre-built config files included in the repo:
-- `.claude/` — Claude Code settings + CLAUDE.md
-- `.opencode/` — OpenCode config + instructions
-- `.cursor/` — Cursor rules
-- `.kiro/` — Kiro config + instructions
-- `.vscode/` — VS Code Copilot MCP config
-- `.zed/` — Zed context_servers config
-- `.github/copilot-instructions.md` — GitHub Copilot instructions
-- `.codex/` — Codex CLI instructions
-- `.windsurfrules` — Windsurf project rules
+### Shared Infrastructure (ready but not wired)
 
-## Full Tool Reference
+The `shared/infrastructure/` directory contains client implementations for **16+ external services** that were part of the monolithic version. These need to be wired into modular handlers:
 
-See `SKILL.md` for complete tool documentation with parameters, return values, and usage patterns.
+- **AI**: OpenAI client (`shared/infrastructure/ai/`)
+- **Calendar**: Lark Calendar (`shared/infrastructure/calendar/`)
+- **Time tracking**: Clockify (`shared/infrastructure/clockify/`)
+- **Docs**: Confluence (`shared/infrastructure/confluence/`)
+- **Source control**: GitHub, GitLab (`shared/infrastructure/github/`, `gitlab/`)
+- **Lark**: Bot, Webhook, OKR, Commands (`shared/infrastructure/lark/`)
+- **Project tracking**: Linear (`shared/infrastructure/linear/`)
+- **Logger**: Structured logging (`shared/infrastructure/logger/`)
+- **MCP**: Utility helpers (`shared/infrastructure/mcputil/`)
+- **Wiki**: Notion (`shared/infrastructure/notion/`)
+- **Observability**: Metrics/tracing (`shared/infrastructure/observability/`)
+- **Incidents**: PagerDuty (`shared/infrastructure/pagerduty/`)
+- **Sheets**: Google Sheets (`shared/infrastructure/sheets/`)
+- **Validation**: Input validation (`shared/infrastructure/validate/`)
+
+### Agent Architecture Layer
+
+The `agents/` directory implements an **Agent Registry → Dispatcher → Planner → Coordinator → Executor** pattern:
+
+- **Agent interface**: `Name()`, `Description()`, `EventTypes()`, `Execute()`
+- **Dispatcher**: Routes system events to registered agents
+- **Planner**: Decomposes goals into action sequences
+- **Coordinator**: Orchestrates plan execution across tools
+- **Executor**: Runs individual tool calls
+
+Agents communicate via System Events — business domains never call agents directly.
+
+## Data Model
+
+16 SQLite tables, auto-created on first run via `modules/sprint/infrastructure/persistence/sqlite*.go`:
+
+| Table | Purpose |
+|-------|---------|
+| `sprint_snapshots` | Sprint history (velocity, completion, carryover) |
+| `daily_progress` | Burndown data |
+| `risks` | Risk register + tech debt |
+| `decisions` | Decision log + agreements + experiments + learnings |
+| `blockers` | Impediment tracker |
+| `team_metrics` | Individual sprint metrics |
+| `retrospectives` | Retro outcomes |
+| `action_items` | Retro follow-ups |
+| `dependencies` | Dependency map |
+| `meeting_notes` | Ceremony outcomes |
+| `health_scores` | Health over time |
+| `sprint_goals` | Goal tracking |
+| `dod_items` | DoD + DoR checklists |
+| `escalations` | Escalation audit trail |
+| `coaching` | Coaching records |
+| `okrs` | OKR tracking |
+
+Additional advanced tables: `kb_articles`, `feedback_log`, `experiments`, `learnings`, `pulse_surveys`, `radar_dimensions`, `safety_surveys`, `stakeholder_pulse`, `kpi_definitions`, `kpi_measurements`, `key_results`, `kr_issues`, `okr_link`.
+
+Persistence files: `sqlite.go`, `sqlite_deep.go`, `sqlite_advanced.go`, `sqlite_coaching.go`, `sqlite_okr.go`.
+
+## Currently Registered Tools
+
+These are the tools wired in the **new modular** codebase. The installed monolithic binary has ~279 tools.
+
+### Jira Module (4 tools)
+| Tool | Params | Returns |
+|------|--------|---------|
+| `jira_search` | `jql` (required), `max_results` | Issues: key, summary, status, priority, assignee |
+| `jira_get_issue` | `key` | Full issue details |
+| `jira_boards` | none | Board IDs |
+| `jira_sprint_summary` | `board_id` | Active sprint status breakdown |
+
+### Sprint/PM Module (5 tools)
+| Tool | Params | Returns |
+|------|--------|---------|
+| `pm` | `board_id` | Quick project status |
+| `pm_create` | `title`, `description`, `project`, `type`, `assignee`, `priority`, `labels`, `platform` | Create work item |
+| `pm_decide` | `what`, `who`, `why` | Record a decision |
+| `pm_risk` | `what`, `severity`, `owner` | Record a risk |
+| `pm_next` | `board_id` | AI-suggested next action |
+
+### Notification Module (2 stubs)
+| Tool | Params |
+|------|--------|
+| `jira_notify_lark` | `content`, `title` |
+| `notify_routed` | `content`, `severity`, `audience`, `title` |
+
+> **Tool gap**: The monolithic installed binary has ~279 tools across 17 categories. The modular codebase currently registers 9+2 tools. To restore full functionality in the modular version, register tools from the old `tools/handlers.go` pattern into the new module interfaces.
+
+## Key Design Decisions
+
+### Why Hexagonal Architecture
+- **Domain isolation**: `modules/jira`, `sprint`, `notification` each own their domain, ports, and infrastructure
+- **Portability**: Swap Jira SDK, notification provider, or DB without touching domain
+- **Testability**: Domain logic depends only on interfaces (ports)
+- **Migration**: Old code in `internal/` moved to `shared/` — preserved but deprecated
+
+### Module Structure Convention
+```
+module/
+├── domain/           # Entities, value objects, aggregates, domain services
+├── application/      # Use cases, ports (inbound/outbound interfaces)
+├── infrastructure/   # Adapters, REST clients, persistence, external SDKs
+├── interfaces/       # MCP handlers, CLI, or other entry points
+└── test/             # Integration/fixture data
+```
+
+### No DI Framework
+The modular bootstrap (`apps/api/internal/bootstrap/`) uses **manual dependency injection**. No uber-go/fx in the new code. Each handler is constructed explicitly:
+
+```go
+restClient := client.NewRestClient(cfg)
+jiraSvc := service.NewJiraService(restClient)
+jiraHandler := jira_mcp.NewHandlers(jiraSvc)
+```
+
+### Tool Registration Pattern
+```go
+// apps/api/internal/mcp/jira.go
+func RegisterJiraTools(s *server.MCPServer, h *jmcp.Handlers) {
+    s.AddTool(
+        mcp.NewTool("jira_search",
+            mcp.WithDescription("Search Jira issues using JQL."),
+            mcp.WithString("jql", mcp.Required(), ...),
+        ),
+        h.SearchIssues,
+    )
+}
+```
+
+## Important Notes for AI Agents
+
+1. **Two codebases exist**: Source code is modular (new), installed binary is monolithic (old with ~279 tools).
+2. **Source code is truth**: When making changes, work in the modular structure (`apps/api/`, `modules/`, `shared/`).
+3. **First interaction**: Call `jira_boards` to get board_id before using PM tools.
+4. **Tool limitation**: The modular codebase has only 9+2 tools registered. If you need tools not listed above, they're still available in the installed monolithic binary.
+5. **Memory persistence**: SQLite WAL at `~/.zara-jira-mcp/pm.db` — shared between both builds.
+6. **To build modular version**: `make build` (produces `bin/zara-jira-mcp`).
+7. **Migration priority**: Wire more tools from `shared/infrastructure/` into module interfaces.
+8. **Agent layer**: New `agents/` directory implements event-driven agent architecture — not yet wired into bootstrap.
+
+## Quick Build
+
+```bash
+make build        # Build modular version → bin/zara-jira-mcp
+make install      # Copy to ~/.local/bin/
+make test         # Run modular tests
+make lint         # golangci-lint
+```
+
+## Project Status
+
+Current state:
+- ✅ **Modular architecture** with 3 hex modules + shared kernel + agent layer
+- ✅ **SQLite persistence** with 16+ tables for full PM memory
+- ✅ **Multi-channel notification infrastructure** (Slack, Discord, Telegram, Teams, Email, Lark)
+- ✅ **Shared infrastructure** for 16+ external services (ready to wire)
+- ✅ **Agent architecture** with dispatcher/planner/coordinator pattern
+- ⚠️ **9+2 tools registered** in modular code (vs ~279 in monolithic binary)
+- ⚠️ **Infrastructure clients exist** in `shared/infrastructure/` but not wired into modular handlers
+- ⚠️ **Agent layer** not yet wired into bootstrap
+- ⏳ **Migration in progress**: wire tools, register modules, replace monolithic binary
+
+The project has evolved from a monolithic 279-tool server (still in installed binary) to a modular, maintainable hexagonal architecture with clear separation of concerns and improved developer experience. The shared infrastructure and domain logic are largely intact — the remaining work is wiring them into the new module interfaces.

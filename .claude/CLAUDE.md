@@ -6,10 +6,12 @@ AI-powered Scrum Master MCP server. 124 tools for Jira, sprint intelligence, ris
 
 ## When Working On This Codebase
 
-- Go 1.26, uber-go/fx for DI, SQLite for persistence
-- Domain-driven architecture: domain/ has interfaces, internal/ has implementations
-- All MCP tools live in application/tools/ (12 handler files)
-- Transport layer in transport/ registers tools with mcp-go
+- Go 1.26, manual constructor injection (no uber-go/fx in prod), SQLite for persistence
+- Ports & Adapters architecture: `modules/` per bounded context, `shared/` for kernel + infra
+- Each module: `domain/` (entities, no deps), `application/` (service + port), `infrastructure/` (adapters), `interfaces/` (delivery)
+- All MCP handlers in `modules/<name>/interfaces/mcp/handlers.go`
+- Tool registration in `apps/api/internal/mcp/<module>.go`
+- **Read `.claude/rules.md` before writing any code** — it contains comprehensive coding standards
 
 ## Using The MCP Tools (as a PM/SM)
 
