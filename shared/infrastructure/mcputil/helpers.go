@@ -31,17 +31,17 @@ func ErrJira(action string, err error) *mcp.CallToolResult {
 	slog.Error(action, "detail", err.Error())
 	switch {
 	case isAuthError(err):
-		return ErrorResult("Authentication failed. Check your API credentials.")
+		return ErrorResult("Jira auth failed. Check JIRA_EMAIL and JIRA_API_TOKEN — they may be expired or invalid.")
 	case isRateLimit(err):
-		return ErrorResult("Rate limit reached. Back off and try again in a few seconds.")
+		return ErrorResult("Jira API rate limited. Wait 10-30 seconds, then retry. Rate limits reset per minute.")
 	case isNotFound(err):
-		return ErrorResult("Resource not found. Verify the ID/key exists and you have access.")
+		return ErrorResult("Jira resource not found. Verify the ID/key and confirm you have project access.")
 	case isNetworkError(err):
-		return ErrorResult("Network error. Check connectivity, VPN, and firewall settings.")
+		return ErrorResult("Jira unreachable. Check your network, VPN, and that JIRA_BASE_URL is correct.")
 	case isServerError(err):
-		return ErrorResult("Server error. The service may be degraded — try again later.")
+		return ErrorResult("Jira server error (5xx). The service may be degraded — retry in a few minutes.")
 	default:
-		return ErrorResult(fmt.Sprintf("Operation failed: %s. Check configuration and try again.", action))
+		return ErrorResult(fmt.Sprintf("Jira operation failed: %s. Verify your configuration and try again.", action))
 	}
 }
 
@@ -49,27 +49,27 @@ func ErrJira(action string, err error) *mcp.CallToolResult {
 func ErrAI(action string, err error) *mcp.CallToolResult {
 	slog.Error(action, "detail", err.Error())
 	if isRateLimit(err) {
-		return ErrorResult("AI provider rate limit reached. Wait a moment and try again.")
+		return ErrorResult("AI provider rate limited. Wait a moment and retry. (10 req/min limit.)")
 	}
 	if isAuthError(err) {
-		return ErrorResult("AI authentication failed. Check AI_API_KEY and AI_PROVIDER settings.")
+		return ErrorResult("AI authentication failed. Check JIRA_AI_API_KEY and that the key hasn't expired.")
 	}
 	if isNetworkError(err) {
-		return ErrorResult("AI provider unreachable. Check connectivity and firewall.")
+		return ErrorResult("AI provider unreachable. Check JIRA_AI_BASE_URL, network, and firewall.")
 	}
-	return ErrorResult("AI operation failed. Verify AI_PROVIDER and AI_API_KEY are configured correctly.")
+	return ErrorResult("AI operation failed. Verify JIRA_AI_BASE_URL and JIRA_AI_API_KEY are configured correctly.")
 }
 
 // ErrInvalid returns a validation error with the specific issue.
 func ErrInvalid(msg string) *mcp.CallToolResult {
 	slog.Warn("validation failed", "message", msg)
-	return ErrorResult(fmt.Sprintf("Invalid input: %s", msg))
+	return ErrorResult(fmt.Sprintf("Invalid input: %s. Fix the value and retry.", msg))
 }
 
 // ErrInternal returns a generic internal error (no details leaked).
 func ErrInternal(action string, err error) *mcp.CallToolResult {
 	slog.Error(action, "detail", err)
-	return ErrorResult("Internal error. Check server logs for details.")
+	return ErrorResult(fmt.Sprintf("Internal error during '%s'. Check server logs for details.", action))
 }
 
 // ErrorHandler provides consistent error handling for MCP tools.
@@ -98,7 +98,7 @@ func (h *ErrorHandler) Error(message string) *mcp.CallToolResult {
 // Wrap wraps an error with context and returns an error result.
 func (h *ErrorHandler) Wrap(operation string, err error) *mcp.CallToolResult {
 	if err == nil {
-		return h.Error("operation failed: " + operation)
+		return h.Error("Jira operation failed: " + operation + ". Unknown error.")
 	}
 	return ErrJira(operation, err)
 }
