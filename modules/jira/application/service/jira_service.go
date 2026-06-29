@@ -108,6 +108,98 @@ func (s *JiraService) CloseSprint(ctx context.Context, sprintID int) error {
 	return s.client.CloseSprint(ctx, sprintID)
 }
 
+func (s *JiraService) TransitionIssue(ctx context.Context, issueKey, transitionID string) error {
+	return s.client.TransitionIssue(ctx, issueKey, transitionID)
+}
+
+func (s *JiraService) GetTransitions(ctx context.Context, issueKey string) ([]domain.Transition, error) {
+	return s.client.GetTransitions(ctx, issueKey)
+}
+
+func (s *JiraService) AssignIssue(ctx context.Context, issueKey, accountID string) error {
+	return s.client.AssignIssue(ctx, issueKey, accountID)
+}
+
+func (s *JiraService) FindUser(ctx context.Context, query string) ([]domain.User, error) {
+	return s.client.FindUser(ctx, query)
+}
+
+func (s *JiraService) GetSprints(ctx context.Context, boardID int, state string) ([]domain.Sprint, error) {
+	return s.client.GetSprints(ctx, boardID, state)
+}
+
+func (s *JiraService) StartSprint(ctx context.Context, sprintID int, startDate, endDate string) error {
+	return s.client.StartSprint(ctx, sprintID, startDate, endDate)
+}
+
+func (s *JiraService) MoveIssuesToSprint(ctx context.Context, sprintID int, issueKeys []string) error {
+	return s.client.MoveIssuesToSprint(ctx, sprintID, issueKeys)
+}
+
+func (s *JiraService) CreateSubtask(ctx context.Context, parentKey string, input *domain.CreateIssueInput) (*domain.Issue, error) {
+	return s.client.CreateSubtask(ctx, parentKey, input)
+}
+
+func (s *JiraService) LinkIssues(ctx context.Context, inwardKey, outwardKey, linkType string) error {
+	return s.client.LinkIssues(ctx, inwardKey, outwardKey, linkType)
+}
+
+func (s *JiraService) GetLinkTypes(ctx context.Context) ([]domain.LinkType, error) {
+	return s.client.GetLinkTypes(ctx)
+}
+
+func (s *JiraService) AddWorklog(ctx context.Context, issueKey, timeSpent, comment string) error {
+	return s.client.AddWorklog(ctx, issueKey, timeSpent, comment)
+}
+
+func (s *JiraService) GetWorklogs(ctx context.Context, issueKey string) ([]domain.Worklog, error) {
+	return s.client.GetWorklogs(ctx, issueKey)
+}
+
+func (s *JiraService) AddWatcher(ctx context.Context, issueKey, accountID string) error {
+	return s.client.AddWatcher(ctx, issueKey, accountID)
+}
+
+func (s *JiraService) GetWatchers(ctx context.Context, issueKey string) ([]domain.User, error) {
+	return s.client.GetWatchers(ctx, issueKey)
+}
+
+func (s *JiraService) AddLabel(ctx context.Context, issueKey, label string) error {
+	return s.client.AddLabel(ctx, issueKey, label)
+}
+
+func (s *JiraService) GetProjects(ctx context.Context) ([]domain.Project, error) {
+	return s.client.GetProjects(ctx)
+}
+
+func (s *JiraService) GetProject(ctx context.Context, key string) (*domain.ProjectDetail, error) {
+	return s.client.GetProject(ctx, key)
+}
+
+func (s *JiraService) GetVersions(ctx context.Context, projectKey string) ([]domain.Version, error) {
+	return s.client.GetVersions(ctx, projectKey)
+}
+
+func (s *JiraService) CreateVersion(ctx context.Context, projectKey, name, description string) (*domain.Version, error) {
+	return s.client.CreateVersion(ctx, projectKey, name, description)
+}
+
+func (s *JiraService) ReleaseVersion(ctx context.Context, versionID string) error {
+	return s.client.ReleaseVersion(ctx, versionID)
+}
+
+func (s *JiraService) GetAttachments(ctx context.Context, issueKey string) ([]domain.Attachment, error) {
+	return s.client.GetAttachments(ctx, issueKey)
+}
+
+func (s *JiraService) GetComponents(ctx context.Context, projectKey string) ([]domain.Component, error) {
+	return s.client.GetComponents(ctx, projectKey)
+}
+
+func (s *JiraService) GetFields(ctx context.Context) ([]domain.Field, error) {
+	return s.client.GetFields(ctx)
+}
+
 // InvalidateBoardCache clears the cached board list, forcing a fresh fetch on next call.
 func (s *JiraService) InvalidateBoardCache() {
 	s.mu.Lock()
