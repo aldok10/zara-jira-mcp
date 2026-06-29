@@ -90,6 +90,13 @@ type Store interface {
 	GetOKRSignals(ctx context.Context) ([]OKRSignal, error)
 	DeleteOKRSignal(ctx context.Context, id int64) error
 
+	// Workflow patterns (status classification)
+	SaveWorkflowPattern(ctx context.Context, p *WorkflowPattern) error
+	UpsertWorkflowPattern(ctx context.Context, p *WorkflowPattern) error
+	GetWorkflowPatterns(ctx context.Context, boardID int) ([]WorkflowPattern, error)
+	DeleteWorkflowPattern(ctx context.Context, id int64) error
+	DeleteWorkflowPatternsByBoard(ctx context.Context, boardID int) error
+
 	// Raw database access for ad-hoc queries
 	DB() RawDB
 

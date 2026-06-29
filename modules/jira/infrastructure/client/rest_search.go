@@ -16,7 +16,7 @@ func (c *RestClient) SearchIssues(ctx context.Context, jql string, maxResults in
 	}
 	result, err := c.sdk.Search.SearchJQL(ctx, &search.SearchJQLOptions{
 		JQL:        jql,
-		Fields:     []string{"summary", "description", "status", "priority", "issuetype", "assignee", "reporter", "labels", "created", "updated", "sprint", "story_points", "customfield_10016", "customfield_10028"},
+		Fields:     []string{"summary", "description", "status", "priority", "issuetype", "assignee", "reporter", "labels", "created", "updated", "duedate", "sprint", "story_points"},
 		MaxResults: maxResults,
 	})
 	if err != nil {

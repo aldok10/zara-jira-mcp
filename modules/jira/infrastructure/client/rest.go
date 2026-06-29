@@ -52,12 +52,13 @@ func (r *rateLimiter) wait() {
 
 // RestClient wraps jirasdk.Client and implements domain.Client.
 type RestClient struct {
-	sdk     *jira.Client
-	baseURL string
-	email   string
-	token   string
-	http    *http.Client
-	limiter *rateLimiter
+	sdk               *jira.Client
+	baseURL           string
+	email             string
+	token             string
+	http              *http.Client
+	limiter           *rateLimiter
+	storyPointsFields []string // configurable story points field IDs
 }
 
 // drainAndClose ensures response body is properly drained and closed.
@@ -183,16 +184,19 @@ func NewRestClient(cfg *config.Config) (*RestClient, error) {
 		return nil, fmt.Errorf("create jira client: %w", err)
 	}
 	return &RestClient{
-		sdk:     client,
-		baseURL: cfg.Jira.BaseURL,
-		email:   cfg.Jira.Email,
-		token:   cfg.Jira.Token,
-		http:    secureHTTPClient,
-		limiter: &rateLimiter{max: 60, tokens: 60, last: time.Now()},
+		sdk:               client,
+		baseURL:           cfg.Jira.BaseURL,
+		email:             cfg.Jira.Email,
+		token:             cfg.Jira.Token,
+		http:              secureHTTPClient,
+		limiter:           &rateLimiter{max: 60, tokens: 60, last: time.Now()},
+		storyPointsFields: cfg.Jira.StoryPointsCustomFields,
 	}, nil
 }
 
 // mapIssue converts a jirasdk issue to domain.Issue.
+// This is a standalone function, so it uses fallback fields. For instance-specific
+// configurable fields, use RestClient.MapIssueWithFields.
 func mapIssue(raw *issue.Issue) domain.Issue {
 	if raw == nil {
 		return domain.Issue{}
@@ -209,22 +213,74 @@ func mapIssue(raw *issue.Issue) domain.Issue {
 		Labels:      raw.GetLabels(),
 		Created:     raw.GetCreatedTime(),
 		Updated:     raw.GetUpdatedTime(),
+		DueDate:     raw.GetDueDate(),
 	}
-	// Extract story points from common custom field IDs
+
 	if raw.Fields != nil && raw.Fields.Custom != nil {
-		for _, fieldID := range storyPointFields {
+		// Extract story points from fallback fields (see mapIssueWithFields for configurable)
+		for _, fieldID := range fallbackStoryPointFields {
 			if sp, ok := raw.Fields.Custom.GetNumber(fieldID); ok && sp > 0 {
 				i.StoryPoints = sp
 				break
 			}
 		}
+
+		// Capture ALL custom field values for downstream discovery and use.
+		i.Custom = make(map[string]interface{}, len(raw.Fields.Custom))
+		for fieldID, cf := range raw.Fields.Custom {
+			if cf != nil && cf.Value != nil {
+				i.Custom[fieldID] = cf.Value
+			}
+		}
 	}
+
 	return i
 }
 
-// storyPointFields lists common Jira custom field IDs for story points.
-// The first match wins.
-var storyPointFields = []string{
+// MapIssueWithFields extracts story points using configurable field IDs.
+func (c *RestClient) MapIssueWithFields(raw *issue.Issue, storyPointsFields []string) domain.Issue {
+	if raw == nil {
+		return domain.Issue{}
+	}
+	i := domain.Issue{
+		Key:         raw.Key,
+		Summary:     raw.GetSummary(),
+		Description: raw.GetDescriptionText(),
+		Status:      raw.GetStatusName(),
+		Priority:    raw.GetPriorityName(),
+		Type:        raw.GetIssueTypeName(),
+		Assignee:    raw.GetAssigneeName(),
+		Reporter:    raw.GetReporterName(),
+		Labels:      raw.GetLabels(),
+		Created:     raw.GetCreatedTime(),
+		Updated:     raw.GetUpdatedTime(),
+		DueDate:     raw.GetDueDate(),
+	}
+
+	if raw.Fields != nil && raw.Fields.Custom != nil {
+		// Extract story points from configurable field IDs
+		for _, fieldID := range storyPointsFields {
+			if sp, ok := raw.Fields.Custom.GetNumber(fieldID); ok && sp > 0 {
+				i.StoryPoints = sp
+				break
+			}
+		}
+
+		// Capture ALL custom field values for downstream discovery and use.
+		i.Custom = make(map[string]interface{}, len(raw.Fields.Custom))
+		for fieldID, cf := range raw.Fields.Custom {
+			if cf != nil && cf.Value != nil {
+				i.Custom[fieldID] = cf.Value
+			}
+		}
+	}
+
+	return i
+}
+
+// fallbackStoryPointFields provides default story points fields if not configured.
+// These should be overridden via JIRA_STORY_POINTS_CUSTOM_FIELDS environment variable.
+var fallbackStoryPointFields = []string{
 	"story_points",      // next-gen projects
 	"customfield_10016", // Jira Cloud default
 	"customfield_10028", // common alternative
@@ -232,5 +288,11 @@ var storyPointFields = []string{
 	"customfield_10014", // another variant
 }
 
+// RestInterface defines the subset of RestClient methods needed by BoardRepository.
+type RestInterface interface {
+	GetCustomFieldsByBoard(ctx context.Context, boardID int) ([]string, error)
+}
+
 // Compile-time interface compliance check.
 var _ domain.Client = (*RestClient)(nil)
+var _ RestInterface = (*RestClient)(nil)

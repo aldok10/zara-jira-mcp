@@ -1,372 +1,280 @@
 # Skill: zara-jira-mcp
 
-~279-tool MCP server: AI-powered Scrum Master with persistent memory, Jira Cloud integration, multi-channel notifications, and 16 platform integrations.
+**89-tool MCP server** — AI-powered Scrum Master with persistent memory, Jira Cloud integration, multi-channel notifications, and 12 platform integrations. Written in Go, modular hexagonal architecture.
+
+**Version:** v0.4.0 (modular) | **Transport:** MCP stdio | **Memory:** SQLite WAL
 
 ## Connection
 
-Stdio MCP server. SQLite persistent memory at `~/.zara-jira-mcp/pm_memory.db`. All configuration via environment variables only.
+Stdio MCP server. Configuration via environment variables only (loaded from `.env` or shell).
 
-## Profile System (Research-Backed Budgets)
+**Binary:** `~/.local/bin/zara-jira-mcp` | **Wrapper:** `~/.local/bin/zara-jira-mcp-wrapper.sh` (loads `.env` then exec)
 
-The server loads tools based on `PM_PROFILE` env var:
+**Key env vars:**
+- `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` — Jira Cloud auth
+- `PM_MEMORY_DB_PATH` — SQLite DB path (default: `~/.zara-jira-mcp/pm_memory.db`)
+- `JIRA_AI_BASE_URL`, `JIRA_AI_API_KEY` — AI provider for PM intelligence
 
-| Profile | Tools | Enabled Modules |
-|---------|-------|-----------------|
-| `chatgpt` | ~12 | smart-router, pm-quick |
-| `lite` | ~25 | + help, jira |
-| `standard` | ~40 | + pm-memory, ai |
-| `full` | ~59 | + pm-analysis, notify-lark |
-| `all` | ~279 | all modules |
+## Critical Usage Rules
 
-Custom: `PM_ENABLED_MODULES=smart-router,jira,pm-memory` (comma-separated).
-
-Available modules: `jira`, `jira-ops`, `jira-deep`, `pm-memory`, `pm-analysis`, `pm-planning`, `pm-intel`, `ai`, `notify-lark`, `notify-slack`, `notify-all`, `stakeholder`, `stakeholder-deep`, `portfolio`, `github`, `github-deep`, `integrations`, `smart-router`, `pm-quick`, `help`
-
-## Critical Rules
-
-1. **Get board_id first** — call `jira_boards` before any PM tool.
-2. **Memory builds over time** — intelligence tools need historical data. Record snapshots, decisions, risks.
-3. **`pm_snapshot_sprint` at end of EVERY sprint** — forecasting/velocity require it.
-4. **Use `pm_smart` as primary entry point** — natural language routes to the right tool. Falls back to AI if no keyword matches.
-5. **Use `pm_search` for cross-source lookup** — searches Jira + decisions + risks + blockers + meetings + knowledge base.
-6. **Never `pm_dashboard` for executives** — use `pm_exec_report` instead (no jargon, business outcomes only).
-7. **Record immediately** — after any decision, risk, or blocker.
-8. **All AI tools gracefully degrade** — if AI provider is down, they return raw data.
+1. **Get board_id first** — call `jira_boards` before any PM/sprint tool.
+2. **First call per session** — `jira_boards` to discover boards. Store the board_id.
+3. **Auto-memory is ON** — `jira_search`, `jira_get_issue`, `jira_sprint_summary`, `jira_epic_issues` automatically record blockers, stale risks, and sprint snapshots to PM memory.
+4. **Auto-reconciliation is ON** — every read checks stored blockers/risks against current Jira state. Resolved items auto-close.
+5. **Board-aware classification** — `jira_sprint_summary` uses board configuration for accurate status mapping (catches custom statuses like "Stalled", "On Hold").
+6. **Record immediately** — after any decision, risk, or blocker, record it with `pm_record_decision`, `pm_record_risk`, `pm_record_blocker`.
+7. **Use `pm` as primary entry point** — quick project status with blockers, risks, sprint progress.
+8. **Forecast needs 3+ snapshots** — Monte Carlo (`pm_forecast`) requires historical sprint data.
+9. **Full-sweep reconciliation** — run `pm_reconcile` periodically to sync stored blockers/risks with current Jira state.
 
 ---
 
-## TOOL REFERENCE (~279 tools)
+## TOOL REFERENCE (89 tools)
 
-### Smart Router (Primary Entry Points — 7 Meta-Tools)
-
-| Tool | What It Does | Best For |
-|------|-------------|----------|
-| `pm_smart` | NL query → routes to right tool | "who is blocked?", "sprint health?", "when will we finish?", "what's the mood?" |
-| `pm_do` | NL action → creates/records | "create task X", "record risk Y", "record decision Z", "log feedback" |
-| `pm_report` | Generate reports by type | status, executive, release_notes, weekly, health, velocity, scorecard, sentiment, okr, kpi, coaching |
-| `pm_search` | Unified cross-source search | Searches decisions, risks, blockers, actions, meetings, KB, overdue, Jira |
-| `pm_team` | Team-focused actions | workload, 1on1, pulse, radar, health |
-| `pm_plan` | Planning & preparation | planning_prep, capacity, forecast, ready_check, backlog, goals |
-| `pm_retro` | Retrospective & improvement | actions, experiments, anti_patterns, coaching, facilitate |
-
-Strategy: Start with `pm_smart` for any PM question. Smart router catches 90%+ of use cases via keyword routing + AI fallback.
-
-#### Predictive Tools (Smart Context — 3 tools)
-
-| Tool | What It Does |
-|------|-------------|
-| `pm_predict_blockers` | Predict who is likely to get blocked based on historical patterns |
-| `pm_sprint_similarity` | Compare current sprint to historical ones; warns if it matches a failing pattern |
-| `pm_early_warning` | Multi-signal early warning: chronic blockers, pace, risks, velocity, retro actions |
-
-### Jira Operations
+### Jira Module (28 tools)
 
 #### Search & Read
 | Tool | Params | Returns |
 |------|--------|---------|
-| `jira_search` | `jql` (required), `max_results`, `start_at` | Issues: key, summary, status, priority, assignee |
-| `jira_get_issue` | `key` | Full issue details |
-| `jira_boards` | none | Board IDs (needed for PM tools) |
-| `jira_sprint_summary` | `board_id` | Active sprint status breakdown |
-| `jira_sprints` | `board_id`, `state` | All sprints for a board |
-| `jira_my_issues` | `status` | Current user's unresolved issues |
-| `jira_overdue` | `days`, `project` | Issues with no update in N days |
-| `jira_workload` | `project` | Issue count per assignee |
-| `jira_projects` | none | All accessible projects |
-| `jira_project_detail` | `key` | Project metadata |
-| `jira_transitions` | `key` | Available status transitions |
-| `jira_link_types` | none | Available issue link types |
-| `jira_watchers` | `key` | Issue watchers |
-| `jira_worklog_list` | `key` | Time entries |
-| `jira_find_user` | `query` | Search users (returns account IDs) |
-| `jira_epic_issues` | `epic_key` | Issues in an epic |
-| `jira_health` | none | Server health check |
-| `jira_versions` | `project` | Project versions/releases |
+| `jira_search` | `jql` (req), `max_results` | Issues: key, summary, status, assignee |
+| `jira_get_issue` | `key` (req) | Full issue details |
+| `jira_boards` | *(none)* | Board IDs, names, types |
+| `jira_sprints` | `board_id` (req), `state` | Sprints for a board |
+| `jira_sprint_summary` | `board_id` (req) | Active sprint breakdown |
+| `jira_projects` | *(none)* | All accessible projects |
+| `jira_versions` | `project` (req) | Project versions/releases |
+| `jira_components` | `project` (req) | Components with leads |
+| `jira_board_config` | `board_id` (req) | Column layout + status mappings |
+| `jira_transitions` | `key` (req) | Available status transitions |
+| `jira_link_types` | *(none)* | Issue link types |
+| `jira_worklogs` | `key` (req) | Time entries on issue |
+| `jira_attachments` | `key` (req) | Issue attachments |
+| `jira_find_user` | `query` (req) | Search users (returns account IDs) |
+| `jira_epic_issues` | `epic_key` (req), `max_results` | Issues in an epic |
+| `pm_reconcile` | *(none)* | Full-sweep: sync all stored blockers/risks with Jira |
 
 #### Create & Modify
 | Tool | Params | Action |
 |------|--------|--------|
-| `jira_create_issue` | `project`, `summary`, `issue_type`, `description`, `priority`, `assignee_id`, `labels` | Create issue |
-| `jira_update_issue` | `key`, fields | Update fields |
-| `jira_add_comment` | `key`, `body` | Add comment |
-| `jira_transition` | `key`, `transition_id` | Change status |
-| `jira_assign` | `key`, `account_id` | Assign user |
-| `jira_unassign` | `key` | Remove assignee |
-| `jira_delete_issue` | `key` | Delete permanently |
-| `jira_create_subtask` | `parent_key`, `project`, `summary` | Create subtask |
-| `jira_labels_set` | `key`, `labels` | Set labels |
-| `jira_link_issues` | `from_key`, `to_key`, `link_type` | Create link |
-| `jira_watch` | `key`, `account_id` | Add watcher |
-| `jira_worklog_add` | `key`, `time_spent`, `comment` | Log time |
-| `jira_epic_add` | `issue_key`, `epic_key` | Add to epic |
-| `jira_epic_remove` | `issue_key` | Remove from epic |
-| `jira_version_create` | `project`, `name` | Create version |
-| `jira_version_release` | `version_id` | Release version |
+| `jira_create` | `project` (req), `summary` (req), `issue_type`, `description`, `priority`, `assignee_id`, `labels` | Create issue |
+| `jira_transition` | `key` (req), `transition_id` (req) | Change status |
+| `jira_assign` | `key` (req), `account_id` (req) | Assign user |
+| `jira_add_comment` | `key` (req), `body` (req) | Add comment |
+| `jira_add_worklog` | `key` (req), `time_spent` (req), `comment` | Log time |
+| `jira_link_issues` | `inward_key` (req), `outward_key` (req), `link_type` (req) | Create issue link |
+| `jira_epic_add` | `epic_key` (req), `issue_keys` (req) | Add to epic |
+| `jira_epic_remove` | `issue_keys` (req) | Remove from epic |
+| `jira_version_create` | `project` (req), `name` (req), `description` | Create version |
+| `jira_version_release` | `version_id` (req) | Release version |
 
 #### Sprint Management
 | Tool | Params | Action |
 |------|--------|--------|
-| `jira_sprint_create` | `board_id`, `name`, `goal` | Create sprint |
-| `jira_sprint_start` | `sprint_id`, `start_date`, `end_date` | Start sprint |
-| `jira_sprint_close` | `sprint_id` | Close sprint |
-| `jira_sprint_move_issues` | `sprint_id`, `issue_keys` | Move issues to sprint |
-
-#### Bulk Operations
-| Tool | Params | Action |
-|------|--------|--------|
-| `jira_bulk_transition` | `keys`, `transition_id` | Transition multiple |
-| `jira_bulk_assign` | `keys`, `account_id` | Assign multiple |
-| `jira_bulk_label` | `keys`, `label` | Label multiple |
-
-#### Advanced
-| Tool | Params | Action |
-|------|--------|--------|
-| `jira_raw_request` | `method`, `path`, `body` | Raw REST API call |
-| `jira_from_branch` | `branch` | Extract issue key from branch |
-| `jira_smart_commit` | `key`, `message` | Parse commit commands |
-| `jira_link_pr` | `key`, `url`, `title` | Link PR to issue |
-| `jira_trace_branch` | `key` | Trace issue through git/deploy pipeline |
+| `jira_start_sprint` | `sprint_id` (req), `start_date` (req), `end_date` (req) | Start sprint |
+| `jira_move_to_sprint` | `sprint_id` (req), `issue_keys` (req) | Move issues to sprint |
 
 ---
 
-### PM Memory (~22 tools)
+### Sprint/PM Module (18 tools)
 
-#### Sprint Data
-| Tool | When | Params |
-|------|------|--------|
-| `pm_snapshot_sprint` | End of sprint | `board_id`, `velocity`, `carryover`, `notes` |
-| `pm_track_daily` | Daily | `board_id` |
-| `pm_burndown` | View chart | `board_id`, `sprint_name` |
-| `pm_velocity_trend` | Planning | `board_id` |
-
-#### Risks
-| Tool | When | Params |
-|------|------|--------|
-| `pm_record_risk` | Risk found | `title`, `severity`, `owner`, `mitigation` |
-| `pm_update_risk` | Status change | `risk_id`, `status` |
-| `pm_risk_dashboard` | Standup/planning | none |
-| `pm_auto_detect_risks` | Weekly | `board_id` |
-
-#### Decisions & Knowledge
-| Tool | When | Params |
-|------|------|--------|
-| `pm_record_decision` | After decision | `title`, `decision`, `context`, `rationale`, `made_by`, `tags` |
-| `pm_search_decisions` | Before re-deciding | `query`, `limit` |
-| `pm_record_learning` | Team learned something | `title`, `learning`, `context`, `tags` |
-| `pm_team_kb` | Onboarding/Q&A | `question`, `board_id` |
-
-#### Blockers
-| Tool | When | Params |
-|------|------|--------|
-| `pm_record_blocker` | Team blocked | `description`, `issue_key`, `owner` |
-| `pm_resolve_blocker` | Unblocked | `blocker_id`, `resolution` |
-| `pm_blockers` | Standup | `show_history` |
-
-#### Dependencies
-| Tool | When | Params |
-|------|------|--------|
-| `pm_record_dependency` | Cross-team dep | `from_issue`, `to_issue`, `type`, `description` |
-| `pm_resolve_dependency` | Satisfied | `dependency_id` |
-| `pm_dependencies` | Planning | `issue_key` |
-
-#### Team & Retros
-| Tool | When | Params |
-|------|------|--------|
-| `pm_record_team_metric` | End sprint | `member_name`, `sprint_name`, `issues_assigned`, `issues_done` |
-| `pm_team_health` | Planning | `sprint_name` or `member_name` |
-| `pm_confidence` | Pre-sprint | `sprint_name`, `score`, `member`, `note` |
-| `pm_record_retro` | After retro | `sprint_name`, `went_well`, `improvements`, `action_items` |
-| `pm_action_items` | Standup | none |
-| `pm_record_meeting` | After ceremony | `meeting_type`, `notes`, `decisions`, `action_items` |
-
-#### Goals & Process
-| Tool | When | Params |
-|------|------|--------|
-| `pm_set_sprint_goal` | Sprint planning | `board_id`, `goal`, `key_results` |
-| `pm_close_sprint_goal` | End sprint | `goal_id`, `status`, `outcome` |
-| `pm_sprint_goals` | Review | `board_id`, `show_history` |
-| `pm_dod` | Manage DoD | `action`, `item`, `category`, `project` |
-| `pm_dor` | Manage DoR | `action`, `item`, `category`, `project` |
-| `pm_agreements` | Team rules | `action`, `agreement`, `why` |
-| `pm_experiment` | Improvement | `hypothesis`, `action`, `measure`, `duration` |
+| Tool | Params | Description |
+|------|--------|-------------|
+| `pm` | `board_id` | Quick project status: sprint, blockers, risks, actions |
+| `pm_create` | `title` (req), `description`, `project`, `assignee`, `type`, `priority`, `labels`, `platform` | Create work item (Jira/GitHub/GitLab) |
+| `pm_decide` | `what` (req), `who`, `why` | Quick decision record |
+| `pm_risk` | `what` (req), `severity`, `owner` | Quick risk record |
+| `pm_next` | `board_id` | Suggest next PM action from memory state |
+| `pm_snapshot` | `board_id`, `sprint_name`, `total_issues`, `done`, `in_progress`, `todo`, `blocked`, `carryover`, `velocity`, `notes` | Sprint snapshot to memory |
+| `pm_record_decision` | `title` (req), `decision` (req), `context`, `rationale`, `made_by`, `tags` | Decision with rationale |
+| `pm_record_risk` | `title` (req), `description`, `severity`, `owner`, `mitigation` | Risk with mitigation |
+| `pm_record_blocker` | `description` (req), `issue_key`, `owner` | Impediment record |
+| `pm_record_retro` | `sprint_name` (req), `went_well`, `improvements`, `action_items` | Retrospective |
+| `pm_record_meeting` | `meeting_type` (req), `notes`, `attendees`, `decisions`, `action_items`, `sprint_name` | Meeting notes |
+| `pm_risks` | *(none)* | Risk dashboard |
+| `pm_blockers` | `show_history` | Active blocker list |
+| `pm_decisions` | `limit` | Recent decisions |
+| `pm_actions` | *(none)* | Pending action items |
+| `pm_dependencies` | `issue_key` | Dependency map |
+| `pm_health` | `board_id` | Sprint health history |
+| `pm_forecast` | `board_id`, `remaining_items` | Monte Carlo 50/70/85/95% completion forecast |
 
 ---
 
-### AI Intelligence (~15 tools)
+### Notification Module (5 tools)
 
-| Tool | Purpose | Key Params |
-|------|---------|------------|
-| `pm_recommendations` | AI recs from ALL memory | `board_id`, `focus` |
-| `pm_standup_prep` | Daily talking points | `board_id` |
-| `pm_forecast` | Monte Carlo "when done?" | `board_id`, `remaining_items` |
-| `pm_forecast_sprint` | Sprint completion probability | `board_id`, `items_remaining` |
-| `pm_anti_patterns` | Detect dysfunctions | `board_id` |
-| `pm_coaching` | Coaching advice | `topic`, `situation`, `board_id` |
-| `pm_facilitate` | Ceremony prompts | `ceremony`, `board_id` |
-| `pm_retro_analysis` | Pattern detection | `board_id` |
-| `pm_check_ready` | Story readiness | `key` |
-| `pm_exec_report` | Executive report | `board_id`, `send_to_lark` |
-| `pm_flow_metrics` | WIP/throughput/cycle time | `board_id` |
-| `pm_sprint_compare` | This vs last sprint | `board_id` |
-| `pm_scope_creep` | Scope change detection | `board_id` |
-| `jira_ai_analyze` | Ad-hoc analysis | `query`, `jql` |
-| `jira_ai_sprint_report` | Full sprint report | `board_id`, `send_to_lark` |
+| Tool | Params | Channel |
+|------|--------|---------|
+| `jira_notify_lark` | `content` (req), `title` | Lark group |
+| `jira_notify_slack` | `content` (req), `title`, `channel` | Slack |
+| `jira_notify_discord` | `content` (req), `title`, `channel` | Discord |
+| `jira_notify_telegram` | `content` (req), `title`, `chat_id` | Telegram |
+| `notify_routed` | `content` (req), `severity`, `audience`, `title` | Auto-picks channel by severity |
 
 ---
 
-### Stakeholder & Reporting (~18 tools)
+### GitHub Module (10 tools)
 
-| Tool | Audience | Purpose |
-|------|----------|---------|
-| `pm_dashboard` | SM/PM | One-shot sprint view |
-| `pm_sprint_health` | SM/PM | 0-100 health score |
-| `pm_health_history` | SM/PM | Health trend |
-| `pm_scorecard` | SM/PM | A-F sprint grade |
-| `pm_exec_report` | Executives | Business outcomes, no jargon |
-| `pm_weekly_digest` | Stakeholders | AI weekly summary |
-| `pm_release_notes` | Stakeholders | What shipped |
-| `pm_review_prep` | SM | Demo prep |
-| `pm_planning_prep` | SM | Full planning package |
-| `pm_stakeholder_pulse` | PM | Track satisfaction |
-| `pm_stakeholder_trend` | PM | Relationship trajectory |
-| `pm_sm_impact` | SM's manager | Prove SM value |
-| `pm_escalate` | Auto | Alert on chronic issues |
-| `pm_maturity_assessment` | Eng leadership | Team stage |
-| `pm_outcome_map` | PO/leadership | Sprint-to-OKR mapping |
-| `pm_mcp_stats` | Admin | Memory contents |
-| `pm_tech_debt` | Team | Debt inventory |
-| `pm_tech_debt_budget` | Planning | Allocation % recommendation |
+| Tool | Params | Description |
+|------|--------|-------------|
+| `pm_github_prs` | `state`, `limit` | Open PRs with age, review status |
+| `pm_github_pr_metrics` | `stale_days` | Avg PR age, stale count |
+| `pm_github_activity` | `days` | Commits + PRs merged + issues closed |
+| `pm_github_releases` | `limit` | Recent releases/tags |
+| `pm_github_search_branches` | `pattern` (req) | Search branches by pattern |
+| `pm_github_search_prs_by_branch` | `branch` (req) | Find PRs for a branch |
+| `pm_github_issues` | `state`, `labels`, `limit` | List GitHub issues |
+| `pm_github_create_issue` | `title` (req), `body`, `labels`, `assignees`, `milestone` | Create GitHub issue |
+| `pm_github_milestones` | `state` | Milestones with progress |
+| `pm_github_create_milestone` | `title` (req), `description`, `due_date` | Create milestone |
 
 ---
 
-### Communication Intelligence (~18 tools)
+### GitLab Module (9 tools)
 
-| Tool | Framework | Purpose |
-|------|-----------|---------
-| `pm_comms_health` | Signal-over-Noise | Communication health score 0-100 (decision velocity, blocker resolution, action follow-through, engagement) |
-| `pm_comms_anti_patterns` | Community Smells | Detect: re-deciding, escalation hoarding, ghost stakeholders, blocker silence |
-| `pm_silence_detector` | Ghost Stakeholders | Find stakeholders with no recent activity |
-| `pm_lencioni` | 5 Dysfunctions | Map team data to Lencioni pyramid levels with coaching per level |
-| `pm_trust_signals` | Trust Pyramid | Dashboard: forecast accuracy, escalation responsiveness, consistency, transparency |
-| `pm_hard_conversation` | Crucial Conversations | Prep difficult conversations: facts + stories + SCARF risks + opening lines |
-| `pm_nvc_reframe` | NVC (Rosenberg) | Rewrite blaming language into Observation/Feeling/Need/Request |
-| `pm_communicate` | Minto Pyramid | Generate or rewrite audience-specific messages (also absorbs pm_compose) |
-| `pm_feedback_prep` | SBI + data | AI-generate structured feedback from team metrics |
-| `pm_escalation_draft` | BLUF + TIRED | Draft escalation: ask + context + impact + next step + deadline |
-| `pm_decision_record` | ADR/MADR | Enhanced decision record with alternatives + consequences |
-| `pm_status_draft` | Pyramid + data | Auto-pull sprint data, format for audience |
-| `pm_announce_decision` | DACI | Communicate decisions with roles and rationale |
-| `pm_comms_plan` | RACI + Timing | Generate communication plan: who, what, when, channel |
-| `pm_cadence_check` | Communication Cadence | Check communication cadences. Flags overdue items |
-| `pm_kpi_trend` | KPI Tracking | Track Key Performance Indicators over time |
-| `pm_comms_nudge` | Proactive Nudges | Proactive communication suggestions from team signals |
-| `pm_conversation_prep` | Framework Prep | Framework-based conversation prep (SBI, NVC, STATE, SCARF) |
-| `pm_feedback_log` | Feedback Lifecycle | Record feedback given. Auto-schedules follow-up |
-| `pm_feedback_due` | Feedback Tracking | Show overdue feedback follow-ups |
-| `pm_feedback_close` | Feedback Closure | Mark feedback as followed up |
-| `pm_comms_effectiveness` | Effectiveness Score | Communication effectiveness score (0-100) |
+| Tool | Params | Description |
+|------|--------|-------------|
+| `pm_gitlab_issues` | `state`, `labels`, `limit` | List GitLab issues |
+| `pm_gitlab_create_issue` | `title` (req), `description`, `labels`, `assignee_id`, `milestone_id` | Create GitLab issue |
+| `pm_gitlab_merge_requests` | `state`, `limit` | List merge requests |
+| `pm_gitlab_milestones` | `state` | List milestones |
+| `pm_gitlab_create_milestone` | `title` (req), `description`, `due_date` | Create milestone |
+| `pm_gitlab_search_branches` | `pattern` (req) | Search branches |
+| `pm_gitlab_search_mrs_by_branch` | `branch` (req) | Find MRs by branch |
+| `pm_gitlab_read_file` | `path` (req), `ref` | Read file from repo |
+| `pm_gitlab_list_files` | `path`, `ref` | List directory contents |
 
 ---
 
-### Notifications (~15 tools)
+### Calendar (Lark) — 3 tools
 
-| Tool | Channel |
-|------|---------|
-| `jira_notify_lark` | Lark |
-| `slack_send` | Slack |
-| `slack_notify_team` | Slack |
-| `slack_channels` | Slack (list) |
-| `slack_history` | Slack (read) |
-| `discord_send` | Discord |
-| `telegram_send` | Telegram |
-| `teams_send` | Teams |
-| `email_send` | Email |
-| `confluence_create_page` | Confluence |
-| `confluence_get_page` | Confluence |
-| `confluence_search` | Confluence |
-| `notify_routed` | Smart routing (auto-picks channel by severity) |
-| `broadcast` | All channels |
-| `daily_digest` | Generates + sends digest |
+| Tool | Params | Description |
+|------|--------|-------------|
+| `pm_calendar_create` | `summary` (req), `start` (req), `end`, `description` | Create Lark event |
+| `pm_calendar_events` | `days` | List upcoming events |
+| `pm_calendar_schedule_meeting` | `summary` (req), `start` (req), `description`, `duration_minutes`, `attendees` | Schedule with VC |
 
----
+### Clockify — 2 tools
 
-### GitHub/GitLab (~12 tools)
+| Tool | Params | Description |
+|------|--------|-------------|
+| `pm_time_entries` | `days` | Recent time entries |
+| `pm_time_report` | `days` | Time tracked per person/project |
 
-| Tool | Purpose |
-|------|---------|
-| `pm_github_prs` | Open PRs with age |
-| `pm_github_pr_metrics` | PR review health |
-| `pm_github_activity` | Repo activity |
-| `pm_github_releases` | Release history |
-| `github_create_issue` | Create GitHub issue |
-| `github_create_pr` | Create pull request |
-| `github_repo_info` | Repository metadata |
-| `github_actions` | Workflow status |
-| `jira_from_branch` | Extract issue from branch |
-| `jira_link_pr` | Link PR to Jira issue |
-| `jira_trace_branch` | Trace through pipeline |
-| `jira_smart_commit` | Parse commit commands |
+### Confluence — 3 tools
 
----
+| Tool | Params | Description |
+|------|--------|-------------|
+| `pm_confluence_search` | `query` (req), `limit` | Search pages by CQL |
+| `pm_confluence_get_page` | `page_id` (req) | Get page content |
+| `pm_confluence_create_page` | `space_key` (req), `title` (req), `body`, `parent_id` | Create page |
 
-### External Integrations (~12 tools)
+### Linear — 3 tools
 
-| Tool | Service |
-|------|---------|
-| `pm_calendar_today` | Google Calendar — today's events |
-| `pm_calendar_week` | Google Calendar — week view |
-| `pm_calendar_create` | Google Calendar — create event |
-| `notion_query` | Notion — query database |
-| `notion_create_page` | Notion — create page |
-| `linear_issues` | Linear — query issues |
-| `linear_create_issue` | Linear — create issue |
-| `pagerduty_incidents` | PagerDuty — active incidents |
-| `pagerduty_oncall` | PagerDuty — on-call schedule |
-| `clockify_time_entries` | Clockify — time entries |
-| `clockify_log_time` | Clockify — log time |
-| `sheets_read` | Google Sheets — read data |
+| Tool | Params | Description |
+|------|--------|-------------|
+| `pm_linear_issues` | `team`, `state` | List issues |
+| `pm_linear_cycles` | *(none)* | Current/recent cycles |
+| `pm_linear_activity` | *(none)* | Recent changes |
 
----
+### Notion — 3 tools
 
-### Quick Actions (pm-quick module — 5 tools)
+| Tool | Params | Description |
+|------|--------|-------------|
+| `pm_notion_search` | `query` (req), `limit` | Search pages/databases |
+| `pm_notion_create_page` | `title` (req), `content`, `parent_id` | Create page |
+| `pm_notion_query_db` | `database_id`, `filter`, `limit` | Query database |
 
-| Tool | Purpose |
-|------|---------|
-| `pm` | One-shot sprint status (alias for dashboard) |
-| `pm_create` | Quick issue/task create (simplified) |
-| `pm_decide` | Quick decision record (simplified) |
-| `pm_risk` | Quick risk record (simplified) |
-| `pm_next` | AI suggests next action |
+### PagerDuty — 2 tools
 
-### Help & Discovery (help module — 3 tools)
+| Tool | Params | Description |
+|------|--------|-------------|
+| `pm_incidents` | `status` | Incidents with severity |
+| `pm_oncall` | *(none)* | Who's on call now |
 
-| Tool | Purpose |
-|------|---------|
-| `pm_help` | Topic-based tool discovery |
-| `pm_quickstart` | First-time setup guide |
-| `pm_workflow` | Step-by-step workflow sequences |
+### Google Sheets — 1 tool
+
+| Tool | Params | Description |
+|------|--------|-------------|
+| `pm_sheet_read` | `spreadsheet_id` (req), `range` | Read sheet data |
+
+### Backup & Onboard — 2 tools
+
+| Tool | Params | Description |
+|------|--------|-------------|
+| `pm_backup` | *(none)* | Export PM memory to JSON |
+| `pm_onboard` | *(none)* | First-run config wizard |
 
 ---
 
-### Workflow Recipes (3 tools)
+## AUTO-MEMORY SYSTEM
 
-| Tool | Action |
-|------|--------|
-| `pm_recipe_start_work` | Assign + In Progress + branch name |
-| `pm_recipe_done` | Transition Done + log time + comment |
-| `pm_recipe_block` | Record blocker + comment on issue |
+The server records and reconciles PM memory automatically on data access:
+
+### Auto-Record (on read)
+| Trigger | What's Recorded |
+|---------|-----------------|
+| `jira_search` | Blockers (status=blocked), stale risks (Highest/Critical, no update >7d) |
+| `jira_get_issue` | Blockers + stale risks for single issue |
+| `jira_sprint_summary` | Blockers + stale risks + sprint snapshot (done/progress/blocked/todo counts) |
+| `jira_epic_issues` | Blockers + stale risks for epic |
+
+### Auto-Reconciliation (on every read)
+| Trigger | What's Resolved |
+|---------|-----------------|
+| Any read | Blockers whose issues are no longer blocked → auto-resolve |
+| Any read | Risks whose issues are done → auto-resolve |
+| Any read | Risks whose issues recently updated → auto-mitigate |
+
+### Full-Sweep
+`pm_reconcile` fetches every stored issue key and reconciles all at once.
+
+### Deduplication
+- Blockers: deduped by `issue_key` (only one active blocker per issue)
+- Risks: deduped by issue key prefix in title (e.g., "Stale: PROJ-123 — ...")
 
 ---
 
-### Portfolio (5 tools)
+## BOARD-AWARE CLASSIFICATION
 
-| Tool | Purpose |
-|------|---------|
-| `portfolio_overview` | Cross-project status |
-| `portfolio_risks` | Risks across all projects |
-| `portfolio_blockers` | Blockers across all projects |
-| `portfolio_workload` | Team load across projects |
-| `portfolio_summary` | AI executive portfolio summary |
+The server uses board configuration (`jira_board_config`) for accurate status classification:
+
+| Category | Description |
+|----------|-------------|
+| `todo` | Column names like "To Do", "Backlog", "Open", or unmapped |
+| `progress` | Column names containing "Progress", "Review", "Testing", "Dev" |
+| `blocked` | Column names containing "Blocked", "Stalled", "Waiting", "Impediment" |
+| `done` | Column names containing "Done", "Closed", "Resolved", "Complete" |
+
+**Fallback:** When board config isn't available (e.g., search without board context), uses heuristic string matching on status names.
+
+**Caching:** Board configurations are cached per board ID in memory for the server lifetime.
+
+---
+
+## DATA MODEL
+
+16+ SQLite tables, auto-created on first run at `~/.zara-jira-mcp/pm_memory.db`:
+
+| Table | Purpose |
+|-------|---------|
+| `sprint_snapshots` | Sprint history (velocity, completion, carryover) |
+| `daily_progress` | Burndown data |
+| `risks` | Risk register |
+| `decisions` | Decision log + agreements + experiments + learnings |
+| `blockers` | Impediment tracker |
+| `team_metrics` | Individual sprint metrics |
+| `retrospectives` | Retro outcomes |
+| `action_items` | Retro follow-ups |
+| `dependencies` | Dependency map |
+| `meeting_notes` | Ceremony outcomes |
+| `health_scores` | Health over time |
+| `sprint_goals` | Goal tracking |
+| `dod_items` | DoD + DoR checklists |
+| `escalations` | Escalation audit trail |
+| `coaching` | Coaching records |
+| `okrs` | OKR tracking |
+
+Additional advanced tables: `kb_articles`, `feedback_log`, `experiments`, `learnings`, `pulse_surveys`, `radar_dimensions`, `safety_surveys`, `stakeholder_pulse`, `kpi_definitions`, `kpi_measurements`, `key_results`, `kr_issues`, `okr_link`.
 
 ---
 
@@ -374,250 +282,87 @@ Strategy: Start with `pm_smart` for any PM question. Smart router catches 90%+ o
 
 ### Daily Standup
 ```
-1. pm_calendar_today → today's meetings
-2. pm_standup_prep board_id=X → AI talking points
-3. pm_blockers → active impediments
-4. pm_incidents → production issues
-5. pm_github_prs → PRs needing review
-```
-
-### Sprint Start
-```
-1. pm_planning_prep board_id=X → velocity, capacity, carryover
-2. pm_set_sprint_goal board_id=X goal="..." → define goal
-3. pm_check_ready key=ISSUE-123 → verify readiness (per story)
-4. pm_capacity_plan board_id=X team_size=N → recommended points
-5. pm_confidence sprint_name="Sprint X" score=4 → team confidence
-```
-
-### Sprint End
-```
-1. pm_sprint_health board_id=X → health score
-2. pm_scorecard board_id=X → sprint grade
-3. pm_snapshot_sprint board_id=X → save to memory
-4. pm_release_notes board_id=X → categorized release notes
-5. pm_record_retro sprint_name="Sprint X" → capture retro
-6. pm_close_sprint_goal goal_id=X status=achieved → close goal
-7. pm_exec_report board_id=X → executive summary
+1. pm board_id=X → quick sprint status
+2. pm_blockers → active impediments
+3. pm_risks → risk dashboard
+4. pm_github_prs → PRs needing review
 ```
 
 ### Sprint Planning
 ```
-1. pm_planning_prep board_id=X → history + carryover + risks + deps
-2. pm_backlog_groom project=PROJ → stale items
-3. pm_capacity_plan board_id=X team_size=N sprint_days=10 → capacity
-4. pm_check_ready key=ISSUE-123 → story readiness (per candidate)
-5. pm_forecast board_id=X remaining_items=N → "when done?"
-6. pm_set_sprint_goal board_id=X goal="..." → define goal
+1. pm_health board_id=X → previous sprint history
+2. pm_forecast board_id=X → Monte Carlo forecast
+3. pm_next board_id=X → AI-suggested action
 ```
 
-### Retrospective
+### Sprint End
 ```
-1. pm_facilitate ceremony=retro → fresh format
-2. pm_sprint_compare board_id=X → this vs last
-3. pm_anti_patterns board_id=X → detected issues
-4. pm_retro_analysis board_id=X → AI patterns
-5. pm_record_retro sprint_name="Sprint X" → save outcomes
-6. pm_experiment hypothesis="..." action="..." → track improvement
+1. pm_snapshot board_id=X → save to memory
+2. pm_record_retro sprint_name="Sprint X" → capture retro outcomes
+3. pm_reconcile → sync blockers/risks
 ```
 
-### Incident Response
+### Decision Record
 ```
-1. pm_incidents → open incidents
-2. pm_incident_summary → sprint impact
-3. pm_oncall → who's handling
-4. pm_auto_detect_risks board_id=X → scan for risks
-5. pm_record_risk title="..." severity=high → log risk
-6. pm_escalate board_id=X → auto-escalate critical items
+1. pm_record_decision title="..." decision="..." context="..."
+2. pm_decisions → browse decision log
 ```
 
 ### Weekly Review
 ```
-1. pm_weekly_digest board_id=X → AI weekly summary
-2. pm_github_activity days=7 → repo activity
-3. pm_time_report range=week → hours tracked
-4. pm_risk_dashboard → open risks
-5. pm_action_items → pending retro actions
-6. pm_experiments → active experiments
-7. pm_health_history board_id=X → health trend
-```
-
-### "When Will It Be Done?"
-```
-pm_forecast board_id=X remaining_items=30
-→ 50%/70%/85%/95% confidence dates from 10,000 Monte Carlo simulations
-```
-
-### Executive Update
-```
-pm_exec_report board_id=X
-→ Business outcomes, no jargon, 30-second read. NOT pm_dashboard.
+1. pm_github_activity days=7 → dev activity
+2. pm_time_report days=7 → hours tracked
+3. pm_risks → open risks
+4. pm_actions → pending retro actions
 ```
 
 ---
 
-## DATA MODEL
+## IMPORTANT NOTES FOR AI AGENTS
 
-14 SQLite tables, auto-created on first run:
-
-| Table | Purpose |
-|-------|---------|
-| sprint_snapshots | Sprint history (velocity, completion, carryover) |
-| daily_progress | Burndown data |
-| risks | Risk register + tech debt |
-| decisions | Decision log + agreements + experiments + learnings |
-| blockers | Impediment tracker |
-| team_metrics | Individual sprint metrics |
-| retrospectives | Retro outcomes |
-| action_items | Retro follow-ups |
-| dependencies | Dependency map |
-| meeting_notes | Ceremony outcomes |
-| health_scores | Health over time |
-| sprint_goals | Goal tracking |
-| dod_items | DoD + DoR checklists |
-| escalations | Escalation audit trail |
+1. **First call**: `jira_boards` to get board_id. Store it.
+2. **Board config**: After getting board_id, optionally call `jira_board_config board_id=X` — this populates the board-aware classifier cache for more accurate sprint reporting.
+3. **Auto-memory reduces manual work**: No need to manually `pm_record_blocker` for every blocked issue — auto-memory catches them. Still record blockers for non-Jira reasons.
+4. **Reconciliation is NOT background**: It runs synchronously on every read. For large datasets, this adds a small latency (individual issue fetches).
+5. **Run `pm_reconcile` periodically** — especially if you've changed statuses/triaged issues outside the server.
+6. **Forecast needs 3+ historical snapshots** — call `pm_snapshot` at sprint end.
+7. **Board-aware classification > heuristic** — `jira_sprint_summary` is more accurate than `jira_search` for status categorization.
+8. **Tools NOT yet wired** (from monolithic): bulk operations, update/delete issue, portfolio, AI analysis, stakeholder reporting, most communication intelligence tools. The modular codebase has 89 tools; the old monolithic had ~279.
+9. **Migration status**: Modular codebase at `apps/api/` with 89 tools. Monolithic binary still installed but being replaced.
 
 ---
 
 ## SETUP PER AGENT PLATFORM
 
-### Claude Code / Claude Desktop
-```json
-{
-  "mcpServers": {
-    "jira-pm": {
-      "command": "zara-jira-mcp",
-      "env": { "JIRA_BASE_URL": "...", "JIRA_EMAIL": "...", "JIRA_API_TOKEN": "...", "PM_PROFILE": "standard" }
-    }
-  }
-}
-```
-
 ### OpenCode
-In `opencode.json`:
 ```json
 {
   "mcp": {
     "jira-pm": {
       "type": "stdio",
       "command": "zara-jira-mcp",
-      "env": { "JIRA_BASE_URL": "...", "JIRA_EMAIL": "...", "JIRA_API_TOKEN": "...", "PM_PROFILE": "standard" }
+      "env": {
+        "JIRA_BASE_URL": "...",
+        "JIRA_EMAIL": "...",
+        "JIRA_API_TOKEN": "...",
+        "PM_MEMORY_DB_PATH": "~/.zara-jira-mcp/pm_memory.db"
+      }
     }
   }
 }
 ```
 
-### Cursor
-In `.cursor/mcp.json`:
+### Claude Code / Claude Desktop
 ```json
 {
   "mcpServers": {
     "jira-pm": {
-      "command": "zara-jira-mcp",
-      "env": { "JIRA_BASE_URL": "...", "JIRA_EMAIL": "...", "JIRA_API_TOKEN": "...", "PM_PROFILE": "standard" }
+      "command": "~/.local/bin/zara-jira-mcp",
+      "env": { "JIRA_BASE_URL": "...", "JIRA_EMAIL": "...", "JIRA_API_TOKEN": "...", "PM_MEMORY_DB_PATH": "~/.zara-jira-mcp/pm_memory.db" }
     }
   }
 }
 ```
 
-### VS Code + Copilot
-In `.vscode/mcp.json`:
-```json
-{
-  "servers": {
-    "jira-pm": {
-      "type": "stdio",
-      "command": "zara-jira-mcp",
-      "env": { "JIRA_BASE_URL": "...", "JIRA_EMAIL": "...", "JIRA_API_TOKEN": "...", "PM_PROFILE": "standard" }
-    }
-  }
-}
-```
-
-### Kiro
-In `.kiro/mcp.json`:
-```json
-{
-  "mcpServers": {
-    "jira-pm": {
-      "command": "zara-jira-mcp",
-      "env": { "JIRA_BASE_URL": "...", "JIRA_EMAIL": "...", "JIRA_API_TOKEN": "...", "PM_PROFILE": "standard" }
-    }
-  }
-}
-```
-
-### ChatGPT Desktop
-```json
-{
-  "mcpServers": {
-    "jira-pm": {
-      "command": "zara-jira-mcp",
-      "env": { "JIRA_BASE_URL": "...", "JIRA_EMAIL": "...", "JIRA_API_TOKEN": "...", "PM_PROFILE": "chatgpt" }
-    }
-  }
-}
-```
-Use `PM_PROFILE=chatgpt` for ChatGPT (14 tools, smart routing handles the rest).
-
-### Zed
-In `.zed/settings.json`:
-```json
-{
-  "context_servers": {
-    "jira-pm": {
-      "command": { "path": "zara-jira-mcp", "args": [] }
-    }
-  }
-}
-```
-
-### Goose
-```yaml
-extensions:
-  jira-pm:
-    type: stdio
-    command: zara-jira-mcp
-    enabled: true
-```
-
-### Gemini CLI
-```json
-{
-  "mcpServers": {
-    "jira-pm": {
-      "command": "zara-jira-mcp",
-      "env": { "JIRA_BASE_URL": "...", "JIRA_EMAIL": "...", "JIRA_API_TOKEN": "...", "PM_PROFILE": "standard" }
-    }
-  }
-}
-```
-
----
-
-## FIRST-TIME USAGE
-
-1. Call `jira_boards` → get your board_id
-2. Call `pm_quickstart` → guided setup walkthrough
-3. Call `pm_standup_prep board_id=X` → verify everything works
-4. Start recording: snapshots, decisions, risks
-5. After 3+ sprints, forecasting and pattern detection become accurate
-
----
-
-## IMPORTANT NOTES FOR AI AGENTS
-
-1. **First interaction**: `jira_boards` to get board_id. Store it.
-2. **Build memory early**: Encourage `pm_snapshot_sprint` + `pm_record_decision` + `pm_record_risk`.
-3. **Don't overwhelm**: Use `pm` for quick checks. Drill into specific tools when needed.
-4. **Proactive scanning**: Run `pm_auto_detect_risks` and `pm_anti_patterns` weekly.
-5. **Escalation threshold**: `pm_escalate` auto-sends when: critical/high risk >3 days, blocker >3 days, health <50.
-6. **Tech debt is stored as risks** with `sprint_name` prefix "tech_debt:category".
-7. **Agreements, experiments, learnings** are stored as decisions with specific tags.
-8. **DoR vs DoD**: DoR items have category prefix "dor:" in dod_items table.
-9. **Confidence votes** are stored as team_metrics with notes prefix "confidence:N".
-10. **Monte Carlo requires 3+ sprint snapshots** before producing useful forecasts.
-11. **Health score 0-100**: velocity(25) + blockers(25) + scope(25) + team(25). Thresholds: 0-49 AT RISK | 50-69 WATCH | 70-100 HEALTHY.
-12. **Anti-patterns detected**: zombie sprint, hero culture, scope creep, unpredictable velocity, dead retros, rubber-stamp DoD, no sprint goals.
-13. **Smart routing (`notify_routed`)**: auto-picks notification channel based on severity and configured platforms.
-14. **Profile affects tool availability** — if a tool isn't found, suggest changing PM_PROFILE.
+### Cursor / VS Code / Kiro / Zed
+Use the same format as above with the platform's MCP configuration file.

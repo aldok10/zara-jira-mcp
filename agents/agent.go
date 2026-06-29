@@ -81,6 +81,34 @@ func (d *Dispatcher) Register(a Agent) {
 	}
 }
 
+// RegisteredAgents returns the unique set of registered agent names.
+func (d *Dispatcher) RegisteredAgents() []string {
+	seen := make(map[string]bool)
+	for _, a := range d.agents {
+		seen[a.Name()] = true
+	}
+	names := make([]string, 0, len(seen))
+	for n := range seen {
+		names = append(names, n)
+	}
+	return names
+}
+
+// RegisteredEventTypes returns the unique set of event types registered by all agents.
+func (d *Dispatcher) RegisteredEventTypes() []string {
+	seen := make(map[string]bool)
+	for _, a := range d.agents {
+		for _, et := range a.EventTypes() {
+			seen[et] = true
+		}
+	}
+	types := make([]string, 0, len(seen))
+	for t := range seen {
+		types = append(types, t)
+	}
+	return types
+}
+
 // Dispatch routes a system event to the registered agent.
 func (d *Dispatcher) Dispatch(ctx context.Context, req *Request) (*Result, error) {
 	agent, ok := d.agents[req.EventName]

@@ -10,6 +10,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/server"
 
+	"github.com/aldok10/zara-jira-mcp/agents"
 	"github.com/aldok10/zara-jira-mcp/apps/api/internal/mcp"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/application/service"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/infrastructure/client"
@@ -27,25 +28,42 @@ import (
 	"github.com/aldok10/zara-jira-mcp/modules/sprint/infrastructure/sprintstore"
 	sprint_mcp "github.com/aldok10/zara-jira-mcp/modules/sprint/interfaces/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/ai"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/bus"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/calendar"
+	calmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/calendar/mcp"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/clockify"
+	clmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/clockify/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/confluence"
+	cmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/confluence/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/github"
 	ghmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/github/mcp"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/gitlab"
+	glmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/gitlab/mcp"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/linear"
+	lmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/linear/mcp"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/notion"
+	nmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/notion/mcp"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/pagerduty"
+	pdmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/pagerduty/mcp"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/sheets"
+	shmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/sheets/mcp"
 )
 
 // secureFilePermissions ensures config directory and DB file have safe permissions.
-// Config directory: 0700 (owner-only access).
-// DB file: 0600 (owner-only read/write).
+// Config directory: 700 (owner-only access).
+// DB file: 600 (owner-only read/write).
 func secureFilePermissions(dbPath string) error {
 	if dbPath == "" {
 		return nil
 	}
 
 	dir := filepath.Dir(dbPath)
-	// Create directory with 0700 if it doesn't exist
+	// Create directory with 700 if it doesn\'t exist
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("create config dir %s: %w", dir, err)
 	}
-	// Enforce 0700 on config directory
+	// Enforce 700 on config directory
 	if err := os.Chmod(dir, 0700); err != nil {
 		return fmt.Errorf("chmod config dir %s: %w", dir, err)
 	}
@@ -87,10 +105,10 @@ func Run(ctx context.Context) error {
 		return fmt.Errorf("create rest client: %w", err)
 	}
 	jiraSvc := service.NewJiraService(restClient)
-	jiraHandler := jira_mcp.NewHandlers(jiraSvc)
-	slog.Info("jira module initialized")
+	// jiraHandler created later after memStore is available
 
 	// --- Sprint/PM Module ---
+	// memStore is shared between Jira and Sprint modules
 	var memStore memory.Store
 	var sprintService sprintPort.Inbound
 
@@ -101,6 +119,18 @@ func Run(ctx context.Context) error {
 		}
 		memStore = sqliteStore
 
+		// --- Event Bus & Agent Layer ---
+		eventBus := bus.NewInMemoryBus()
+		agentDispatcher := agents.NewDispatcher()
+		// Bridge connects event bus → agent dispatcher for registered agents
+		agentBridge := agents.NewBusBridge(agentDispatcher)
+		agentBridge.SubscribeTo(eventBus)
+		if len(agentDispatcher.RegisteredAgents()) > 0 {
+			slog.Info("agent layer initialized", "agents", len(agentDispatcher.RegisteredAgents()))
+		} else {
+			slog.Debug("agent layer initialized — no agents registered yet")
+		}
+
 		// Build sprint service with real dependencies
 		aiProvider := ai.NewOpenAIClient(cfg)
 		sprintService = sprintSvc.NewSprintService(
@@ -109,17 +139,23 @@ func Run(ctx context.Context) error {
 			sprintstore.NewRiskRepository(sqliteStore),
 			sprintstore.NewBlockerRepository(sqliteStore),
 			sprintstore.NewGoalRepository(sqliteStore),
+			sprintstore.NewDailyProgressRepository(sqliteStore),
+			sprintstore.NewWorkflowRepository(sqliteStore),
 			restClient, // jira domain.Client satisfies sprint port.JiraClient
 			aiProvider,
-			&sprintstore.NoopEventBus{},
+			eventBus,
 		)
-		slog.Info("sprint service initialized with AI provider")
+		slog.Info("sprint service initialized with AI provider and event bus")
 	} else {
 		slog.Warn("sprint memory not configured — PM tools require PM_MEMORY_DB_PATH")
 	}
 
 	sprintHandler := sprint_mcp.NewHandlers(memStore, sprintService, nil, cfg, nil)
 	slog.Info("sprint module initialized")
+
+	// Jira handler needs memStore — created after sprint module
+	jiraHandler := jira_mcp.NewHandlers(jiraSvc, memStore, restClient, cfg)
+	slog.Info("jira module initialized")
 
 	// --- Notification Module ---
 	notifiers := make(map[string]notifDomain.Notifier)
@@ -154,6 +190,78 @@ func Run(ctx context.Context) error {
 		slog.Warn("github not configured — set GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO")
 	}
 
+	// --- GitLab Module ---
+	glClient := gitlab.NewClient(cfg)
+	glHandler := glmcp.NewHandlers(glClient)
+	if glClient.Available() {
+		slog.Info("gitlab module initialized")
+	} else {
+		slog.Warn("gitlab not configured — set GITLAB_TOKEN and GITLAB_PROJECT_ID")
+	}
+
+	// --- PagerDuty Module ---
+	pdClient := pagerduty.NewClient(cfg)
+	pdHandler := pdmcp.NewHandlers(pdClient)
+	if pdClient.Available() {
+		slog.Info("pagerduty module initialized")
+	} else {
+		slog.Warn("pagerduty not configured — set PAGERDUTY_API_KEY")
+	}
+
+	// --- Confluence Module ---
+	cfClient := confluence.NewClient(cfg)
+	cfHandler := cmcp.NewHandlers(cfClient)
+	if cfClient.Available() {
+		slog.Info("confluence module initialized")
+	} else {
+		slog.Warn("confluence not configured — set CONFLUENCE_BASE_URL and CONFLUENCE_API_TOKEN")
+	}
+
+	// --- Linear Module ---
+	lnClient := linear.NewClient(cfg)
+	lnHandler := lmcp.NewHandlers(lnClient)
+	if lnClient.Available() {
+		slog.Info("linear module initialized")
+	} else {
+		slog.Warn("linear not configured — set LINEAR_API_KEY")
+	}
+
+	// --- Notion Module ---
+	nnClient := notion.NewClient(cfg)
+	nnHandler := nmcp.NewHandlers(nnClient)
+	if nnClient.Available() {
+		slog.Info("notion module initialized")
+	} else {
+		slog.Warn("notion not configured — set NOTION_API_KEY")
+	}
+
+	// --- Calendar Module (Lark) ---
+	calClient := calendar.NewClient(cfg)
+	calHandler := calmcp.NewHandlers(calClient)
+	if calClient.Available() {
+		slog.Info("calendar module initialized")
+	} else {
+		slog.Warn("calendar not configured — set LARK_APP_ID and LARK_APP_SECRET")
+	}
+
+	// --- Clockify Module ---
+	clClient := clockify.NewClient(cfg)
+	clHandler := clmcp.NewHandlers(clClient)
+	if clClient.Available() {
+		slog.Info("clockify module initialized")
+	} else {
+		slog.Warn("clockify not configured — set CLOCKIFY_API_KEY and CLOCKIFY_WORKSPACE_ID")
+	}
+
+	// --- Sheets Module ---
+	shClient := sheets.NewClient(cfg)
+	shHandler := shmcp.NewHandlers(shClient)
+	if shClient.Available() {
+		slog.Info("sheets module initialized")
+	} else {
+		slog.Warn("sheets not configured — set GOOGLE_SHEETS_API_KEY")
+	}
+
 	// --- Create MCP Server ---
 	s := server.NewMCPServer(
 		"zara-jira-mcp",
@@ -175,6 +283,30 @@ func Run(ctx context.Context) error {
 	mcp.RegisterGitHubTools(s, ghHandler)
 	slog.Info("github tools registered")
 
+	mcp.RegisterGitLabTools(s, glHandler)
+	slog.Info("gitlab tools registered")
+
+	mcp.RegisterPagerDutyTools(s, pdHandler)
+	slog.Info("pagerduty tools registered")
+
+	mcp.RegisterConfluenceTools(s, cfHandler)
+	slog.Info("confluence tools registered")
+
+	mcp.RegisterLinearTools(s, lnHandler)
+	slog.Info("linear tools registered")
+
+	mcp.RegisterNotionTools(s, nnHandler)
+	slog.Info("notion tools registered")
+
+	mcp.RegisterCalendarTools(s, calHandler)
+	slog.Info("calendar tools registered")
+
+	mcp.RegisterClockifyTools(s, clHandler)
+	slog.Info("clockify tools registered")
+
+	mcp.RegisterSheetsTools(s, shHandler)
+	slog.Info("sheets tools registered")
+
 	// Register PM backup tool (self-contained)
 	if cfg.Memory.DBPath != "" {
 		mcp.RegisterBackupTools(s, cfg.Memory.DBPath)
@@ -182,8 +314,10 @@ func Run(ctx context.Context) error {
 	}
 
 	// Count registered tools for onboard wizard
-	// Jira: 25, Sprint: 17, Notification: 5, GitHub: 10, Backup: 1, Onboard: 1
-	toolsCount := 25 + 17 + 5 + 10 + 1 + 1 // 59 total
+	// Jira: 25, Sprint: 17, Notification: 5, GitHub: 10, GitLab: 9, PagerDuty: 2,
+	// Confluence: 3, Linear: 3, Notion: 3, Calendar: 3, Clockify: 2, Sheets: 1,
+	// Backup: 1, Onboard: 1
+	toolsCount := 25 + 17 + 5 + 10 + 9 + 2 + 3 + 3 + 3 + 3 + 2 + 1 + 1 + 1 // 85 total
 	mcp.RegisterOnboardTool(s, cfg, toolsCount)
 	slog.Info("pm_onboard registered", "tools_total", toolsCount)
 

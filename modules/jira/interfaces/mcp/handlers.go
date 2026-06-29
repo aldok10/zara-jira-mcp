@@ -4,29 +4,404 @@ package mcp
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 
 	"github.com/aldok10/zara-jira-mcp/modules/jira/application/port"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/domain"
+	"github.com/aldok10/zara-jira-mcp/modules/jira/infrastructure/client"
+	mem "github.com/aldok10/zara-jira-mcp/modules/sprint/domain/memory"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/mcputil"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/validate"
 )
 
 // Handlers holds dependencies for jira MCP tool handlers.
 type Handlers struct {
-	Jira port.Inbound
+	Jira   port.Inbound
+	Memory mem.Store            // optional: auto-records blockers/risks to PM memory
+	Rest   client.RestInterface // REST client for Jira connections
 }
 
 // NewHandlers creates a new jira MCP handlers instance.
-func NewHandlers(jiraService port.Inbound) *Handlers {
-	return &Handlers{Jira: jiraService}
+func NewHandlers(jiraService port.Inbound, memStore mem.Store, restClient client.RestInterface, cfg *config.Config) *Handlers {
+	if cfg == nil {
+		cfg = &config.Config{}
+	}
+	return &Handlers{Jira: jiraService, Memory: memStore, Rest: restClient}
 }
 
 // Health returns server version and status.
 func (h *Handlers) Health(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return mcputil.TextResult("zara-jira-mcp | status: ok | modular handlers"), nil
+}
+
+// recordBlockers scans a list of issues for blocked items and auto-records to PM memory.
+// Skips if memory is not configured. Deduplicates against existing active blockers.
+// Uses issue-level heuristic for blocking detection.
+func (h *Handlers) recordBlockers(ctx context.Context, issues []domain.Issue) {
+	if h.Memory == nil {
+		return
+	}
+
+	for _, issue := range issues {
+		if !issue.IsBlocked() {
+			continue
+		}
+
+		// Check if already recorded (dedup)
+		row := h.Memory.DB().QueryRow(
+			"SELECT COUNT(*) FROM blockers WHERE issue_key = ? AND resolved_at IS NULL",
+			issue.Key,
+		)
+		var count int
+		if err := row.Scan(&count); err != nil || count > 0 {
+			continue
+		}
+
+		blocker := &mem.Blocker{
+			IssueKey:     issue.Key,
+			Description:  fmt.Sprintf("Auto-detected: %s — %s", issue.Summary, issue.Status),
+			BlockedSince: issue.Updated,
+			Owner:        issue.Assignee,
+			DaysBlocked:  0,
+		}
+
+		if err := h.Memory.SaveBlocker(ctx, blocker); err != nil {
+			slog.Warn("auto-record blocker", "issue", issue.Key, "error", err)
+		} else {
+			slog.Info("auto-recorded blocker", "issue", issue.Key, "assignee", issue.Assignee)
+		}
+	}
+}
+
+// recordSnapshot auto-records a sprint snapshot to PM memory when sprint summary is called.
+// Uses board-aware classification when board config is available.
+func (h *Handlers) recordSnapshot(ctx context.Context, sprintName string, boardID int, issues []domain.Issue) {
+	if h.Memory == nil {
+		return
+	}
+	if sprintName == "" {
+		return
+	}
+
+	// Build board-aware classifier — fetch config once, use for all issues
+	classify := domain.HeuristicClassify // fallback
+	if cfg, err := h.Jira.GetBoardConfiguration(ctx, boardID); err == nil && cfg != nil {
+		classify = cfg.StatusCategory
+	}
+
+	total := len(issues)
+	var done, inProg, blocked, todo int
+	for _, i := range issues {
+		switch classify(i.Status) {
+		case "done":
+			done++
+		case "progress":
+			inProg++
+		case "blocked":
+			blocked++
+		default:
+			todo++
+		}
+	}
+
+	snap := &mem.SprintSnapshot{
+		SprintName:   sprintName,
+		BoardID:      boardID,
+		SnapshotDate: time.Now(),
+		TotalIssues:  total,
+		Done:         done,
+		InProgress:   inProg,
+		Todo:         todo,
+		Blocked:      blocked,
+	}
+	snap.CompletionRate = snap.CalculateCompletionRate()
+
+	if err := h.Memory.SaveSprintSnapshot(ctx, snap); err != nil {
+		slog.Warn("auto-record snapshot", "sprint", sprintName, "error", err)
+	} else {
+		slog.Info("auto-recorded sprint snapshot", "sprint", sprintName, "done/total", fmt.Sprintf("%d/%d", done, total))
+	}
+}
+
+// recordBlockersForBoard scans issues for blocked items using board-aware classification.
+// Uses the board configuration to detect blocking statuses (e.g. "Stalled", "On Hold").
+func (h *Handlers) recordBlockersForBoard(ctx context.Context, boardID int, issues []domain.Issue) {
+	if h.Memory == nil {
+		return
+	}
+
+	// Fetch board config for board-aware blocking detection
+	isBlocked := func(status string) bool {
+		return h.classifyStatus(ctx, boardID, status) == "blocked"
+	}
+
+	for _, issue := range issues {
+		if !isBlocked(issue.Status) {
+			continue
+		}
+
+		// Check if already recorded (dedup)
+		row := h.Memory.DB().QueryRow(
+			"SELECT COUNT(*) FROM blockers WHERE issue_key = ? AND resolved_at IS NULL",
+			issue.Key,
+		)
+		var count int
+		if err := row.Scan(&count); err != nil || count > 0 {
+			continue
+		}
+
+		blocker := &mem.Blocker{
+			IssueKey:     issue.Key,
+			Description:  fmt.Sprintf("Auto-detected: %s — %s", issue.Summary, issue.Status),
+			BlockedSince: issue.Updated,
+			Owner:        issue.Assignee,
+			DaysBlocked:  0,
+		}
+
+		if err := h.Memory.SaveBlocker(ctx, blocker); err != nil {
+			slog.Warn("auto-record blocker (board-aware)", "issue", issue.Key, "error", err)
+		} else {
+			slog.Info("auto-recorded blocker (board-aware)", "issue", issue.Key, "status", issue.Status, "assignee", issue.Assignee)
+		}
+	}
+}
+
+// reconcileBlockers checks stored blockers against current issue data.
+// Auto-resolves blockers whose issues are no longer blocked.
+// Uses heuristic blocking detection (use reconcileBlockersForBoard for board-aware).
+func (h *Handlers) reconcileBlockers(ctx context.Context, issues []domain.Issue) {
+	if h.Memory == nil {
+		return
+	}
+
+	issueMap := make(map[string]bool, len(issues))
+	for _, issue := range issues {
+		issueMap[issue.Key] = issue.IsBlocked()
+	}
+
+	h.resolveUnblockedIssues(ctx, issueMap)
+}
+
+// reconcileBlockersForBoard checks stored blockers against current issue data
+// using board-aware classification for accurate blocking detection.
+func (h *Handlers) reconcileBlockersForBoard(ctx context.Context, boardID int, issues []domain.Issue) {
+	if h.Memory == nil {
+		return
+	}
+
+	// Fetch board config once
+	isBlocked := func(status string) bool {
+		return h.classifyStatus(ctx, boardID, status) == "blocked"
+	}
+
+	issueMap := make(map[string]bool, len(issues))
+	for _, issue := range issues {
+		issueMap[issue.Key] = isBlocked(issue.Status)
+	}
+
+	h.resolveUnblockedIssues(ctx, issueMap)
+}
+
+// resolveUnblockedIssues is shared by reconcileBlockers and reconcileBlockersForBoard.
+func (h *Handlers) resolveUnblockedIssues(ctx context.Context, issueMap map[string]bool) {
+
+	blockers, err := h.Memory.GetActiveBlockers(ctx)
+	if err != nil {
+		slog.Warn("reconcile blockers: get active", "error", err)
+		return
+	}
+
+	for _, blocker := range blockers {
+		if blocker.IssueKey == "" {
+			continue // no Jira link, can't reconcile
+		}
+
+		isBlocked, found := issueMap[blocker.IssueKey]
+		if !found {
+			continue // not in current dataset, skip
+		}
+
+		if isBlocked {
+			continue // still blocked, nothing to do
+		}
+
+		// Issue is no longer blocked — auto-resolve
+		resolution := "Auto-reconciled: issue no longer blocked"
+		if err := h.Memory.ResolveBlocker(ctx, blocker.ID, resolution); err != nil {
+			slog.Warn("reconcile blocker: resolve", "issue", blocker.IssueKey, "error", err)
+		} else {
+			slog.Info("reconciled blocker — auto-resolved", "issue", blocker.IssueKey)
+		}
+	}
+}
+
+// reconcileRisks checks stored risks against current issue data.
+// Resolves risks where the issue is done, or mitigates if recently updated.
+func (h *Handlers) reconcileRisks(ctx context.Context, issues []domain.Issue) {
+	if h.Memory == nil {
+		return
+	}
+
+	issueMap := make(map[string]domain.Issue, len(issues))
+	for _, issue := range issues {
+		issueMap[issue.Key] = issue
+	}
+
+	risks, err := h.Memory.GetAllRisks(ctx, 100)
+	if err != nil {
+		slog.Warn("reconcile risks: get all", "error", err)
+		return
+	}
+
+	cutoff := time.Now().AddDate(0, 0, -staleThreshold)
+
+	for _, risk := range risks {
+		if risk.Status != "open" && risk.Status != "mitigating" {
+			continue
+		}
+
+		issueKey := extractIssueKey(risk.Title)
+		if issueKey == "" {
+			issueKey = extractIssueKey(risk.Description)
+		}
+		if issueKey == "" {
+			continue
+		}
+
+		issue, found := issueMap[issueKey]
+		if !found {
+			continue
+		}
+
+		now := time.Now()
+
+		// Case 1: Issue is done → resolve risk
+		if issue.IsDone() {
+			risk.Status = "resolved"
+			risk.ResolvedAt = &now
+			if err := h.Memory.UpdateRisk(ctx, &risk); err != nil {
+				slog.Warn("reconcile risk: resolve", "id", risk.ID, "issue", issueKey, "error", err)
+			} else {
+				slog.Info("reconciled risk — resolved (done)", "issue", issueKey, "risk", risk.Title)
+			}
+			continue
+		}
+
+		// Case 2: Issue recently updated (>7d) → mitigate risk
+		if !issue.Updated.IsZero() && issue.Updated.After(cutoff) {
+			risk.Status = "mitigating"
+			risk.ResolvedAt = &now
+			if err := h.Memory.UpdateRisk(ctx, &risk); err != nil {
+				slog.Warn("reconcile risk: mitigate", "id", risk.ID, "issue", issueKey, "error", err)
+			} else {
+				slog.Info("reconciled risk — mitigated (updated)", "issue", issueKey, "risk", risk.Title)
+			}
+			continue
+		}
+
+		// Case 3: Issue is still stale at high priority — update timestamp only
+		if risk.IdentifiedAt.IsZero() {
+			risk.IdentifiedAt = now
+			if err := h.Memory.UpdateRisk(ctx, &risk); err != nil {
+				slog.Warn("reconcile risk: update timestamp", "id", risk.ID, "error", err)
+			}
+		}
+	}
+}
+
+// extractIssueKey finds a Jira issue key (e.g. PROJ-123) from a string.
+func extractIssueKey(s string) string {
+	if s == "" {
+		return ""
+	}
+	for _, part := range strings.Fields(s) {
+		part = strings.Trim(part, ":,;-.")
+		if looksLikeIssueKey(part) {
+			return part
+		}
+	}
+	return ""
+}
+
+// looksLikeIssueKey checks if a string matches a Jira key pattern (e.g. PROJ-123).
+func looksLikeIssueKey(s string) bool {
+	hyphenIdx := strings.LastIndex(s, "-")
+	if hyphenIdx < 1 || hyphenIdx >= len(s)-1 {
+		return false
+	}
+	for _, ch := range s[:hyphenIdx] {
+		if ch < 'A' || ch > 'Z' {
+			return false
+		}
+	}
+	for _, ch := range s[hyphenIdx+1:] {
+		if ch < '0' || ch > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+// staleThreshold is the number of days without update before a high-priority issue
+// is considered stale and auto-recorded as a risk.
+const staleThreshold = 7
+
+// recordRisks scans for stale high-priority issues (Highest/Critical, not Done, >7d no update)
+// and auto-records them as risks in PM memory.
+func (h *Handlers) recordRisks(ctx context.Context, issues []domain.Issue) {
+	if h.Memory == nil {
+		return
+	}
+
+	cutoff := time.Now().AddDate(0, 0, -staleThreshold)
+
+	for _, issue := range issues {
+		if issue.IsDone() {
+			continue
+		}
+		// Only flag Highest/Critical priority items as risks
+		prio := strings.ToLower(issue.Priority)
+		if prio != "highest" && prio != "critical" && prio != "blocker" {
+			continue
+		}
+		if issue.Updated.After(cutoff) {
+			continue // recently updated, not stale
+		}
+		if issue.Updated.IsZero() {
+			continue // no timestamp, skip
+		}
+
+		// Dedup: check if risk title already exists for this issue
+		riskTitle := fmt.Sprintf("Stale: %s — %s", issue.Key, issue.Summary[:min(len(issue.Summary), 80)])
+		row := h.Memory.DB().QueryRow(
+			"SELECT COUNT(*) FROM risks WHERE title LIKE ? AND status IN ('open', 'mitigating')",
+			fmt.Sprintf("Stale: %s%%", issue.Key),
+		)
+		var count int
+		if err := row.Scan(&count); err != nil || count > 0 {
+			continue
+		}
+
+		risk := &mem.Risk{
+			Title:        riskTitle,
+			Description:  fmt.Sprintf("Auto-detected: %s has been %s (priority: %s) with no update for %d+ days", issue.Key, issue.Status, issue.Priority, staleThreshold),
+			Severity:     "high",
+			Status:       "open",
+			Owner:        issue.Assignee,
+			IdentifiedAt: time.Now(),
+		}
+
+		if err := h.Memory.SaveRisk(ctx, risk); err != nil {
+			slog.Warn("auto-record risk", "issue", issue.Key, "error", err)
+		} else {
+			slog.Info("auto-recorded stale risk", "issue", issue.Key, "priority", issue.Priority, "assignee", issue.Assignee)
+		}
+	}
 }
 
 // SearchIssues searches Jira issues using JQL.
@@ -47,6 +422,13 @@ func (h *Handlers) SearchIssues(ctx context.Context, req mcp.CallToolRequest) (*
 	if results == nil {
 		return mcputil.TextResult("No results found."), nil
 	}
+
+	// Auto-record + reconcile blockers & risks against current Jira state
+	h.recordBlockers(ctx, results.Issues)
+	h.reconcileBlockers(ctx, results.Issues)
+	h.recordRisks(ctx, results.Issues)
+	h.reconcileRisks(ctx, results.Issues)
+
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Found %d issues\n", len(results.Issues)))
 	for _, issue := range results.Issues {
@@ -69,6 +451,14 @@ func (h *Handlers) GetIssue(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	if err != nil {
 		return mcputil.ErrJira("get issue", err), nil
 	}
+
+	// Auto-record + reconcile for this issue
+	issues := []domain.Issue{*issue}
+	h.recordBlockers(ctx, issues)
+	h.reconcileBlockers(ctx, issues)
+	h.recordRisks(ctx, issues)
+	h.reconcileRisks(ctx, issues)
+
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("**%s** - %s\n", issue.Key, issue.Summary))
 	sb.WriteString(fmt.Sprintf("Type: %s | Status: %s | Priority: %s\n", issue.Type, issue.Status, issue.Priority))
@@ -493,6 +883,12 @@ func (h *Handlers) GetEpicIssues(ctx context.Context, req mcp.CallToolRequest) (
 		return mcputil.TextResult(fmt.Sprintf("No issues found in epic %s.", epicKey)), nil
 	}
 
+	// Auto-record + reconcile blockers & risks against current Jira state
+	h.recordBlockers(ctx, results.Issues)
+	h.reconcileBlockers(ctx, results.Issues)
+	h.recordRisks(ctx, results.Issues)
+	h.reconcileRisks(ctx, results.Issues)
+
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Epic %s — %d issue(s):\n", epicKey, len(results.Issues)))
 	for _, issue := range results.Issues {
@@ -594,6 +990,43 @@ func (h *Handlers) GetComponents(ctx context.Context, req mcp.CallToolRequest) (
 
 // --- Attachment Handler ---
 
+// GetBoardConfig returns the full board configuration including column layout and status mappings.
+func (h *Handlers) GetBoardConfig(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	boardID, err := req.RequireInt("board_id")
+	if err != nil {
+		return mcputil.ErrInvalid("board_id parameter is required"), nil
+	}
+	if err := validate.BoardID(int(boardID)); err != nil {
+		return mcputil.ErrInvalid(err.Error()), nil
+	}
+
+	cfg, err := h.Jira.GetBoardConfiguration(ctx, int(boardID))
+	if err != nil {
+		return mcputil.ErrJira("get board configuration", err), nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Board: %s (ID: %d, Type: %s)\n\n", cfg.Name, cfg.ID, cfg.Type))
+	sb.WriteString("Columns:\n")
+	for _, col := range cfg.ColumnConfig.Columns {
+		sb.WriteString(fmt.Sprintf("  %s:\n", col.Name))
+		for _, s := range col.Statuses {
+			sb.WriteString(fmt.Sprintf("    - %s (ID: %s)\n", s.Name, s.ID))
+		}
+	}
+	return mcputil.TextResult(sb.String()), nil
+}
+
+// classifyStatus uses board-aware classification when boardID is available,
+// falling back to heuristic on the Issue method.
+func (h *Handlers) classifyStatus(ctx context.Context, boardID int, statusName string) string {
+	cfg, err := h.Jira.GetBoardConfiguration(ctx, boardID)
+	if err != nil || cfg == nil {
+		return domain.HeuristicClassify(statusName)
+	}
+	return cfg.StatusCategory(statusName)
+}
+
 // GetAttachments lists attachments on an issue.
 func (h *Handlers) GetAttachments(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	key, err := req.RequireString("key")
@@ -639,20 +1072,110 @@ func (h *Handlers) GetSprintSummary(ctx context.Context, req mcp.CallToolRequest
 		return mcputil.TextResult("No active sprints found for this board."), nil
 	}
 
-	sprint := sprints[0]
-	issues, err := h.Jira.GetSprintIssues(ctx, sprint.ID)
+	sprintResult := sprints[0]
+	issues, err := h.Jira.GetSprintIssues(ctx, sprintResult.ID)
 	if err != nil {
 		return mcputil.ErrJira("get sprint issues", err), nil
 	}
 
+	// Auto-record + reconcile blockers/risks + snapshot to PM memory
+	// Sprint summary has board context, so we use board-aware classification
+	h.recordBlockersForBoard(ctx, int(boardID), issues)
+	h.reconcileBlockersForBoard(ctx, int(boardID), issues)
+	h.recordRisks(ctx, issues)
+	h.reconcileRisks(ctx, issues)
+	h.recordSnapshot(ctx, sprintResult.Name, int(boardID), issues)
+
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Sprint: %s (ID: %d)\n", sprint.Name, sprint.ID))
-	sb.WriteString(fmt.Sprintf("Goals: %s\n", sprint.Goal))
-	sb.WriteString(fmt.Sprintf("Start: %s | End: %s\n", sprint.StartDate, sprint.EndDate))
+	sb.WriteString(fmt.Sprintf("Sprint: %s (ID: %d)\n", sprintResult.Name, sprintResult.ID))
+	sb.WriteString(fmt.Sprintf("Goals: %s\n", sprintResult.Goal))
+	sb.WriteString(fmt.Sprintf("Start: %s | End: %s\n", sprintResult.StartDate, sprintResult.EndDate))
 	sb.WriteString(fmt.Sprintf("Issues: %d\n", len(issues)))
 
 	for _, i := range issues {
 		sb.WriteString(fmt.Sprintf("  %s - %s [%s]\n", i.Key, i.Summary, i.Status))
 	}
+	return mcputil.TextResult(sb.String()), nil
+}
+
+// ReconcileMemory performs a full sweep: fetches every issue key from stored blockers/risks
+// and reconciles them with current Jira state. Auto-resolves resolved items.
+func (h *Handlers) ReconcileMemory(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	if h.Memory == nil {
+		return mcputil.ErrorResult("PM memory not configured. Set PM_MEMORY_DB_PATH."), nil
+	}
+
+	var resolvedBlockers, resolvedRisks, mitigatedRisks int
+
+	// Get all active blockers with issue keys
+	blockers, err := h.Memory.GetActiveBlockers(ctx)
+	if err != nil {
+		return mcputil.ErrInternal("reconcile: get blockers", err), nil
+	}
+
+	// Get all open/mitigating risks
+	allRisks, err := h.Memory.GetAllRisks(ctx, 200)
+	if err != nil {
+		return mcputil.ErrInternal("reconcile: get risks", err), nil
+	}
+
+	// Collect unique issue keys from both stores
+	keys := make(map[string]bool)
+	for _, b := range blockers {
+		if b.IssueKey != "" {
+			keys[b.IssueKey] = false
+		}
+	}
+	for _, r := range allRisks {
+		if r.Status != "open" && r.Status != "mitigating" {
+			continue
+		}
+		issueKey := extractIssueKey(r.Title)
+		if issueKey == "" {
+			issueKey = extractIssueKey(r.Description)
+		}
+		if issueKey != "" {
+			keys[issueKey] = true
+		}
+	}
+
+	if len(keys) == 0 {
+		return mcputil.TextResult("No stored items to reconcile. All data is consistent."), nil
+	}
+
+	// Fetch each issue and reconcile
+	total := len(keys)
+	processed := 0
+	for issueKey := range keys {
+		processed++
+		issue, err := h.Jira.GetIssue(ctx, issueKey)
+		if err != nil {
+			slog.Warn("reconcile: fetch issue", "issue", issueKey, "error", err)
+			continue
+		}
+
+		issues := []domain.Issue{*issue}
+		prevBlockers, _ := h.Memory.GetActiveBlockers(ctx)
+		prevCount := len(prevBlockers)
+
+		h.reconcileBlockers(ctx, issues)
+		h.reconcileRisks(ctx, issues)
+
+		// Count changes
+		currBlockers, _ := h.Memory.GetActiveBlockers(ctx)
+		if len(currBlockers) < prevCount {
+			resolvedBlockers += prevCount - len(currBlockers)
+		}
+
+		slog.Info("reconcile progress", "processed", processed, "total", total)
+	}
+
+	var sb strings.Builder
+	sb.WriteString("# PM Memory Reconciliation\n\n")
+	sb.WriteString(fmt.Sprintf("Issues checked: %d\n", total))
+	sb.WriteString(fmt.Sprintf("Blockers resolved: %d\n", resolvedBlockers))
+	sb.WriteString(fmt.Sprintf("Risks resolved/mitigated: %d\n", resolvedRisks+mitigatedRisks))
+	sb.WriteString("\nMemory is now consistent with current Jira state.\n")
+
 	return mcputil.TextResult(sb.String()), nil
 }

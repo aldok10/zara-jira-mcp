@@ -2,9 +2,6 @@
 
 BINARY := zara-jira-mcp
 VERSION := 0.4.0
-
-BINARY := zara-jira-mcp
-VERSION := 0.4.0
 API_DIR := ./apps/api
 
 build:
@@ -17,7 +14,6 @@ run:
 	cd $(API_DIR) && go run ./cmd/server
 
 test:
-	go test ./bootstrap/...
 	cd $(API_DIR) && go test ./...
 
 test-cover:
