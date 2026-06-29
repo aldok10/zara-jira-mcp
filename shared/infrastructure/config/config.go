@@ -187,9 +187,9 @@ type LarkConfig struct {
 }
 
 type JiraConfig struct {
-	BaseURL string // JIRA_BASE_URL (e.g. https://company.atlassian.net)
-	Email   string // JIRA_EMAIL
-	Token   string // JIRA_API_TOKEN (store securely, prefer OAuth or JWT)
+	BaseURL                 string   // JIRA_BASE_URL (e.g. https://company.atlassian.net)
+	Email                   string   // JIRA_EMAIL
+	Token                   string   // JIRA_API_TOKEN (store securely, prefer OAuth or JWT)
 	StoryPointsCustomFields []string // STORY_POINTS_CUSTOM_FIELDS (comma-separated field IDs)
 }
 

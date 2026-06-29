@@ -688,8 +688,8 @@ func (s *sprintService) Burndown(ctx context.Context, boardID int) (string, erro
 	sb.WriteString(fmt.Sprintf("**Completed**: %d issues\n\n", last.Done))
 
 	sb.WriteString("```\n")
-	sb.WriteString(fmt.Sprintf("Day  Start  Ideal  Actual  Remaining\n"))
-	sb.WriteString(fmt.Sprintf("───  ─────  ─────  ────── ─────────\n"))
+	sb.WriteString("Day  Start  Ideal  Actual  Remaining\n")
+	sb.WriteString("───  ─────  ─────  ────── ─────────\n")
 
 	for i, e := range entries {
 		remaining := e.TotalIssues - e.Done
@@ -769,7 +769,7 @@ func (s *sprintService) LearnWorkflow(ctx context.Context, boardID int) (string,
 	// Classify each status and save.
 	var saved int
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("# Board Workflow Learned\n\n"))
+	sb.WriteString("# Board Workflow Learned\n\n")
 	sb.WriteString(fmt.Sprintf("Board ID: **%d**\n", boardID))
 	sb.WriteString(fmt.Sprintf("Sprint: **%s**\n", sprints[0].Name))
 	sb.WriteString(fmt.Sprintf("Statuses found: **%d**\n\n", len(statuses)))

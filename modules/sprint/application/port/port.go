@@ -3,7 +3,7 @@ package port
 import (
 	"context"
 
-	jira "github.com/aldok10/zara-jira-mcp/modules/jira/domain"
+	"github.com/aldok10/zara-jira-mcp/modules/jira/domain"
 	memory "github.com/aldok10/zara-jira-mcp/modules/sprint/domain/memory"
 	"github.com/aldok10/zara-jira-mcp/shared/domain/event"
 )
@@ -56,10 +56,10 @@ type WorkflowRepository interface {
 
 // JiraClient provides Jira data access for sprint operations.
 type JiraClient interface {
-	GetBoards(ctx context.Context) ([]jira.Board, error)
-	GetActiveSprints(ctx context.Context, boardID int) ([]jira.Sprint, error)
-	GetSprintIssues(ctx context.Context, sprintID int) ([]jira.Issue, error)
-	SearchIssues(ctx context.Context, jql string, maxResults int, startAt int) (*jira.SearchResult, error)
+	GetBoards(ctx context.Context) ([]domain.Board, error)
+	GetActiveSprints(ctx context.Context, boardID int) ([]domain.Sprint, error)
+	GetSprintIssues(ctx context.Context, sprintID int) ([]domain.Issue, error)
+	SearchIssues(ctx context.Context, jql string, maxResults int, startAt int) (*domain.SearchResult, error)
 }
 
 // AIProvider provides AI analysis for sprint insights.
