@@ -12,6 +12,7 @@ type Inbound interface {
 	SearchIssues(ctx context.Context, jql string, maxResults int) (*domain.SearchResult, error)
 	GetIssue(ctx context.Context, key string) (*domain.Issue, error)
 	GetBoards(ctx context.Context) ([]domain.Board, error)
+	GetDefaultBoardID(ctx context.Context) (int, error)
 	GetActiveSprints(ctx context.Context, boardID int) ([]domain.Sprint, error)
 	GetSprintIssues(ctx context.Context, sprintID int) ([]domain.Issue, error)
 	CreateIssue(ctx context.Context, input *domain.CreateIssueInput) (*domain.Issue, error)
@@ -20,11 +21,4 @@ type Inbound interface {
 	DeleteIssue(ctx context.Context, issueKey string) error
 	CreateSprint(ctx context.Context, boardID int, name, goal string) (*domain.Sprint, error)
 	CloseSprint(ctx context.Context, sprintID int) error
-}
-
-// Cache provides caching for Jira data.
-type Cache interface {
-	Get(key string) ([]byte, bool)
-	Set(key string, data []byte)
-	TTL() int
 }
