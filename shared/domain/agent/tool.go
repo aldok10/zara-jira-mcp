@@ -2,36 +2,75 @@ package agent
 
 import "context"
 
-// ToolParam describes a single parameter a tool accepts.
-type ToolParam struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"` // string, number, boolean, array, object
-	Description string `json:"description"`
-	Required    bool   `json:"required"`
+// Tool is the interface for agent-accessible tools.
+// All external integrations (Jira, GitLab, Slack, Lark, etc.) are tools.
+// Business logic must NOT call tools directly — use System Events.
+type Tool interface {
+	// Name returns the tool's unique name.
+	Name() string
+
+	// Description returns a human-readable description for the agent.
+	Description() string
+
+	// Execute runs the tool with the given arguments.
+	Execute(ctx context.Context, args map[string]interface{}) (interface{}, error)
+
+	// Schema returns the JSON Schema for the tool's arguments.
+	Schema() map[string]interface{}
 }
 
-// ToolDefinition describes a tool the agent can call.
-// Modeled after Hermes tool registry + OpenClaw skill concept.
-type ToolDefinition struct {
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Parameters  []ToolParam `json:"parameters"`
-	Execute     ToolFunc    `json:"-"` // not serialized
+// Registry maps tool names to Tool implementations.
+type ToolRegistry struct {
+	tools map[string]Tool
 }
 
-// ToolFunc is the actual function that runs a tool.
-type ToolFunc func(ctx context.Context, params map[string]any) (string, error)
-
-// ToolCall represents the AI's decision to invoke a tool.
-type ToolCall struct {
-	Name   string         `json:"tool"` // "tool" in JSON to match the prompt format
-	Params map[string]any `json:"params"`
+// NewToolRegistry creates an empty tool registry.
+func NewToolRegistry() *ToolRegistry {
+	return &ToolRegistry{
+		tools: make(map[string]Tool),
+	}
 }
 
-// ToolResult is the outcome of executing a tool call.
-type ToolResult struct {
-	Name    string `json:"name"`
-	Success bool   `json:"success"`
-	Output  string `json:"output"`
-	Error   string `json:"error,omitempty"`
+// Register adds a tool to the registry.
+func (r *ToolRegistry) Register(t Tool) {
+	r.tools[t.Name()] = t
 }
+
+// Get returns a tool by name.
+func (r *ToolRegistry) Get(name string) (Tool, bool) {
+	t, ok := r.tools[name]
+	return t, ok
+}
+
+// List returns all registered tools.
+func (r *ToolRegistry) List() []Tool {
+	result := make([]Tool, 0, len(r.tools))
+	for _, t := range r.tools {
+		result = append(result, t)
+	}
+	return result
+}
+
+// ToolFunc adapts a function to the Tool interface.
+type ToolFunc struct {
+	name        string
+	description string
+	fn          func(ctx context.Context, args map[string]interface{}) (interface{}, error)
+	schema      map[string]interface{}
+}
+
+func NewToolFunc(name, description string, fn func(ctx context.Context, args map[string]interface{}) (interface{}, error), schema map[string]interface{}) *ToolFunc {
+	return &ToolFunc{
+		name:        name,
+		description: description,
+		fn:          fn,
+		schema:      schema,
+	}
+}
+
+func (t *ToolFunc) Name() string        { return t.name }
+func (t *ToolFunc) Description() string { return t.description }
+func (t *ToolFunc) Execute(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+	return t.fn(ctx, args)
+}
+func (t *ToolFunc) Schema() map[string]interface{} { return t.schema }
