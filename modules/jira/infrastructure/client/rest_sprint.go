@@ -32,7 +32,7 @@ func (c *RestClient) GetSprintIssues(ctx context.Context, sprintID int) ([]domai
 	jql := fmt.Sprintf("sprint = %d ORDER BY status ASC", sprintID)
 	result, err := c.sdk.Search.SearchJQL(ctx, &search.SearchJQLOptions{
 		JQL:        jql,
-		Fields:     []string{"summary", "description", "status", "priority", "issuetype", "assignee", "reporter", "labels", "created", "updated", "story_points", "customfield_10016", "customfield_10028"},
+		Fields:     []string{"summary", "description", "status", "priority", "issuetype", "assignee", "reporter", "labels", "created", "updated", "duedate", "story_points"},
 		MaxResults: 100,
 	})
 	if err != nil {

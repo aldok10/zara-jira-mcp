@@ -128,6 +128,18 @@ type Escalation struct {
 	Acknowledged bool
 }
 
+// WorkflowPattern maps a Jira status name to a classification for a specific board.
+type WorkflowPattern struct {
+	ID             int64
+	BoardID        int
+	StatusName     string // exact Jira status name (e.g. "In Progress")
+	Classification string // "done", "blocked", "progress", "todo"
+	Pattern        string // regex/keyword that matched (e.g. "progress")
+	IsAuto         bool   // true if auto-detected by LearnWorkflow
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
 // OKRSignal maps a Key Result to Jira data via JQL + formula.
 type OKRSignal struct {
 	ID           int64

@@ -16,8 +16,8 @@ var _ port.Inbound = (*JiraService)(nil)
 type JiraService struct {
 	client   domain.Client
 	mu       sync.RWMutex
-	boards   []domain.Board                       // cached board list
-	boardCfg map[int]*domain.BoardConfiguration   // cached board config by board ID
+	boards   []domain.Board                     // cached board list
+	boardCfg map[int]*domain.BoardConfiguration // cached board config by board ID
 }
 
 // NewJiraService creates a new JiraService with its dependencies.

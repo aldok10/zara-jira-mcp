@@ -15,9 +15,9 @@ type mockAgent struct {
 	execFn     func(ctx context.Context, req *Request) (*Result, error)
 }
 
-func (m *mockAgent) Name() string                         { return m.name }
-func (m *mockAgent) Description() string                   { return m.desc }
-func (m *mockAgent) EventTypes() []string                  { return m.eventTypes }
+func (m *mockAgent) Name() string         { return m.name }
+func (m *mockAgent) Description() string  { return m.desc }
+func (m *mockAgent) EventTypes() []string { return m.eventTypes }
 func (m *mockAgent) Execute(ctx context.Context, req *Request) (*Result, error) {
 	if m.execFn != nil {
 		return m.execFn(ctx, req)
@@ -103,8 +103,8 @@ func TestBusBridge_HandleEvent(t *testing.T) {
 			if req.EventName != "system.sprint.completed" {
 				t.Errorf("unexpected event: %s", req.EventName)
 			}
-		if req.Payload["board_id"] != 42 {
-			t.Errorf("expected board_id 42, got %v (type: %T)", req.Payload["board_id"], req.Payload["board_id"])
+			if req.Payload["board_id"] != 42 {
+				t.Errorf("expected board_id 42, got %v (type: %T)", req.Payload["board_id"], req.Payload["board_id"])
 			}
 			return &Result{Success: true}, nil
 		},

@@ -17,8 +17,8 @@ type ColumnStatus struct {
 
 // BoardColumn represents a column on a Jira board with its mapped statuses.
 type BoardColumn struct {
-	Name     string          `json:"name"`
-	Statuses []ColumnStatus  `json:"statuses"`
+	Name     string         `json:"name"`
+	Statuses []ColumnStatus `json:"statuses"`
 }
 
 // ColumnConfig holds the column layout for a board.
@@ -29,10 +29,12 @@ type ColumnConfig struct {
 // BoardConfiguration holds the full board configuration including column layout
 // and status mappings. Used by StatusClassifier to understand board-specific statuses.
 type BoardConfiguration struct {
-	ID           int           `json:"id"`
-	Name         string        `json:"name"`
-	Type         string        `json:"type"`
-	ColumnConfig ColumnConfig  `json:"columnConfig"`
+	ID                   int               `json:"id"`
+	Name                 string            `json:"name"`
+	Type                 string            `json:"type"`
+	ColumnConfig         ColumnConfig      `json:"columnConfig"`
+	CustomFields         []string          `json:"customFields,omitempty"`         // Dynamic board-specific custom fields
+	CustomStatusMappings map[string]string `json:"customStatusMappings,omitempty"` // Custom status name to category mappings
 }
 
 // StatusCategory returns the board-aware classification for a status name.

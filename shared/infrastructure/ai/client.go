@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
 	domain "github.com/aldok10/zara-jira-mcp/shared/domain/ai"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
 )
 
 // aiRateLimiter is a token bucket rate limiter for AI API calls.

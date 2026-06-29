@@ -230,6 +230,21 @@ func (c *RestClient) GetBoardConfiguration(ctx context.Context, boardID int) (*d
 	return &cfg, nil
 }
 
+// GetCustomFieldsByBoard fetches custom field definitions for a board for dynamic field selection.
+func (c *RestClient) GetCustomFieldsByBoard(ctx context.Context, boardID int) ([]string, error) {
+	path := fmt.Sprintf("/rest/agile/1.0/board/%d/properties/customScreens/default/fields", boardID)
+	data, _, err := c.doRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("get custom fields for board %d: %w", boardID, err)
+	}
+
+	var fieldIDs []string
+	if err := json.Unmarshal(data, &fieldIDs); err != nil {
+		return nil, fmt.Errorf("decode custom fields: %w", err)
+	}
+	return fieldIDs, nil
+}
+
 func validateRawRequest(method, path string) error {
 	// Check for blocked methods first (e.g. DELETE always blocked).
 	for _, blocked := range rawRequestBlockedMethods {

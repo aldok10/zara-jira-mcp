@@ -8,6 +8,42 @@ import (
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/validate"
 )
 
+// fallbackStoryPointFields provides default story points field IDs if not configured.
+// These should be overridden via JIRA_STORY_POINTS_CUSTOM_FIELDS environment variable.
+var fallbackStoryPointFields = []string{
+	"story_points",      // next-gen projects
+	"customfield_10016", // Jira Cloud default
+	"customfield_10028", // common alternative
+	"customfield_10004", // some instances
+	"customfield_10014", // another variant
+}
+
+// getStoryPointFields intelligently loads story points field configuration.
+// Priority:
+// 1. JIRA_STORY_POINTS_CUSTOM_FIELDS environment variable (comma-separated)
+// 2. fallback: default Jira story points field IDs
+// Returns cleaned, non-empty slice of field IDs
+func getStoryPointFields() []string {
+	envValue := os.Getenv("JIRA_STORY_POINTS_CUSTOM_FIELDS")
+	if envValue == "" {
+		return fallbackStoryPointFields
+	}
+	// Split on commas and clean whitespace
+	fields := strings.Split(envValue, ",")
+	result := make([]string, 0, len(fields))
+	for _, field := range fields {
+		trimmed := strings.TrimSpace(field)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	if len(result) > 0 {
+		return result
+	}
+	// Fallback to hardcoded defaults if env was empty or only whitespace
+	return fallbackStoryPointFields
+}
+
 // Config holds all application configuration parsed from environment variables.
 type Config struct {
 	Server         ServerConfig
@@ -154,6 +190,7 @@ type JiraConfig struct {
 	BaseURL string // JIRA_BASE_URL (e.g. https://company.atlassian.net)
 	Email   string // JIRA_EMAIL
 	Token   string // JIRA_API_TOKEN (store securely, prefer OAuth or JWT)
+	StoryPointsCustomFields []string // STORY_POINTS_CUSTOM_FIELDS (comma-separated field IDs)
 }
 
 type AIConfig struct {

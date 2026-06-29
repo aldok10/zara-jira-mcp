@@ -39,6 +39,21 @@ type GoalRepository interface {
 	Save(ctx context.Context, g *memory.SprintGoal) error
 }
 
+// DailyProgressRepository provides daily progress persistence for burndown.
+type DailyProgressRepository interface {
+	Save(ctx context.Context, p *memory.DailyProgress) error
+	FindByBoardAndSprint(ctx context.Context, boardID int, sprintName string) ([]memory.DailyProgress, error)
+}
+
+// WorkflowRepository provides status classification persistence.
+type WorkflowRepository interface {
+	Save(ctx context.Context, p *memory.WorkflowPattern) error
+	Upsert(ctx context.Context, p *memory.WorkflowPattern) error
+	FindByBoard(ctx context.Context, boardID int) ([]memory.WorkflowPattern, error)
+	Delete(ctx context.Context, id int64) error
+	DeleteByBoard(ctx context.Context, boardID int) error
+}
+
 // JiraClient provides Jira data access for sprint operations.
 type JiraClient interface {
 	GetBoards(ctx context.Context) ([]jira.Board, error)
@@ -63,6 +78,14 @@ type Inbound interface {
 	Forecast(ctx context.Context, boardID int, remaining int) (*ForecastResult, error)
 	DetectAntiPatterns(ctx context.Context, boardID int) ([]AntiPattern, error)
 	VelocityTrend(ctx context.Context, boardID int) (string, error)
+	FlowMetrics(ctx context.Context, boardID int) (*FlowMetricsResult, error)
+	SprintCompare(ctx context.Context, boardID int) (string, error)
+	Predictability(ctx context.Context, boardID int) (string, error)
+	Scorecard(ctx context.Context, boardID int) (string, error)
+	Calibration(ctx context.Context, boardID int) (string, error)
+	TrackDaily(ctx context.Context, boardID int) (string, error)
+	Burndown(ctx context.Context, boardID int) (string, error)
+	LearnWorkflow(ctx context.Context, boardID int) (string, error)
 }
 
 // HealthResult holds a sprint health assessment.
@@ -83,6 +106,19 @@ type AntiPattern struct {
 	Description string
 	Severity    string // High/Medium/Low
 	Suggestion  string
+}
+
+// FlowMetricsResult holds WIP, throughput, and flow efficiency.
+type FlowMetricsResult struct {
+	BoardID       int
+	CurrentWIP    int     // items in In Progress/Review/Test
+	AvgThroughput float64 // avg items/sprint from history
+	AvgCycleTime  float64 // inferred days (WIP / throughput per day)
+	CompletionPct float64 // current sprint completion %
+	TotalIssues   int
+	DoneIssues    int
+	BlockedIssues int
+	Trend         string // up, down, stable
 }
 
 // ForecastResult holds Monte Carlo forecast results.

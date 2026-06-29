@@ -10,6 +10,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/server"
 
+	"github.com/aldok10/zara-jira-mcp/agents"
 	"github.com/aldok10/zara-jira-mcp/apps/api/internal/mcp"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/application/service"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/infrastructure/client"
@@ -27,43 +28,42 @@ import (
 	"github.com/aldok10/zara-jira-mcp/modules/sprint/infrastructure/sprintstore"
 	sprint_mcp "github.com/aldok10/zara-jira-mcp/modules/sprint/interfaces/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/ai"
-	"github.com/aldok10/zara-jira-mcp/agents"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/bus"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/calendar"
+	calmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/calendar/mcp"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/clockify"
+	clmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/clockify/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/confluence"
+	cmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/confluence/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/github"
 	ghmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/github/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/gitlab"
 	glmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/gitlab/mcp"
-	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/confluence"
-	cmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/confluence/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/linear"
 	lmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/linear/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/notion"
 	nmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/notion/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/pagerduty"
 	pdmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/pagerduty/mcp"
-	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/calendar"
-	calmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/calendar/mcp"
-	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/clockify"
-	clmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/clockify/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/sheets"
 	shmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/sheets/mcp"
 )
 
 // secureFilePermissions ensures config directory and DB file have safe permissions.
-// Config directory: 0700 (owner-only access).
-// DB file: 0600 (owner-only read/write).
+// Config directory: 700 (owner-only access).
+// DB file: 600 (owner-only read/write).
 func secureFilePermissions(dbPath string) error {
 	if dbPath == "" {
 		return nil
 	}
 
 	dir := filepath.Dir(dbPath)
-	// Create directory with 0700 if it doesn't exist
+	// Create directory with 700 if it doesn\'t exist
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("create config dir %s: %w", dir, err)
 	}
-	// Enforce 0700 on config directory
+	// Enforce 700 on config directory
 	if err := os.Chmod(dir, 0700); err != nil {
 		return fmt.Errorf("chmod config dir %s: %w", dir, err)
 	}
@@ -139,6 +139,8 @@ func Run(ctx context.Context) error {
 			sprintstore.NewRiskRepository(sqliteStore),
 			sprintstore.NewBlockerRepository(sqliteStore),
 			sprintstore.NewGoalRepository(sqliteStore),
+			sprintstore.NewDailyProgressRepository(sqliteStore),
+			sprintstore.NewWorkflowRepository(sqliteStore),
 			restClient, // jira domain.Client satisfies sprint port.JiraClient
 			aiProvider,
 			eventBus,
@@ -152,7 +154,7 @@ func Run(ctx context.Context) error {
 	slog.Info("sprint module initialized")
 
 	// Jira handler needs memStore — created after sprint module
-	jiraHandler := jira_mcp.NewHandlers(jiraSvc, memStore)
+	jiraHandler := jira_mcp.NewHandlers(jiraSvc, memStore, restClient, cfg)
 	slog.Info("jira module initialized")
 
 	// --- Notification Module ---

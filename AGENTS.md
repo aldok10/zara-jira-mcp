@@ -16,7 +16,7 @@ Instructions for AI agents working with this project.
 | **Transport** | MCP stdio |
 | **Module path** | `github.com/aldok10/zara-jira-mcp` |
 
-> **Migration status**: The source code has been restructured to a modular architecture. The installed binary at `~/.local/bin/zara-jira-mcp` still runs the older monolithic tools (~279). The new modular code in `apps/api/` currently registers **85 tools** (Jira: 25, Sprint PM: 17, Notification: 5, GitHub: 10, GitLab: 9, PagerDuty: 2, Confluence: 3, Linear: 3, Notion: 3, Calendar: 3, Clockify: 2, Sheets: 1, Backup: 1, Onboard: 1). Event bus (InMemoryBus with retry, depth tracking, metrics) and Agent dispatcher layer wired into bootstrap. All shared infrastructure clients are now wired.
+> **Migration status**: The source code has been restructured to a modular architecture. The installed binary at `~/.local/bin/zara-jira-mcp` still runs the older monolithic tools (~279). The new modular code in `apps/api/` currently registers **99 tools** (Jira: 25, Sprint PM: 31, Notification: 5, GitHub: 10, GitLab: 9, PagerDuty: 2, Confluence: 3, Linear: 3, Notion: 3, Calendar: 3, Clockify: 2, Sheets: 1, Backup: 1, Onboard: 1). Event bus (InMemoryBus with retry, depth tracking, metrics) and Agent dispatcher layer wired into bootstrap. All shared infrastructure clients are now wired.
 
 ## Architecture
 
@@ -247,9 +247,10 @@ Current state:
 - ✅ **Agent architecture** with dispatcher/planner/coordinator pattern
 - ✅ **Jira client wired to sprint service** (duck-typing via domain.Client)
 - ✅ **AI provider wired** (shared/infrastructure/ai.OpenAIClient → sprint port.AIProvider)
-- ✅ **85 tools registered** in modular code (was 9+2)
+- ✅ **86 tools registered** in modular code (was 9+2)
 - ✅ **All shared infrastructure clients wired** — Calendar, Clockify, Sheets now have MCP handlers
 - ✅ **Event bus + Agent dispatcher** wired into bootstrap (InMemoryBus → BusBridge → Dispatcher)
+- ✅ **pm_forecast** added (Monte Carlo simulation, already implemented in sprint service)
 - ⏳ **Migration in progress**: wire remaining tools from monolithic binary (~279) into modular structure
 
 The project has evolved from a monolithic 279-tool server (still in installed binary) to a modular, maintainable hexagonal architecture with clear separation of concerns and improved developer experience. The shared infrastructure and domain logic are largely intact — the remaining work is wiring them into the new module interfaces.

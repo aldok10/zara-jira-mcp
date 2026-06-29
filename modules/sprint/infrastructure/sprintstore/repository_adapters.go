@@ -15,6 +15,8 @@ var _ port.HealthRepository = (*HealthRepository)(nil)
 var _ port.RiskRepository = (*RiskRepository)(nil)
 var _ port.BlockerRepository = (*BlockerRepository)(nil)
 var _ port.GoalRepository = (*GoalRepository)(nil)
+var _ port.DailyProgressRepository = (*DailyProgressRepository)(nil)
+var _ port.WorkflowRepository = (*WorkflowRepository)(nil)
 
 // --- HealthRepository adapter ---
 
@@ -94,6 +96,58 @@ func (r *GoalRepository) FindActive(ctx context.Context, boardID int) ([]memory.
 
 func (r *GoalRepository) Save(ctx context.Context, g *memory.SprintGoal) error {
 	return r.store.SaveSprintGoal(ctx, g)
+}
+
+// --- DailyProgressRepository adapter ---
+
+// DailyProgressRepository adapts *persistence.SQLiteStore to port.DailyProgressRepository.
+type DailyProgressRepository struct {
+	store *persistence.SQLiteStore
+}
+
+// NewDailyProgressRepository wraps a SQLiteStore as a DailyProgressRepository.
+func NewDailyProgressRepository(store *persistence.SQLiteStore) *DailyProgressRepository {
+	return &DailyProgressRepository{store: store}
+}
+
+func (r *DailyProgressRepository) Save(ctx context.Context, p *memory.DailyProgress) error {
+	return r.store.SaveDailyProgress(ctx, p)
+}
+
+func (r *DailyProgressRepository) FindByBoardAndSprint(ctx context.Context, boardID int, sprintName string) ([]memory.DailyProgress, error) {
+	return r.store.GetDailyProgress(ctx, boardID, sprintName)
+}
+
+// --- WorkflowRepository adapter ---
+
+// WorkflowRepository adapts *persistence.SQLiteStore to port.WorkflowRepository.
+type WorkflowRepository struct {
+	store *persistence.SQLiteStore
+}
+
+// NewWorkflowRepository wraps a SQLiteStore as a WorkflowRepository.
+func NewWorkflowRepository(store *persistence.SQLiteStore) *WorkflowRepository {
+	return &WorkflowRepository{store: store}
+}
+
+func (r *WorkflowRepository) Save(ctx context.Context, p *memory.WorkflowPattern) error {
+	return r.store.SaveWorkflowPattern(ctx, p)
+}
+
+func (r *WorkflowRepository) Upsert(ctx context.Context, p *memory.WorkflowPattern) error {
+	return r.store.UpsertWorkflowPattern(ctx, p)
+}
+
+func (r *WorkflowRepository) FindByBoard(ctx context.Context, boardID int) ([]memory.WorkflowPattern, error) {
+	return r.store.GetWorkflowPatterns(ctx, boardID)
+}
+
+func (r *WorkflowRepository) Delete(ctx context.Context, id int64) error {
+	return r.store.DeleteWorkflowPattern(ctx, id)
+}
+
+func (r *WorkflowRepository) DeleteByBoard(ctx context.Context, boardID int) error {
+	return r.store.DeleteWorkflowPatternsByBoard(ctx, boardID)
 }
 
 // --- NoopEventBus ---

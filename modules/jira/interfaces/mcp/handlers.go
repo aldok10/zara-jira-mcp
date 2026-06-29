@@ -10,8 +10,10 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
+	"github.com/aldok10/zara-jira-mcp/config"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/application/port"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/domain"
+	"github.com/aldok10/zara-jira-mcp/modules/jira/infrastructure/client"
 	mem "github.com/aldok10/zara-jira-mcp/modules/sprint/domain/memory"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/mcputil"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/validate"
@@ -20,12 +22,16 @@ import (
 // Handlers holds dependencies for jira MCP tool handlers.
 type Handlers struct {
 	Jira   port.Inbound
-	Memory mem.Store // optional: auto-records blockers/risks to PM memory
+	Memory mem.Store            // optional: auto-records blockers/risks to PM memory
+	Rest   client.RestInterface // REST client for Jira connections
 }
 
 // NewHandlers creates a new jira MCP handlers instance.
-func NewHandlers(jiraService port.Inbound, memStore mem.Store) *Handlers {
-	return &Handlers{Jira: jiraService, Memory: memStore}
+func NewHandlers(jiraService port.Inbound, memStore mem.Store, restClient client.RestInterface, cfg *config.Config) *Handlers {
+	if cfg == nil {
+		cfg = &config.Config{}
+	}
+	return &Handlers{Jira: jiraService, Memory: memStore, Rest: restClient}
 }
 
 // Health returns server version and status.
@@ -382,11 +388,11 @@ func (h *Handlers) recordRisks(ctx context.Context, issues []domain.Issue) {
 		}
 
 		risk := &mem.Risk{
-			Title:       riskTitle,
-			Description: fmt.Sprintf("Auto-detected: %s has been %s (priority: %s) with no update for %d+ days", issue.Key, issue.Status, issue.Priority, staleThreshold),
-			Severity:    "high",
-			Status:      "open",
-			Owner:       issue.Assignee,
+			Title:        riskTitle,
+			Description:  fmt.Sprintf("Auto-detected: %s has been %s (priority: %s) with no update for %d+ days", issue.Key, issue.Status, issue.Priority, staleThreshold),
+			Severity:     "high",
+			Status:       "open",
+			Owner:        issue.Assignee,
 			IdentifiedAt: time.Now(),
 		}
 

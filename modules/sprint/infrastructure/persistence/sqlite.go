@@ -38,6 +38,9 @@ func NewSQLiteStore(dbPath string) (*SQLiteStore, error) {
 	if err := s.migrateOKR(); err != nil {
 		return nil, fmt.Errorf("migrate okr: %w", err)
 	}
+	if err := s.migrateWorkflow(); err != nil {
+		return nil, fmt.Errorf("migrate workflow: %w", err)
+	}
 	return s, nil
 }
 

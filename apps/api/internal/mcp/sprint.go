@@ -164,4 +164,100 @@ func RegisterSprintTools(s *server.MCPServer, h *smcp.Handlers) {
 		),
 		h.PMSprintHealth,
 	)
+	s.AddTool(
+		mcp.NewTool("pm_forecast",
+			mcp.WithDescription("Monte Carlo forecast: 10K simulations from historical throughput. Predicts completion sprints at 50/70/85/95% confidence."),
+			mcp.WithNumber("board_id", mcp.Description("Board ID")),
+			mcp.WithNumber("remaining_items", mcp.Description("Items remaining (default: from active sprint)")),
+		),
+		h.PMForecast,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_velocity_trend",
+			mcp.WithDescription("Velocity and completion trends over recent sprints. Detects improvement or decline."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.PMVelocityTrend,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_anti_patterns",
+			mcp.WithDescription("Detect Scrum anti-patterns: zombie sprints, scope creep, blocked issues, inconsistent delivery, declining velocity."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.PMAntiPatterns,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_flow_metrics",
+			mcp.WithDescription("Flow metrics: WIP, throughput, cycle time, completion rate. Detects flow problems and bottlenecks."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.PMFlowMetrics,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_sprint_compare",
+			mcp.WithDescription("Compare current vs previous sprint: issues, completion, carryover, velocity."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.PMSprintCompare,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_predictability",
+			mcp.WithDescription("Sprint predictability score (0-100). How consistent is delivery across recent sprints?"),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.PMPredictability,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_scorecard",
+			mcp.WithDescription("Sprint scorecard (0-100): completion, velocity, blocked ratio, carryover, predictability. Comprehensive sprint health."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.PMScorecard,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_calibration",
+			mcp.WithDescription("Forecast accuracy: committed vs delivered over time. Shows on-target rate, over-commit, and under-deliver patterns."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.PMCalibration,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_set_sprint_goal",
+			mcp.WithDescription("Define sprint goal with measurable key results. Tracks achievement across sprints."),
+			mcp.WithString("goal", mcp.Required(), mcp.Description("Sprint goal statement")),
+			mcp.WithString("key_results", mcp.Description("Measurable key results (newline-separated)")),
+			mcp.WithNumber("board_id", mcp.Description("Board ID")),
+			mcp.WithString("sprint_name", mcp.Description("Sprint name (default: current)")),
+		),
+		h.PMSetSprintGoal,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_sprint_goals",
+			mcp.WithDescription("Show active sprint goals or goal achievement history."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+			mcp.WithBoolean("show_history", mcp.Description("Show past goals with outcomes (default: false)")),
+		),
+		h.PMSprintGoals,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_goal_check",
+			mcp.WithDescription("AI sprint goal progress check. Evaluates if on track from current health and sprint data."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.PMGoalCheck,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_track_daily",
+			mcp.WithDescription("Track today's sprint progress. Captures burndown data from Jira and saves to memory."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.PMTrackDaily,
+	)
+	s.AddTool(
+		mcp.NewTool("pm_burndown",
+			mcp.WithDescription("Show sprint burndown chart with daily progress tracking, ideal line, and on-track assessment."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.PMBurndown,
+	)
 }
