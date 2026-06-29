@@ -1,258 +1,211 @@
 # zara-jira-mcp
 
-**Stop being a Jira secretary. Start being the Scrum Master your team actually needs.**
-
-Your AI copilot that handles the admin, surfaces the risks, and gives you back the hours you lost to status updates.
+**89-tool MCP server** — AI-powered Scrum Master with persistent memory, Jira Cloud integration, multi-channel notifications, and 12 platform integrations.
 
 [![CI](https://github.com/aldok10/zara-jira-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/aldok10/zara-jira-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MCP Compatible](https://img.shields.io/badge/MCP-compatible-blue)](https://modelcontextprotocol.io)
 [![Go](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go)](https://golang.org)
-[![GitHub stars](https://img.shields.io/github/stars/aldok10/zara-jira-mcp?style=social)](https://github.com/aldok10/zara-jira-mcp)
+
+Stop copy-pasting status updates. Start coaching your team with data.
 
 ---
 
-## The Problem
-
-Scrum Masters and PMs spend **58% of their time** on meetings and admin that produces zero value ([Jabra 2025 Report](https://brandsit.pl/en/how-much-do-ineffective-meetings-cost-jabra-report/)). Meanwhile:
-
-- Sprint reviews are copy-paste status updates nobody reads
-- Retro actions die within days (the "Dead Retro" pattern)
-- Risks are invisible until they explode
-- Management asks "when will it be done?" and you guess
-- You can't prove your impact as SM because there's no data
-
-**This project exists because SM/PM work is 80% repetitive information assembly that AI can do in seconds.**
-
----
-
-## What This Actually Does
-
-| Before (Manual) | After (zara-jira-mcp) |
-|-----------------|----------------------|
-| 30 min writing sprint status | `pm_exec_report` — 10 seconds, business language |
-| Guessing sprint capacity | `pm_forecast_sprint` — Monte Carlo simulation, confidence intervals |
-| "Are we on track?" = gut feeling | `report_delivery_confidence` — GREEN/AMBER/RED with data |
-| Retro actions forgotten | `sm_improvement_velocity` — tracks if actions produce change |
-| Can't see team dysfunction | `sm_dysfunction_detector` — detects Hero Culture, Zombie Scrum, Scope Creep |
-| Manual blocker escalation email | `report_escalation_brief` — PROBLEM/IMPACT/ASK/DEADLINE format |
-| 1-on-1 prep = winging it | `pm_one_on_one_prep` — data-driven talking points per person |
-| "What should I focus on?" | `pm_what_next` — AI prioritizes your day |
-| Story points scattered in Jira | `pm_story_points` — totals from sprint/epic/JQL, grouped by status/person |
-
----
-
-## Why This, Not Jira AI or Other Tools
-
-| | zara-jira-mcp | Jira AI (Atlassian) | go-jira CLI | Other PM tools |
-|---|---|---|---|---|
-| **Remembers across sprints** | SQLite memory (decisions, risks, retros) | No memory | No memory | Some |
-| **Works with YOUR AI editor** | Any MCP client (20+ supported) | Jira UI only | Terminal only | Their UI only |
-| **Forecasting** | Monte Carlo on real data | Basic | None | Limited |
-| **Team dysfunction detection** | Data-driven pattern matching | None | None | None |
-| **Custom field support** | Auto-detects story points | Built-in | Manual | Varies |
-| **Multi-channel notifications** | 8 platforms + smart routing | Email only | None | 1-2 platforms |
-| **Cost** | Free (MIT) | Paid (Premium) | Free but dead | Paid |
-| **Privacy** | Self-hosted, your data stays local | Cloud (Atlassian) | Local | Cloud |
-
----
-
-## 5-Minute Setup
+## Quick Start
 
 ```bash
-git clone https://github.com/aldok10/zara-jira-mcp.git
-cd zara-jira-mcp
-cp .env.example .env
-# Edit .env: add JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN
+git clone https://github.com/aldok10/zara-jira-mcp.git && cd zara-jira-mcp
+cp .env.example .env   # Add JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN
 make build && make install
 ```
 
-Then add to your MCP client config:
+Add to your MCP client (OpenCode, Claude, Cursor, etc.):
 
 ```json
 {
   "mcpServers": {
     "jira-pm": {
-      "command": "zara-jira-mcp",
+      "command": "~/.local/bin/zara-jira-mcp",
       "env": {
         "JIRA_BASE_URL": "https://company.atlassian.net",
         "JIRA_EMAIL": "you@company.com",
         "JIRA_API_TOKEN": "your-token",
-        "JIRA_AI_BASE_URL": "https://api.groq.com/openai/v1",
-        "JIRA_AI_API_KEY": "your-key",
-        "JIRA_AI_MODEL": "llama-3.3-70b-versatile"
+        "PM_MEMORY_DB_PATH": "~/.zara-jira-mcp/pm_memory.db",
+        "JIRA_AI_BASE_URL": "https://api.openai.com/v1",
+        "JIRA_AI_API_KEY": "your-key"
       }
     }
   }
 }
 ```
 
-Works with **Claude Desktop, ChatGPT, Cursor, VS Code Copilot, Windsurf, Zed, OpenCode, Kiro, Cline, Gemini CLI, Goose**, and 10+ more.
+**First commands:**
+```
+jira_boards                  → discover your boards
+jira_board_config board_id=X → see column layout & status mappings
+pm board_id=X                → sprint status + blockers + risks
+```
 
 ---
 
-## Built on Research, Not Vibes
+## What You Can Do With 89 Tools
 
-This isn't another "AI wrapper." Every feature is grounded in peer-reviewed research:
+| Category | Tools | What |
+|----------|-------|------|
+| **Jira** | 28 | Search, create, transition, assign, link, comment, worklog, epics, versions |
+| **Sprint/PM** | 18 | Snapshots, decisions, risks, blockers, retros, meetings, forecast |
+| **Notifications** | 5 | Lark, Slack, Discord, Telegram + smart routing |
+| **GitHub** | 10 | PRs, issues, milestones, releases, activity, branches |
+| **GitLab** | 9 | MRs, issues, milestones, branches, files |
+| **Calendar** | 3 | Create/list events, schedule meetings (Lark) |
+| **Time** | 2 | Clockify entries & reports |
+| **Wiki** | 6 | Confluence + Notion search, read, create |
+| **Incidents** | 2 | PagerDuty incidents & on-call |
+| **Linear** | 3 | Issues, cycles, activity |
+| **Sheets** | 1 | Google Sheets read |
+| **Tools** | 2 | `pm_backup` (JSON export), `pm_onboard` (config wizard) |
 
-- **DORA 2024**: AI increases individual productivity but hurts delivery stability without fundamentals. We enforce the fundamentals.
-- **State of Agile (18th Edition)**: AI is the "Fourth Wave" of software delivery. We're built for it.
-- **Little's Law**: WIP limits and cycle time are the only levers for faster delivery. We measure both.
-- **Probabilistic Forecasting**: Monte Carlo on historical throughput beats gut-feel estimates every time.
-- **DX Core 4 Framework**: Flow state, cognitive load, feedback loops. We reduce PM cognitive load by 50%+.
-- **Tuckman's Stages**: Team maturity determines SM stance. We auto-assess and recommend.
-- **Sense&Respond Anti-Pattern Library**: 10 documented dysfunctions with coaching interventions. We detect them from data.
+### Quick Examples
+
+```
+# What's happening right now?
+pm board_id=84               → sprint status: 12/20 done, 3 blocked
+pm_blockers                  → active impediments
+pm_risks                     → risk dashboard
+
+# Record things (memory keeps it across sessions)
+pm_decide what="Use PostgreSQL" who="team" why="Operational experience"
+pm_record_risk title="API performance" severity=high owner="Febrian"
+pm_record_blocker description="Waiting for MixPanel access" issue_key="PROJ-123"
+
+# Sprint ceremonies
+pm_record_retro sprint_name="Sprint 12" went_well="Sisa waktu untuk improvement"
+pm_record_meeting meeting_type="planning" notes="Sprint goal: stabilize July"
+
+# Forecast & planning
+pm_forecast board_id=84      → Monte Carlo: 50% in Sprint 13, 85% in Sprint 14
+pm_snapshot board_id=84      → save sprint state to memory
+pm_health board_id=84        → health trend across sprints
+
+# Dev workflow bridge
+pm_github_prs                → open PRs with age & reviewers
+pm_github_activity days=7   → commits, merges, issues closed
+pm_github_create_issue title="Add login" labels=backend
+
+# Notifications
+jira_notify_lark content="Sprint 12 done. 12/20 completed. 3 blockers."
+notify_routed content="Prod incident" severity=critical audience=team
+
+# Board-aware classification
+jira_board_config board_id=84 → see which statuses map to done/blocked/progress
+
+# Memory management
+pm_backup                    → full JSON export of all PM memory
+pm_reconcile                 → sync stored blockers/risks with current Jira state
+```
 
 ---
 
-## The SM's Daily Workflow (Powered)
+## How It Works
 
-| Time | You Say | Tool Responds |
-|------|---------|--------------|
-| 8:30 | "What should I focus on?" | Blockers aging >3d, 2 critical risks, sprint behind pace |
-| 9:00 | "Prep my standup" | Talking points: 3 blockers to raise, 1 dependency to chase |
-| 11:00 | "Is sprint goal at risk?" | AMBER: 62% done, 2 blocked items. Suggest removing PROJ-45 |
-| 14:00 | "Prep 1-on-1 with Alice" | High carryover pattern. Workload: 7 items. Ask about estimation |
-| 16:00 | "Write update for VP" | "On track. Auth shipped. API at risk due to infra dependency." |
-| Friday | "Sprint narrative for review" | Business-friendly story of what shipped and why it matters |
+The server runs as an MCP stdio process alongside your AI editor. Every read (`jira_search`, `jira_get_issue`, `jira_sprint_summary`) automatically:
+
+1. **Records blockers** → detects blocked statuses, stores in SQLite
+2. **Records stale risks** → flags Highest/Critical issues untouched >7 days
+3. **Records sprint snapshots** → saves done/in-progress/blocked/todo counts
+4. **Reconciles** → checks stored items against current state, auto-resolves
+
+Board-aware classification uses each board's column configuration for accurate status mapping — no more hardcoded string matching.
+
+All memory persists in SQLite WAL at `~/.zara-jira-mcp/pm_memory.db`.
 
 ---
 
 ## Architecture
 
-Single Go binary. No runtime dependencies. SQLite for memory (WAL mode). Starts in <1 second.
-
-The project uses a **modular hexagonal architecture** with portability and testability as first-class concerns:
+Single Go binary. No runtime deps. Starts in <1 second.
 
 ```
-apps/api/                  # Application entry & wiring
+apps/api/                  # Entry & DI wiring
 ├── cmd/server/main.go     # Entry point
-├── internal/
-│   ├── bootstrap/         # Manual DI wiring
-│   └── mcp/               # MCP tool registration
+└── internal/
+    ├── bootstrap/         # Manual DI (all 89 tools wired here)
+    └── mcp/               # 13 registration files
 
-modules/                   # Domain modules (hexagonal)
-├── jira/                  # Jira Cloud operations
-├── sprint/                # Sprint PM intelligence
-└── notification/          # Multi-channel notifications
+modules/                   # Hexagonal domain modules
+├── jira/                  # 28 tools — full Jira Cloud CRUD
+├── sprint/                # 18 tools — PM memory + analysis
+└── notification/          # 5 tools — multi-channel send
 
 shared/                    # Shared kernel
-├── domain/                # Core domain types & interfaces
-├── infrastructure/        # External service clients
+├── domain/                # Cross-module entities
+├── infrastructure/        # 16+ clients (AI, GitHub, GitLab, Notion...)
 └── usecase/               # Shared business logic
 
-agents/                    # Agent Architecture layer
-└── agent.go               # Dispatcher, Planner, Coordinator
+agents/                    # Agent architecture (event-driven)
 ```
 
-**Stack**: Go 1.26.4 | `mark3labs/mcp-go` v0.55.1 | SQLite WAL | Manual DI
+**Stack:** Go 1.26.4 | `mark3labs/mcp-go` v0.55.1 | SQLite WAL | Manual DI
 
-### Core Modules (Hexagonal)
-
-| Module | Domain | Infrastructure | Status |
-|--------|--------|---------------|--------|
-| **jira** | Issue, Board, Project, User, Sprint | REST client, search, CRUD | ✅ 4 tools |
-| **sprint** | Velocity, Score, Predictability, Planning, Memory (16 tables) | SQLite persistence, snapshot adapter | ✅ 5 tools |
-| **notification** | Notifier contract, Lark entities | Slack, Discord, Telegram, Teams, Email, Lark | ⚠️ stubs |
+**Config:** Environment variables only (`.env` or shell). See `.env.example`.
 
 ---
 
-## Migration Status
+## Integrations (All Optional)
 
-This project is in **active migration** from a monolithic ~279-tool server to a modular, maintainable architecture.
+| Category | Services | Tools |
+|----------|----------|-------|
+| Project Tracking | Jira Cloud | 28 |
+| Sprint/PM | SQLite memory | 18 |
+| Code | GitHub, GitLab | 10 + 9 |
+| Communication | Lark, Slack, Discord, Telegram, Teams, Email | 5 |
+| Wiki | Confluence, Notion | 3 + 3 |
+| Incidents | PagerDuty | 2 |
+| Time | Clockify | 2 |
+| Calendar | Lark Calendar | 3 |
+| Spreadsheets | Google Sheets | 1 |
+| AI | OpenAI, Anthropic, Gemini, Groq, Ollama, OpenRouter, DeepSeek | (internal) |
 
-| Status | Area |
-|--------|------|
-| ✅ | Hexagonal module structure (3 modules) |
-| ✅ | SQLite persistence with 16+ tables |
-| ✅ | Multi-channel notification infrastructure |
-| ✅ | 16+ shared service clients (AI, GitHub, GitLab, Notion, Linear, etc.) |
-| ✅ | Agent architecture pattern (Dispatcher → Planner → Coordinator) |
-| ✅ | **85 tools registered** in modular code (vs ~279 in installed binary) |
-| ✅ | All shared infrastructure clients now wired into modular handlers |
-| ✅ | Agent layer wired (InMemoryBus → BusBridge → Dispatcher) |
-| ⏳ | Tool registration: wire remaining tools from monolithic binary |
-
-The **installed binary** (`~/.local/bin/zara-jira-mcp`) still runs the full monolithic toolset. The **source code** has been restructured and is being rebuilt tool by tool.
-
----
-
-## Who This Is For
-
-**Scrum Masters** who want to stop being meeting schedulers and start being system coaches.
-
-**Project Managers** who are tired of manually assembling status reports from 5 different tabs.
-
-**Engineering Managers** who need data-backed answers to "when will it be done?" and "where are the risks?"
-
-**Product Owners** who want a single place to see sprint progress, blockers needing their decision, and value delivery.
-
-**Teams** who hate Jira's slow UI and want to interact with their board through natural language.
+Works with just Jira + SQLite. Everything else is optional.
 
 ---
 
-## What People Say
+## Full Tool Reference
 
-> "Replaced 2 hours of Monday morning report writing with one command." — PM using `pm_exec_report`
-
-> "The dysfunction detector caught our Hero Culture pattern before I even noticed it." — SM after 3 sprints of data
-
-> "Monte Carlo forecasting finally gave me a defensible answer for stakeholders." — Engineering Manager
+See [SKILL.md](SKILL.md) for the complete 89-tool reference with all parameters, descriptions, and workflow patterns.
 
 ---
 
-## Integrations
+## Research Foundation
 
-| Category | Services |
-|----------|----------|
-| Project Tracking | Jira Cloud, Linear, Notion, GitHub Issues, GitLab Issues |
-| Code | GitHub (PRs, repos), GitLab (MRs, pipelines) |
-| Communication | Lark, Slack, Discord, Telegram, Teams, Email |
-| Documentation | Confluence |
-| Incidents | PagerDuty |
-| Time Tracking | Clockify |
-| Calendar | Google Calendar, Lark Calendar |
-| Data | Google Sheets |
-| AI | OpenAI, Anthropic, Gemini, Groq, Ollama, OpenRouter, DeepSeek, Together.ai |
+Built on validated research, not hype:
 
-All optional. Works with just Jira + any AI provider.
+- **DORA 2024**: AI increases individual productivity but hurts stability without fundamentals
+- **State of Agile (18th Ed)**: AI is the "Fourth Wave" of software delivery
+- **Little's Law**: WIP limits + cycle time = faster delivery
+- **Monte Carlo Forecasting**: Historical throughput beats gut-feel estimates
+- **Tuckman's Stages**: Team maturity determines SM stance
+- **McKinsey 2026**: AI-augmented SM/PM roles are the fastest-growing function
 
 ---
 
-## Contributing
-
-PRs welcome. See [AGENTS.md](AGENTS.md) for architecture decisions and coding guidelines.
+## Build & Develop
 
 ```bash
-make build      # Build modular version → bin/zara-jira-mcp
-make test       # Run tests
+make build      # Build modular → bin/zara-jira-mcp
+make test       # Run all tests
 make lint       # golangci-lint
-make install    # Install to ~/.local/bin/
+make install    # Copy to ~/.local/bin/
+
+# Test individual tools
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | ./bin/zara-jira-mcp
 ```
 
 ---
-
-## Guides for PM/Scrum Masters
-
-| Guide | What You'll Learn |
-|-------|-------------------|
-| [Communication Frameworks](docs/communication-frameworks.md) | Pyramid Principle, SCARF, SBI, Radical Candor, DACI, async protocols |
-| [Reporting to Management](docs/reporting-guide.md) | Who needs what report, when, and which tool to use |
-| [Understanding Engineering](docs/engineering-literacy.md) | WIP, cycle time, tech debt, QA vocabulary, PR review |
-
----
-
-## Part of the Zara Ecosystem
-
-Built as part of [Zara Agent OPC](https://github.com/aldok10/zara-agent-opc) — an empathetic AI engineering partner with cognitive memory and multi-agent orchestration.
 
 ## Author
 
-**[Aldo Karendra](https://www.linkedin.com/in/aldok10/)** — Lead Backend Developer & AI Systems Architect. Building AI tools that help engineers ship better software, faster.
-
-[![GitHub](https://img.shields.io/badge/GitHub-@aldok10-181717?logo=github)](https://github.com/aldok10)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-aldok10-0A66C2?logo=linkedin)](https://www.linkedin.com/in/aldok10/)
-[![Support](https://img.shields.io/badge/Support-SociaBuzz-orange)](https://sociabuzz.com/aldok10)
+**[Aldo Karendra](https://github.com/aldok10)** — Building AI tools that make engineers and Scrum Masters more effective.
 
 ## License
 
