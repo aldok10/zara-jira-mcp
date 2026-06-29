@@ -226,7 +226,7 @@ func RegisterOnboardTool(s *server.MCPServer, cfg *config.Config, toolsCount int
 	)
 }
 
-func handleOnboard(ctx context.Context, cfg *OnboardConfig) (*mcp.CallToolResult, error) {
+func handleOnboard(_ context.Context, cfg *OnboardConfig) (*mcp.CallToolResult, error) {
 	var sb strings.Builder
 	sb.WriteString("# zara-jira-mcp Onboard\n\n")
 
