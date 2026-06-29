@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aldok10/zara-jira-mcp/config"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
 	domain "github.com/aldok10/zara-jira-mcp/shared/domain/ai"
 )
 
