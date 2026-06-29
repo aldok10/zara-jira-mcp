@@ -10,11 +10,11 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"github.com/aldok10/zara-jira-mcp/config"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/application/port"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/domain"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/infrastructure/client"
 	mem "github.com/aldok10/zara-jira-mcp/modules/sprint/domain/memory"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/mcputil"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/validate"
 )
