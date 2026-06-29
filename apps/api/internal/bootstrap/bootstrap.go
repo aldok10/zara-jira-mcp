@@ -28,6 +28,8 @@ import (
 	sprint_mcp "github.com/aldok10/zara-jira-mcp/modules/sprint/interfaces/mcp"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/ai"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/github"
+	ghmcp "github.com/aldok10/zara-jira-mcp/shared/infrastructure/github/mcp"
 )
 
 // secureFilePermissions ensures config directory and DB file have safe permissions.
@@ -143,6 +145,15 @@ func Run(ctx context.Context) error {
 	notifHandler := notif_mcp.NewHandlers(notifiers, nil)
 	slog.Info("notification module initialized", "channels", len(notifiers))
 
+	// --- GitHub Module ---
+	ghClient := github.NewClient(cfg)
+	ghHandler := ghmcp.NewHandlers(ghClient)
+	if ghClient.Available() {
+		slog.Info("github module initialized")
+	} else {
+		slog.Warn("github not configured — set GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO")
+	}
+
 	// --- Create MCP Server ---
 	s := server.NewMCPServer(
 		"zara-jira-mcp",
@@ -161,6 +172,9 @@ func Run(ctx context.Context) error {
 	mcp.RegisterNotificationTools(s, notifHandler)
 	slog.Info("notification tools registered")
 
+	mcp.RegisterGitHubTools(s, ghHandler)
+	slog.Info("github tools registered")
+
 	// Register PM backup tool (self-contained)
 	if cfg.Memory.DBPath != "" {
 		mcp.RegisterBackupTools(s, cfg.Memory.DBPath)
@@ -168,9 +182,8 @@ func Run(ctx context.Context) error {
 	}
 
 	// Count registered tools for onboard wizard
-	// Jira: 25 tools (17 core + 3 epic + 3 version + 1 component + 1 attachment)
-	// Sprint: 17 tools, Notification: 5 tools, Backup: 1, Onboard: 1
-	toolsCount := 25 + 17 + 5 + 1 + 1 // 49 total
+	// Jira: 25, Sprint: 17, Notification: 5, GitHub: 10, Backup: 1, Onboard: 1
+	toolsCount := 25 + 17 + 5 + 10 + 1 + 1 // 59 total
 	mcp.RegisterOnboardTool(s, cfg, toolsCount)
 	slog.Info("pm_onboard registered", "tools_total", toolsCount)
 

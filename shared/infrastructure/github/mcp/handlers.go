@@ -31,13 +31,12 @@ func (h *Handlers) ListPRs(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 		return mcputil.ErrorResult("GitHub not configured. Set GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO."), nil
 	}
 	state := req.GetString("state", "open")
-	limit := int(req.GetInt("limit", 30))
+	limit := req.GetInt("limit", 30)
 
 	prs, err := h.client.ListPRs(ctx, state, limit)
 	if err != nil {
 		return h.errH.Wrap("list PRs", err), nil
 	}
-
 	if len(prs) == 0 {
 		return mcputil.TextResult("No pull requests found."), nil
 	}
@@ -64,7 +63,7 @@ func (h *Handlers) ListReleases(ctx context.Context, req mcp.CallToolRequest) (*
 	if !h.client.Available() {
 		return mcputil.ErrorResult("GitHub not configured."), nil
 	}
-	limit := int(req.GetInt("limit", 10))
+	limit := req.GetInt("limit", 10)
 
 	releases, err := h.client.ListReleases(ctx, limit)
 	if err != nil {
@@ -85,7 +84,7 @@ func (h *Handlers) GetActivity(ctx context.Context, req mcp.CallToolRequest) (*m
 	if !h.client.Available() {
 		return mcputil.ErrorResult("GitHub not configured."), nil
 	}
-	days := int(req.GetInt("days", 7))
+	days := req.GetInt("days", 7)
 
 	act, err := h.client.GetActivity(ctx, days)
 	if err != nil {
@@ -159,7 +158,7 @@ func (h *Handlers) CreateIssue(ctx context.Context, req mcp.CallToolRequest) (*m
 	body := req.GetString("body", "")
 	labelsStr := req.GetString("labels", "")
 	assigneesStr := req.GetString("assignees", "")
-	milestone := int(req.GetInt("milestone", 0))
+	milestone := req.GetInt("milestone", 0)
 
 	var labels, assignees []string
 	if labelsStr != "" {
@@ -189,7 +188,7 @@ func (h *Handlers) ListIssues(ctx context.Context, req mcp.CallToolRequest) (*mc
 	}
 	state := req.GetString("state", "open")
 	labels := req.GetString("labels", "")
-	limit := int(req.GetInt("limit", 20))
+	limit := req.GetInt("limit", 20)
 
 	issues, err := h.client.ListIssues(ctx, state, labels, limit)
 	if err != nil {
@@ -259,13 +258,12 @@ func (h *Handlers) GetPRMetrics(ctx context.Context, req mcp.CallToolRequest) (*
 	if !h.client.Available() {
 		return mcputil.ErrorResult("GitHub not configured."), nil
 	}
-	staleDays := int(req.GetInt("stale_days", 7))
+	staleDays := req.GetInt("stale_days", 7)
 
 	prs, err := h.client.ListPRs(ctx, "open", 100)
 	if err != nil {
 		return h.errH.Wrap("list PRs for metrics", err), nil
 	}
-
 	if len(prs) == 0 {
 		return mcputil.TextResult("No open PRs."), nil
 	}
