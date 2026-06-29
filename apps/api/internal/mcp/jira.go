@@ -149,4 +149,72 @@ func RegisterJiraTools(s *server.MCPServer, h *jmcp.Handlers) {
 		),
 		h.GetSprintSummary,
 	)
+
+	// Epic tools
+	s.AddTool(
+		mcp.NewTool("jira_epic_add",
+			mcp.WithDescription("Add issues to an epic by setting the parent/epic link."),
+			mcp.WithString("epic_key", mcp.Required(), mcp.Description("Epic key to add issues to")),
+			mcp.WithString("issue_keys", mcp.Required(), mcp.Description("Comma-separated issue keys to add")),
+		),
+		h.SetEpicLink,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_epic_remove",
+			mcp.WithDescription("Remove issues from their epic by clearing the parent link."),
+			mcp.WithString("issue_keys", mcp.Required(), mcp.Description("Comma-separated issue keys to remove")),
+		),
+		h.RemoveEpicLink,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_epic_issues",
+			mcp.WithDescription("List all issues in an epic."),
+			mcp.WithString("epic_key", mcp.Required(), mcp.Description("Epic issue key (e.g. PROJ-100)")),
+			mcp.WithNumber("max_results", mcp.Description("Maximum results (default 50)")),
+		),
+		h.GetEpicIssues,
+	)
+
+	// Version tools
+	s.AddTool(
+		mcp.NewTool("jira_versions",
+			mcp.WithDescription("List project versions/releases."),
+			mcp.WithString("project", mcp.Required(), mcp.Description("Project key")),
+		),
+		h.GetVersions,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_version_create",
+			mcp.WithDescription("Create a new project version for release tracking."),
+			mcp.WithString("project", mcp.Required(), mcp.Description("Project key")),
+			mcp.WithString("name", mcp.Required(), mcp.Description("Version name (e.g. v1.2.0)")),
+			mcp.WithString("description", mcp.Description("Version description")),
+		),
+		h.CreateVersion,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_version_release",
+			mcp.WithDescription("Mark a version as released."),
+			mcp.WithString("version_id", mcp.Required(), mcp.Description("Version ID (from jira_versions)")),
+		),
+		h.ReleaseVersion,
+	)
+
+	// Component tools
+	s.AddTool(
+		mcp.NewTool("jira_components",
+			mcp.WithDescription("List project components with leads."),
+			mcp.WithString("project", mcp.Required(), mcp.Description("Project key")),
+		),
+		h.GetComponents,
+	)
+
+	// Attachment tools
+	s.AddTool(
+		mcp.NewTool("jira_attachments",
+			mcp.WithDescription("List attachments on a Jira issue."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key")),
+		),
+		h.GetAttachments,
+	)
 }

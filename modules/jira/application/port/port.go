@@ -53,6 +53,10 @@ type Inbound interface {
 	// Labels
 	AddLabel(ctx context.Context, issueKey, label string) error
 
+	// Epics
+	SetEpicLink(ctx context.Context, issueKey, epicKey string) error
+	RemoveEpicLink(ctx context.Context, issueKey string) error
+
 	// Projects
 	GetProjects(ctx context.Context) ([]domain.Project, error)
 	GetProject(ctx context.Context, key string) (*domain.ProjectDetail, error)

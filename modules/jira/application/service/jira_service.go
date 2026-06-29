@@ -168,6 +168,14 @@ func (s *JiraService) AddLabel(ctx context.Context, issueKey, label string) erro
 	return s.client.AddLabel(ctx, issueKey, label)
 }
 
+func (s *JiraService) SetEpicLink(ctx context.Context, issueKey, epicKey string) error {
+	return s.client.SetEpicLink(ctx, issueKey, epicKey)
+}
+
+func (s *JiraService) RemoveEpicLink(ctx context.Context, issueKey string) error {
+	return s.client.RemoveEpicLink(ctx, issueKey)
+}
+
 func (s *JiraService) GetProjects(ctx context.Context) ([]domain.Project, error) {
 	return s.client.GetProjects(ctx)
 }
