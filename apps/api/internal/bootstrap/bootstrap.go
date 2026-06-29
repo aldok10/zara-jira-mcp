@@ -14,6 +14,19 @@ import (
 	"github.com/aldok10/zara-jira-mcp/modules/jira/application/service"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/infrastructure/client"
 	jira_mcp "github.com/aldok10/zara-jira-mcp/modules/jira/interfaces/mcp"
+	notifDomain "github.com/aldok10/zara-jira-mcp/modules/notification/domain"
+	"github.com/aldok10/zara-jira-mcp/modules/notification/infrastructure/discord"
+	"github.com/aldok10/zara-jira-mcp/modules/notification/infrastructure/lark"
+	"github.com/aldok10/zara-jira-mcp/modules/notification/infrastructure/slack"
+	"github.com/aldok10/zara-jira-mcp/modules/notification/infrastructure/telegram"
+	notif_mcp "github.com/aldok10/zara-jira-mcp/modules/notification/interfaces/mcp"
+	sprintPort "github.com/aldok10/zara-jira-mcp/modules/sprint/application/port"
+	sprintSvc "github.com/aldok10/zara-jira-mcp/modules/sprint/application/service"
+	"github.com/aldok10/zara-jira-mcp/modules/sprint/domain/memory"
+	"github.com/aldok10/zara-jira-mcp/modules/sprint/infrastructure/persistence"
+	"github.com/aldok10/zara-jira-mcp/modules/sprint/infrastructure/sprintstore"
+	sprint_mcp "github.com/aldok10/zara-jira-mcp/modules/sprint/interfaces/mcp"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/ai"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/config"
 )
 
@@ -66,19 +79,71 @@ func Run(ctx context.Context) error {
 		slog.Warn("file permission setup", "error", err)
 	}
 
-	// Build Jira REST client
+	// --- Jira Module ---
 	restClient, err := client.NewRestClient(cfg)
 	if err != nil {
 		return fmt.Errorf("create rest client: %w", err)
 	}
-
-	// Build Jira service
 	jiraSvc := service.NewJiraService(restClient)
-
-	// Build Jira handler
 	jiraHandler := jira_mcp.NewHandlers(jiraSvc)
+	slog.Info("jira module initialized")
 
-	// Create MCP server with all tools
+	// --- Sprint/PM Module ---
+	var memStore memory.Store
+	var sprintService sprintPort.Inbound
+
+	if cfg.Memory.DBPath != "" {
+		sqliteStore, err := persistence.NewSQLiteStore(cfg.Memory.DBPath)
+		if err != nil {
+			return fmt.Errorf("create sqlite store: %w", err)
+		}
+		memStore = sqliteStore
+
+		// Build sprint service with real dependencies
+		aiProvider := ai.NewOpenAIClient(cfg)
+		sprintService = sprintSvc.NewSprintService(
+			sprintstore.NewSnapshotRepository(sqliteStore),
+			sprintstore.NewHealthRepository(sqliteStore),
+			sprintstore.NewRiskRepository(sqliteStore),
+			sprintstore.NewBlockerRepository(sqliteStore),
+			sprintstore.NewGoalRepository(sqliteStore),
+			restClient, // jira domain.Client satisfies sprint port.JiraClient
+			aiProvider,
+			&sprintstore.NoopEventBus{},
+		)
+		slog.Info("sprint service initialized with AI provider")
+	} else {
+		slog.Warn("sprint memory not configured — PM tools require PM_MEMORY_DB_PATH")
+	}
+
+	sprintHandler := sprint_mcp.NewHandlers(memStore, sprintService, nil, cfg, nil)
+	slog.Info("sprint module initialized")
+
+	// --- Notification Module ---
+	notifiers := make(map[string]notifDomain.Notifier)
+
+	if sl := slack.NewClient(cfg); sl.Available() {
+		notifiers["slack"] = slack.NewNotifierAdapter(sl)
+		slog.Info("slack notifier registered")
+	}
+	if dc := discord.NewClient(cfg); dc.Available() {
+		notifiers["discord"] = discord.NewNotifierAdapter(dc)
+		slog.Info("discord notifier registered")
+	}
+	if tg := telegram.NewClient(cfg); tg.Available() {
+		notifiers["telegram"] = telegram.NewNotifierAdapter(tg)
+		slog.Info("telegram notifier registered")
+	}
+	lkW := lark.NewWebhookClient(cfg)
+	if cfg.Lark.WebhookURL != "" || (cfg.Lark.AppID != "" && cfg.Lark.AppSecret != "") {
+		notifiers["lark"] = lark.NewNotifierAdapter(lkW)
+		slog.Info("lark notifier registered")
+	}
+
+	notifHandler := notif_mcp.NewHandlers(notifiers, nil)
+	slog.Info("notification module initialized", "channels", len(notifiers))
+
+	// --- Create MCP Server ---
 	s := server.NewMCPServer(
 		"zara-jira-mcp",
 		"0.4.0",
@@ -86,25 +151,32 @@ func Run(ctx context.Context) error {
 		server.WithRecovery(),
 	)
 
-	// Register Jira tools
+	// Register all tools
 	mcp.RegisterJiraTools(s, jiraHandler)
+	slog.Info("jira tools registered")
 
-	// Register PM backup tool (self-contained, no sprint module needed)
+	mcp.RegisterSprintTools(s, sprintHandler)
+	slog.Info("sprint/pm tools registered")
+
+	mcp.RegisterNotificationTools(s, notifHandler)
+	slog.Info("notification tools registered")
+
+	// Register PM backup tool (self-contained)
 	if cfg.Memory.DBPath != "" {
 		mcp.RegisterBackupTools(s, cfg.Memory.DBPath)
 		slog.Info("pm_backup registered", "db_path", cfg.Memory.DBPath)
 	}
 
-	// Register onboard wizard (always available)
-	toolsCount := 5 // 4 jira + 1 onboard
-	if cfg.Memory.DBPath != "" {
-		toolsCount++ // +1 for pm_backup
-	}
+	// Count registered tools for onboard wizard
+	// Jira: 25 tools (17 core + 3 epic + 3 version + 1 component + 1 attachment)
+	// Sprint: 17 tools, Notification: 5 tools, Backup: 1, Onboard: 1
+	toolsCount := 25 + 17 + 5 + 1 + 1 // 49 total
 	mcp.RegisterOnboardTool(s, cfg, toolsCount)
 	slog.Info("pm_onboard registered", "tools_total", toolsCount)
 
 	slog.Info("server ready, waiting for MCP connections",
 		"version", "0.4.0",
+		"tools", toolsCount,
 	)
 
 	// ServeStdio blocks, so run it in a goroutine and wait for
