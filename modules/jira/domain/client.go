@@ -46,4 +46,6 @@ type Client interface {
 	GetComponents(ctx context.Context, projectKey string) ([]Component, error)
 	// Fields
 	GetFields(ctx context.Context) ([]Field, error)
+	// Board configuration
+	GetBoardConfiguration(ctx context.Context, boardID int) (*BoardConfiguration, error)
 }

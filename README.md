@@ -168,10 +168,10 @@ This project is in **active migration** from a monolithic ~279-tool server to a 
 | ✅ | Multi-channel notification infrastructure |
 | ✅ | 16+ shared service clients (AI, GitHub, GitLab, Notion, Linear, etc.) |
 | ✅ | Agent architecture pattern (Dispatcher → Planner → Coordinator) |
-| ⚠️ | **9+2 tools registered** in modular code (vs ~279 in installed binary) |
-| ⚠️ | Infrastructure clients not yet wired into modular handlers |
-| ⚠️ | Agent layer not yet wired into bootstrap |
-| ⏳ | Tool registration: wire `shared/infrastructure/` into module interfaces |
+| ✅ | **85 tools registered** in modular code (vs ~279 in installed binary) |
+| ✅ | All shared infrastructure clients now wired into modular handlers |
+| ✅ | Agent layer wired (InMemoryBus → BusBridge → Dispatcher) |
+| ⏳ | Tool registration: wire remaining tools from monolithic binary |
 
 The **installed binary** (`~/.local/bin/zara-jira-mcp`) still runs the full monolithic toolset. The **source code** has been restructured and is being rebuilt tool by tool.
 

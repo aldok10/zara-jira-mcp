@@ -14,9 +14,10 @@ var _ port.Inbound = (*JiraService)(nil)
 
 // JiraService implements port.Inbound for Jira operations.
 type JiraService struct {
-	client domain.Client
-	mu     sync.RWMutex
-	boards []domain.Board // cached board list
+	client   domain.Client
+	mu       sync.RWMutex
+	boards   []domain.Board                       // cached board list
+	boardCfg map[int]*domain.BoardConfiguration   // cached board config by board ID
 }
 
 // NewJiraService creates a new JiraService with its dependencies.
@@ -206,6 +207,34 @@ func (s *JiraService) GetComponents(ctx context.Context, projectKey string) ([]d
 
 func (s *JiraService) GetFields(ctx context.Context) ([]domain.Field, error) {
 	return s.client.GetFields(ctx)
+}
+
+// GetBoardConfiguration returns the column layout and status mappings for a board.
+// Results are cached per board ID for the lifetime of the service.
+func (s *JiraService) GetBoardConfiguration(ctx context.Context, boardID int) (*domain.BoardConfiguration, error) {
+	// Fast path: return cached config
+	s.mu.RLock()
+	if cfg, ok := s.boardCfg[boardID]; ok {
+		cpy := *cfg
+		s.mu.RUnlock()
+		return &cpy, nil
+	}
+	s.mu.RUnlock()
+
+	// Slow path: fetch and cache
+	cfg, err := s.client.GetBoardConfiguration(ctx, boardID)
+	if err != nil {
+		return nil, err
+	}
+
+	s.mu.Lock()
+	if s.boardCfg == nil {
+		s.boardCfg = make(map[int]*domain.BoardConfiguration)
+	}
+	s.boardCfg[boardID] = cfg
+	s.mu.Unlock()
+
+	return cfg, nil
 }
 
 // InvalidateBoardCache clears the cached board list, forcing a fresh fetch on next call.

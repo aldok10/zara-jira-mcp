@@ -215,6 +215,21 @@ func (c *RestClient) RawRequest(ctx context.Context, method, path string, body [
 	return c.doRequest(ctx, method, path, body)
 }
 
+// GetBoardConfiguration fetches the full board configuration including column layout
+// and status mappings from the Jira Agile API.
+func (c *RestClient) GetBoardConfiguration(ctx context.Context, boardID int) (*domain.BoardConfiguration, error) {
+	data, _, err := c.doRequest(ctx, http.MethodGet, fmt.Sprintf("/rest/agile/1.0/board/%d/configuration", boardID), nil)
+	if err != nil {
+		return nil, fmt.Errorf("get board %d config: %w", boardID, err)
+	}
+
+	var cfg domain.BoardConfiguration
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return nil, fmt.Errorf("decode board %d config: %w", boardID, err)
+	}
+	return &cfg, nil
+}
+
 func validateRawRequest(method, path string) error {
 	// Check for blocked methods first (e.g. DELETE always blocked).
 	for _, blocked := range rawRequestBlockedMethods {

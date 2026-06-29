@@ -209,6 +209,15 @@ func RegisterJiraTools(s *server.MCPServer, h *jmcp.Handlers) {
 		h.GetComponents,
 	)
 
+	// Board configuration tool
+	s.AddTool(
+		mcp.NewTool("jira_board_config",
+			mcp.WithDescription("Get board configuration: column layout and status mappings."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+		),
+		h.GetBoardConfig,
+	)
+
 	// Attachment tools
 	s.AddTool(
 		mcp.NewTool("jira_attachments",
@@ -216,5 +225,13 @@ func RegisterJiraTools(s *server.MCPServer, h *jmcp.Handlers) {
 			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key")),
 		),
 		h.GetAttachments,
+	)
+
+	// Memory reconciliation tool
+	s.AddTool(
+		mcp.NewTool("pm_reconcile",
+			mcp.WithDescription("Full-sweep reconciliation: compare all stored blockers/risks against current Jira state. Auto-resolves outdated items."),
+		),
+		h.ReconcileMemory,
 	)
 }

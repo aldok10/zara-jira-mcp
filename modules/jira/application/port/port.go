@@ -74,4 +74,7 @@ type Inbound interface {
 
 	// Fields
 	GetFields(ctx context.Context) ([]domain.Field, error)
+
+	// Board configuration
+	GetBoardConfiguration(ctx context.Context, boardID int) (*domain.BoardConfiguration, error)
 }
