@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	domain "github.com/aldok10/zara-jira-mcp/modules/jira/domain"
+	"github.com/aldok10/zara-jira-mcp/modules/jira/domain"
 	"github.com/aldok10/zara-jira-mcp/modules/jira/infrastructure/client"
 )
 
