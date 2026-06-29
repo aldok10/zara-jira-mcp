@@ -120,11 +120,6 @@ func (fm *FieldManager) ManageCustomField(ctx context.Context, boardID int, fiel
 
 // GetAllCustomFieldsAcrossBoards retrieves all unique custom fields from all configured boards.
 func (fm *FieldManager) GetAllCustomFieldsAcrossBoards(ctx context.Context) ([]string, error) {
-	// Iterate over all known boards to collect custom fields
-	if fm.BoardRepo == nil {
-		return nil, fmt.Errorf("BoardRepository is not configured for collecting fields across boards")
-	}
-
 	// Since the repository does not expose a way to list all boards, this method requires
 	// manual extension or implementation. We'll return an error indicating the limitation.
 	return nil, fmt.Errorf("cannot efficiently collect all custom fields across boards without a method to list all boards")
