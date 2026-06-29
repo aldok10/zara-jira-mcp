@@ -101,17 +101,18 @@ func (fm *FieldManager) ManageCustomField(ctx context.Context, boardID int, fiel
 	}
 
 	// Perform action on custom fields
-	if action == "add" {
+	switch action {
+	case "add":
 		if !cfg.HasCustomField(fieldID) {
 			cfg.AddCustomField(fieldID)
 			fm.BoardRepo.Save(ctx, cfg)
 		}
-	} else if action == "remove" {
+	case "remove":
 		if cfg.HasCustomField(fieldID) {
 			cfg.RemoveCustomField(fieldID)
 			fm.BoardRepo.Save(ctx, cfg)
 		}
-	} else {
+	default:
 		return fmt.Errorf("invalid action '%s', expected 'add' or 'remove'", action)
 	}
 
