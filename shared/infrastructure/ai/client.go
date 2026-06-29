@@ -6,13 +6,61 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aldok10/zara-jira-mcp/config"
 	domain "github.com/aldok10/zara-jira-mcp/shared/domain/ai"
 )
+
+// aiRateLimiter is a token bucket rate limiter for AI API calls.
+type aiRateLimiter struct {
+	mu     sync.Mutex
+	tokens float64
+	max    float64
+	last   time.Time
+	refill float64 // tokens per second
+}
+
+func newAIRateLimiter(ratePerMinute int) *aiRateLimiter {
+	return &aiRateLimiter{
+		tokens: float64(ratePerMinute),
+		max:    float64(ratePerMinute),
+		last:   time.Now(),
+		refill: float64(ratePerMinute) / 60.0,
+	}
+}
+
+func (r *aiRateLimiter) wait(ctx context.Context) error {
+	r.mu.Lock()
+	now := time.Now()
+	elapsed := now.Sub(r.last).Seconds()
+	r.last = now
+	r.tokens = math.Min(r.max, r.tokens+elapsed*r.refill)
+
+	if r.tokens < 1 {
+		// Need to wait for refill
+		waitDur := time.Duration((1 - r.tokens) / r.refill * float64(time.Second))
+		r.mu.Unlock()
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(waitDur):
+		}
+		r.mu.Lock()
+		r.tokens--
+		r.mu.Unlock()
+		return nil
+	}
+
+	r.tokens--
+	r.mu.Unlock()
+	return nil
+}
 
 // OpenAIClient supports OpenAI-compatible, Anthropic, and Google Gemini APIs.
 // Provider is auto-detected from JIRA_AI_BASE_URL.
@@ -22,6 +70,7 @@ type OpenAIClient struct {
 	model      string
 	provider   string // "openai", "anthropic", "gemini"
 	httpClient *http.Client
+	limiter    *aiRateLimiter // 10 req/min by default
 }
 
 // Ensure OpenAIClient satisfies domain.Provider at compile time.
@@ -35,6 +84,7 @@ func NewOpenAIClient(cfg *config.Config) *OpenAIClient {
 		model:      cfg.AI.Model,
 		provider:   provider,
 		httpClient: &http.Client{Timeout: 60 * time.Second},
+		limiter:    newAIRateLimiter(10), // 10 AI requests per minute
 	}
 }
 
@@ -74,7 +124,10 @@ func (c *OpenAIClient) completeOpenAI(ctx context.Context, systemPrompt, userPro
 		"temperature": 0.3,
 	}
 
-	body, _ := json.Marshal(payload)
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("marshal payload: %w", err)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/v1/chat/completions", bytes.NewReader(body))
 	if err != nil {
 		return "", err
@@ -113,7 +166,10 @@ func (c *OpenAIClient) completeAnthropic(ctx context.Context, systemPrompt, user
 		},
 	}
 
-	body, _ := json.Marshal(payload)
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("marshal payload: %w", err)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/v1/messages", bytes.NewReader(body))
 	if err != nil {
 		return "", err
@@ -154,13 +210,17 @@ func (c *OpenAIClient) completeGemini(ctx context.Context, systemPrompt, userPro
 		},
 	}
 
-	body, _ := json.Marshal(payload)
-	url := fmt.Sprintf("%s/v1beta/models/%s:generateContent?key=%s", c.baseURL, c.model, c.apiKey)
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("marshal payload: %w", err)
+	}
+	url := fmt.Sprintf("%s/v1beta/models/%s:generateContent", c.baseURL, c.model)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Goog-Api-Key", c.apiKey)
 
 	respBody, err := c.doRequest(req)
 	if err != nil {
@@ -186,13 +246,19 @@ func (c *OpenAIClient) completeGemini(ctx context.Context, systemPrompt, userPro
 }
 
 func (c *OpenAIClient) doRequest(req *http.Request) ([]byte, error) {
+	// Apply AI rate limiter before making the request
+	if err := c.limiter.wait(req.Context()); err != nil {
+		return nil, fmt.Errorf("ai rate limit: %w", err)
+	}
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	// Limit response size to 10MB to prevent resource exhaustion
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
 		return nil, err
 	}
