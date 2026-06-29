@@ -62,7 +62,10 @@ func (c *Client) post(ctx context.Context, payload any) error {
 	if c.webhookURL == "" {
 		return fmt.Errorf("teams webhook not configured: set TEAMS_WEBHOOK_URL")
 	}
-	data, _ := json.Marshal(payload)
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal payload: %w", err)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.webhookURL, bytes.NewReader(data))
 	if err != nil {
 		return err

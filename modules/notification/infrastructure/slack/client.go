@@ -128,7 +128,10 @@ func (c *Client) webhookPost(ctx context.Context, text, channel string) error {
 	if channel != "" {
 		payload["channel"] = channel
 	}
-	body, _ := json.Marshal(payload)
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal payload: %w", err)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.webhookURL, bytes.NewReader(body))
 	if err != nil {
 		return err

@@ -3,9 +3,9 @@ package port
 import (
 	"context"
 
-	"github.com/aldok10/zara-jira-mcp/shared/kernel/event"
 	jira "github.com/aldok10/zara-jira-mcp/modules/jira/domain"
 	memory "github.com/aldok10/zara-jira-mcp/modules/sprint/domain/memory"
+	"github.com/aldok10/zara-jira-mcp/shared/domain/event"
 )
 
 // SnapshotRepository provides sprint snapshot persistence.
