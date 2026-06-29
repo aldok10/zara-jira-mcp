@@ -160,7 +160,10 @@ func (c *Client) QueryDatabase(ctx context.Context, databaseID string, filterJSO
 }
 
 func (c *Client) doPost(ctx context.Context, path string, payload any) ([]byte, error) {
-	data, _ := json.Marshal(payload)
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("marshal payload: %w", err)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.notion.com"+path, bytes.NewReader(data))
 	if err != nil {
 		return nil, err

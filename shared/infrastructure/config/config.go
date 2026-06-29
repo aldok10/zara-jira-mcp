@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/validate"
 )
 
 // Config holds all application configuration parsed from environment variables.
@@ -303,4 +305,29 @@ func Load() (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// Validate validates the config fields.
+func (c *Config) Validate() error {
+	// Validate Jira
+	if err := validate.JiraBaseURL(c.Jira.BaseURL); err != nil {
+		return fmt.Errorf("jira.base_url: %w", err)
+	}
+	if err := validate.Email(c.Jira.Email); err != nil {
+		return fmt.Errorf("jira.email: %w", err)
+	}
+	if err := validate.Required("jira.token", c.Jira.Token); err != nil {
+		return fmt.Errorf("jira.token: %w", err)
+	}
+	// Validate ports
+	if err := validate.Port(c.Server.Port); err != nil {
+		return fmt.Errorf("server.port: %w", err)
+	}
+	if err := validate.Port(c.Lark.BotPort); err != nil {
+		return fmt.Errorf("lark.bot_port: %w", err)
+	}
+	if err := validate.Port(c.Server.DashboardPort); err != nil {
+		return fmt.Errorf("server.dashboard_port: %w", err)
+	}
+	return nil
 }

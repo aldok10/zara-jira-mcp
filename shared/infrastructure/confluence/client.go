@@ -111,7 +111,10 @@ func (c *Client) CreatePage(ctx context.Context, spaceKey, title, body string, p
 	if parentID != "" {
 		payload["ancestors"] = []map[string]string{{"id": parentID}}
 	}
-	data, _ := json.Marshal(payload)
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("marshal payload: %w", err)
+	}
 
 	respBody, err := c.doPost(ctx, "/wiki/rest/api/content", data)
 	if err != nil {
