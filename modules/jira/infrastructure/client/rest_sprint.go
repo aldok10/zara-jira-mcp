@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/aldok10/zara-jira-mcp/modules/jira/domain"
 	"github.com/felixgeelhaar/jirasdk/core/agile"
 	"github.com/felixgeelhaar/jirasdk/core/search"
-
-	domain "github.com/aldok10/zara-jira-mcp/modules/jira/domain"
 )
 
 // GetActiveSprints returns active sprints for a board.
