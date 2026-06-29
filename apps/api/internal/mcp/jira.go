@@ -30,6 +30,119 @@ func RegisterJiraTools(s *server.MCPServer, h *jmcp.Handlers) {
 		h.GetBoards,
 	)
 	s.AddTool(
+		mcp.NewTool("jira_create",
+			mcp.WithDescription("Create a new Jira issue."),
+			mcp.WithString("project", mcp.Required(), mcp.Description("Project key (e.g. PROJ)")),
+			mcp.WithString("summary", mcp.Required(), mcp.Description("Issue title/summary")),
+			mcp.WithString("issue_type", mcp.Description("Issue type: Task, Bug, Story (default Task)")),
+			mcp.WithString("description", mcp.Description("Detailed description")),
+			mcp.WithString("priority", mcp.Description("Priority: Highest, High, Medium, Low, Lowest")),
+			mcp.WithString("assignee_id", mcp.Description("Assignee account ID")),
+			mcp.WithString("labels", mcp.Description("Comma-separated labels")),
+		),
+		h.CreateIssue,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_transition",
+			mcp.WithDescription("Transition a Jira issue to a new status."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key (e.g. PROJ-123)")),
+			mcp.WithString("transition_id", mcp.Required(), mcp.Description("Transition ID (from jira_transitions)")),
+		),
+		h.TransitionIssue,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_transitions",
+			mcp.WithDescription("Get available status transitions for an issue."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key (e.g. PROJ-123)")),
+		),
+		h.GetTransitions,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_assign",
+			mcp.WithDescription("Assign a Jira issue to a user by account ID."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key (e.g. PROJ-123)")),
+			mcp.WithString("account_id", mcp.Required(), mcp.Description("Assignee account ID (from jira_find_user)")),
+		),
+		h.AssignIssue,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_find_user",
+			mcp.WithDescription("Search Jira users by name or email."),
+			mcp.WithString("query", mcp.Required(), mcp.Description("Search by name or email")),
+		),
+		h.FindUser,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_add_comment",
+			mcp.WithDescription("Add a comment to a Jira issue."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key (e.g. PROJ-123)")),
+			mcp.WithString("body", mcp.Required(), mcp.Description("Comment text")),
+		),
+		h.AddComment,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_sprints",
+			mcp.WithDescription("List sprints for a board. Filter by state: active, future, closed."),
+			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
+			mcp.WithString("state", mcp.Description("Filter: active, future, closed (default: all)")),
+		),
+		h.GetSprints,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_start_sprint",
+			mcp.WithDescription("Start a sprint with start and end dates."),
+			mcp.WithNumber("sprint_id", mcp.Required(), mcp.Description("Sprint ID")),
+			mcp.WithString("start_date", mcp.Required(), mcp.Description("Start date (YYYY-MM-DD)")),
+			mcp.WithString("end_date", mcp.Required(), mcp.Description("End date (YYYY-MM-DD)")),
+		),
+		h.StartSprint,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_move_to_sprint",
+			mcp.WithDescription("Move issues into a sprint."),
+			mcp.WithNumber("sprint_id", mcp.Required(), mcp.Description("Sprint ID")),
+			mcp.WithString("issue_keys", mcp.Required(), mcp.Description("Comma-separated issue keys")),
+		),
+		h.MoveIssuesToSprint,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_link_issues",
+			mcp.WithDescription("Create a link between two issues."),
+			mcp.WithString("inward_key", mcp.Required(), mcp.Description("Inward issue key")),
+			mcp.WithString("outward_key", mcp.Required(), mcp.Description("Outward issue key")),
+			mcp.WithString("link_type", mcp.Required(), mcp.Description("Link type: Blocks, Relates, Duplicates, etc.")),
+		),
+		h.LinkIssues,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_link_types",
+			mcp.WithDescription("List available issue link types."),
+		),
+		h.GetLinkTypes,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_add_worklog",
+			mcp.WithDescription("Log time spent on an issue."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key (e.g. PROJ-123)")),
+			mcp.WithString("time_spent", mcp.Required(), mcp.Description("Time spent (e.g. 2h, 30m, 1d)")),
+			mcp.WithString("comment", mcp.Description("Work description")),
+		),
+		h.AddWorklog,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_worklogs",
+			mcp.WithDescription("List worklogs on a Jira issue."),
+			mcp.WithString("key", mcp.Required(), mcp.Description("Issue key (e.g. PROJ-123)")),
+		),
+		h.GetWorklogs,
+	)
+	s.AddTool(
+		mcp.NewTool("jira_projects",
+			mcp.WithDescription("List all accessible Jira projects."),
+		),
+		h.GetProjects,
+	)
+	s.AddTool(
 		mcp.NewTool("jira_sprint_summary",
 			mcp.WithDescription("Get active sprint status and issues for a board."),
 			mcp.WithNumber("board_id", mcp.Required(), mcp.Description("Board ID")),
