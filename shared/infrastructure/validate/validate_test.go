@@ -232,7 +232,7 @@ func TestLabels(t *testing.T) {
 	tests := []struct {
 		name   string
 		labels string
-		want   int  // expected number of labels for success, -1 for error
+		want   int // expected number of labels for success, -1 for error
 	}{
 		{name: "empty", labels: "", want: 0},
 		{name: "single", labels: "frontend", want: 1},

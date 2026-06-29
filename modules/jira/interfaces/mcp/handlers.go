@@ -10,6 +10,7 @@ import (
 
 	"github.com/aldok10/zara-jira-mcp/modules/jira/application/port"
 	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/mcputil"
+	"github.com/aldok10/zara-jira-mcp/shared/infrastructure/validate"
 )
 
 // Handlers holds dependencies for jira MCP tool handlers.
@@ -33,6 +34,9 @@ func (h *Handlers) SearchIssues(ctx context.Context, req mcp.CallToolRequest) (*
 	if err != nil {
 		return mcputil.ErrInvalid("jql parameter is required"), nil
 	}
+	if err := validate.JQL(jql); err != nil {
+		return mcputil.ErrInvalid(err.Error()), nil
+	}
 	maxResults := req.GetInt("max_results", 20)
 
 	results, err := h.Jira.SearchIssues(ctx, jql, int(maxResults))
@@ -55,6 +59,9 @@ func (h *Handlers) GetIssue(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 	key, err := req.RequireString("key")
 	if err != nil {
 		return mcputil.ErrInvalid("key parameter is required"), nil
+	}
+	if err := validate.IssueKey(key); err != nil {
+		return mcputil.ErrInvalid(err.Error()), nil
 	}
 
 	issue, err := h.Jira.GetIssue(ctx, key)
@@ -89,6 +96,9 @@ func (h *Handlers) GetSprintSummary(ctx context.Context, req mcp.CallToolRequest
 	if err != nil {
 		return mcputil.ErrInvalid("board_id parameter is required"), nil
 	}
+	if err := validate.BoardID(int(boardID)); err != nil {
+		return mcputil.ErrInvalid(err.Error()), nil
+	}
 
 	sprints, err := h.Jira.GetActiveSprints(ctx, int(boardID))
 	if err != nil {
@@ -116,4 +126,3 @@ func (h *Handlers) GetSprintSummary(ctx context.Context, req mcp.CallToolRequest
 	}
 	return mcputil.TextResult(sb.String()), nil
 }
-

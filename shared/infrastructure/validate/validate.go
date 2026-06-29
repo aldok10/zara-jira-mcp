@@ -18,15 +18,30 @@ import (
 	"unicode"
 )
 
-var (
-	issueKeyRE    = regexp.MustCompile(`^[A-Z][A-Z0-9_]*-\d+$`)
-	internalIPRE  = regexp.MustCompile(`(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|169\.254\.\d{1,3}\.\d{1,3})`)
-)
+var issueKeyRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*-\d+$`)
 
 // common Jira field error messages.
 const (
 	ErrRequired = "is required"
 )
+
+// Port validates a port number range.
+func Port(port string) error {
+	if port == "" {
+		return nil // default will be used
+	}
+	portInt := 0
+	for _, r := range port {
+		if r < '0' || r > '9' {
+			return fmt.Errorf("port %q must be a number", port)
+		}
+		portInt = portInt*10 + int(r-'0')
+	}
+	if portInt < 1 || portInt > 65535 {
+		return fmt.Errorf("port %q must be between 1 and 65535", port)
+	}
+	return nil
+}
 
 // Required checks that s is non-empty.
 func Required(name, s string) error {
